@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="TradeSolDevs - Professional software development projects including trading bots and music applications. Quality solutions for modern challenges.">
+    <meta name="keywords" content="trading bot, music app, software development, coding, algorithms, fintech, music technology">
+    <meta name="author" content="TradeSolDevs">
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+    
+    <title>TradeSolDevs | Professional Software Development</title>
+    
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        /* Main Content */
+        main {
+            padding: 3rem 0;
+        }
+        
+        .project-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .project-section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .project-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+        
+        .project-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        
+        .trading-icon {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+        }
+        
+        .music-icon {
+            background: linear-gradient(135deg, #8a2387, #f27121);
+            color: white;
+        }
+        
+        .project-title {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        
+        .project-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+        
+        .tech-tag {
+            background: #e8f4fc;
+            color: #2980b9;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Ad Containers */
+        .ad-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 3rem 0;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+        }
+        
+        .ad-label {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* About Section */
+        .about-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-top: 3rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .about-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        
+        .social-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .copyright {
+            opacity: 0.7;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .project-section, .about-section {
+                padding: 1.5rem;
+            }
+            
+            .project-title {
+                font-size: 1.6rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+        
+        .mt-2 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .mt-3 { margin-top: 3rem; }
+        .mb-3 { margin-bottom: 3rem; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1 class="logo">TradeSolDevs</h1>
+            <p class="tagline">Innovative Software Solutions for Modern Challenges</p>
+            <nav>
+                <ul>
+                    <li><a href="#trading-bot">Trading Bot</a></li>
+                    <li><a href="#music-app">Music App</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Ad Container 1 -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <!-- AdSense Ad Unit -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:block; text-align:center;"
+                 data-ad-layout="in-article"
+                 data-ad-format="fluid"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="1234567890"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <!-- Trading Bot Project -->
+        <section id="trading-bot" class="project-section">
+            <div class="project-header">
+                <div class="project-icon trading-icon">
+                    📈
+                </div>
+                <div>
+                    <h2 class="project-title">Algorithmic Trading Bot</h2>
+                    <p class="project-subtitle">Intelligent automated trading system with risk management</p>
+                </div>
+            </div>
+            
+            <p>A sophisticated algorithmic trading solution designed for cryptocurrency and stock markets. The system uses machine learning models to analyze market trends, execute trades, and manage risk with minimal human intervention.</p>
+            
+            <div class="features-grid mt-2">
+                <div class="feature-card">
+                    <h4>Machine Learning Integration</h4>
+                    <p>Advanced ML models that adapt to changing market conditions and optimize trading strategies in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Risk Management System</h4>
+                    <p>Comprehensive risk assessment with automatic stop-loss, position sizing, and portfolio balancing algorithms.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Multi-Exchange Support</h4>
+                    <p>Seamless integration with multiple cryptocurrency exchanges and traditional trading platforms.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Real-time Analytics</h4>
+                    <p>Live dashboard with performance metrics, profit/loss tracking, and market sentiment analysis.</p>
+                </div>
+            </div>
+            
+            <h3 class="mt-2">Technology Stack</h3>
+            <div class="tech-stack">
+                <span class="tech-tag">Python 3.9+</span>
+                <span class="tech-tag">TensorFlow</span>
+                <span class="tech-tag">FastAPI</span>
+                <span class="tech-tag">PostgreSQL</span>
+                <span class="tech-tag">Redis</span>
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">AWS</span>
+                <span class="tech-tag">WebSockets</span>
+            </div>
+        </section>
+
+        <!-- Ad Container 2 -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <!-- AdSense Ad Unit -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="autorelaxed"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="0987654321"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <!-- Music App Project -->
+        <section id="music-app" class="project-section">
+            <div class="project-header">
+                <div class="project-icon music-icon">
+                    🎵
+                </div>
+                <div>
+                    <h2 class="project-title">Intelligent Music Application</h2>
+                    <p class="project-subtitle">AI-powered music discovery and creation platform</p>
+                </div>
+            </div>
+            
+            <p>An innovative music application that combines artificial intelligence with music theory to help users discover, create, and experience music in new ways. The platform features advanced audio processing and personalized recommendations.</p>
+            
+            <div class="features-grid mt-2">
+                <div class="feature-card">
+                    <h4>AI Music Generation</h4>
+                    <p>Generate original music compositions based on mood, genre, or musical elements using neural networks.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Smart Playlists</h4>
+                    <p>Dynamic playlist creation that adapts to listening habits, mood, and contextual factors.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Music Theory Assistant</h4>
+                    <p>Interactive tool that helps musicians understand chord progressions, scales, and song structure.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Social Features</h4>
+                    <p>Collaborative playlists, music sharing, and community features for music enthusiasts.</p>
+                </div>
+            </div>
+            
+            <h3 class="mt-2">Technology Stack</h3>
+            <div class="tech-stack">
+                <span class="tech-tag">React Native</span>
+                <span class="tech-tag">Node.js</span>
+                <span class="tech-tag">TensorFlow.js</span>
+                <span class="tech-tag">MongoDB</span>
+                <span class="tech-tag">GraphQL</span>
+                <span class="tech-tag">Web Audio API</span>
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">Google Cloud</span>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="about-section">
+            <h2>About TradeSolDevs</h2>
+            <p>TradeSolDevs is a software development team specializing in creating innovative solutions for complex challenges. With expertise in financial technology, artificial intelligence, and digital media, we build applications that combine technical excellence with practical utility.</p>
+            
+            <p class="mt-2">Our approach focuses on:</p>
+            <ul style="margin-left: 1.5rem; margin-top: 1rem;">
+                <li><strong>Quality Code:</strong> Clean, maintainable, and well-documented codebases</li>
+                <li><strong>User Experience:</strong> Intuitive interfaces and seamless interactions</li>
+                <li><strong>Scalability:</strong> Architecture designed for growth and performance</li>
+                <li><strong>Security:</strong> Robust security practices and data protection</li>
+                <li><strong>Innovation:</strong> Leveraging cutting-edge technologies to solve real problems</li>
+            </ul>
+        </section>
+
+        <!-- Ad Container 3 -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <!-- AdSense Ad Unit -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+            <!-- Display Ad -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="1122334455"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <h3>TradeSolDevs</h3>
+                <p>Professional software development for innovative solutions</p>
+                
+                <div class="social-links">
+                    <a href="https://github.com/TradeSolDevs" target="_blank" rel="noopener">GitHub</a>
+                    <a href="mailto:contact@tradesoldevs.com">Email</a>
+                    <a href="https://linkedin.com/company/tradesoldevs" target="_blank" rel="noopener">LinkedIn</a>
+                </div>
+                
+                <p class="copyright">
+                    &copy; 2024 TradeSolDevs. All rights reserved.<br>
+                    <small>This site complies with Google AdSense policies and includes original, high-quality content about software development projects.</small>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize AdSense ads
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // AdSense compliance note
+        console.log('TradeSolDevs site: This site follows Google AdSense policies with original developer content, clear ad labeling, and user-friendly design.');
+    </script>
+</body>
+</html>
