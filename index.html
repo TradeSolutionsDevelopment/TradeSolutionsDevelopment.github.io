@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="TradeSolDevs - Professional software development projects including trading bots and music applications. Quality solutions for modern challenges.">
-    <meta name="keywords" content="trading bot, music app, software development, coding, algorithms, fintech, music technology">
+    <meta name="keywords" content="trading bot, music app, software development, coding, algorithms, fintech, music technology, AI music, royalty free music">
     <meta name="author" content="TradeSolDevs">
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
     
-    <title>TradeSolDevs | Professional Software Development</title>
+    <title>TradeSolDevs | Professional Software Development & AI Music</title>
     
     <style>
         /* Reset and Base Styles */
@@ -77,12 +77,30 @@
             background-color: rgba(255,255,255,0.1);
         }
         
+        /* Contact Button in Header */
+        .contact-button {
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-left: auto;
+        }
+        
+        .contact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
         /* Main Content */
         main {
             padding: 3rem 0;
         }
         
-        .project-section {
+        .project-section, .media-section {
             background: white;
             border-radius: 10px;
             padding: 2.5rem;
@@ -91,7 +109,7 @@
             transition: transform 0.3s ease;
         }
         
-        .project-section:hover {
+        .project-section:hover, .media-section:hover {
             transform: translateY(-5px);
         }
         
@@ -167,6 +185,63 @@
             font-weight: 500;
         }
         
+        /* Music & Media Section */
+        .mixtape-intro {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border-left: 5px solid #8a2387;
+        }
+        
+        .platform-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .platform-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid #eaeaea;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .platform-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .platform-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            margin-top: 0.5rem;
+            word-break: break-all;
+        }
+        
+        .platform-link:hover {
+            color: #3498db;
+        }
+        
+        .citation-box {
+            background: #fff8e1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            border-left: 4px solid #ffb300;
+        }
+        
         /* Ad Containers */
         .ad-container {
             background: white;
@@ -198,6 +273,38 @@
         .about-section h2 {
             color: #2c3e50;
             margin-bottom: 1rem;
+        }
+        
+        /* Contact Section */
+        .contact-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .contact-email {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .email-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .email-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
         }
         
         /* Footer */
@@ -239,7 +346,7 @@
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .project-section, .about-section {
+            .project-section, .about-section, .contact-section, .media-section {
                 padding: 1.5rem;
             }
             
@@ -247,7 +354,7 @@
                 font-size: 1.6rem;
             }
             
-            .features-grid {
+            .features-grid, .platform-links {
                 grid-template-columns: 1fr;
             }
             
@@ -258,6 +365,11 @@
             
             .logo {
                 font-size: 2rem;
+            }
+            
+            .contact-button {
+                margin-left: 0;
+                margin-top: 1rem;
             }
         }
         
@@ -276,12 +388,18 @@
     <!-- Header -->
     <header>
         <div class="container">
-            <h1 class="logo">TradeSolDevs</h1>
-            <p class="tagline">Innovative Software Solutions for Modern Challenges</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <h1 class="logo">TradeSolDevs</h1>
+                    <p class="tagline">Innovative Software Development & AI-Generated Music</p>
+                </div>
+                <button class="contact-button" onclick="location.href='#contact'">Contact Us</button>
+            </div>
             <nav>
                 <ul>
                     <li><a href="#trading-bot">Trading Bot</a></li>
                     <li><a href="#music-app">Music App</a></li>
+                    <li><a href="#media">Music & Media</a></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
@@ -414,7 +532,115 @@
             </div>
         </section>
 
-        <!-- Ad Container 3 - Additional Unit (Requested) -->
+        <!-- Music & Media Section -->
+        <section id="media" class="media-section">
+            <h2 class="project-title" style="margin-bottom: 1.5rem;">🎵 Royalty-Free AI Music Mixtapes</h2>
+            
+            <div class="mixtape-intro">
+                <h3>Enjoy My Mixtapes!</h3>
+                <p>Free to listen to, share and use as you please. Produced with the help of AI, as part of an audio-library that wants to provide royalty free music for every kind of your projects.</p>
+                <p><strong>Just cite:</strong> The name of the mixtape, the artist <strong>TSolD</strong> and, if you like, when and where you got it from.</p>
+                <p style="font-style: italic; margin-top: 1rem;">"Live Life like it's a Melody!"</p>
+            </div>
+            
+            <div class="citation-box">
+                <h4>📝 How to Cite:</h4>
+                <p><strong>Format:</strong> "[Mixtape Name]" by TSolD, available at TradeSolDevs.com</p>
+                <p><strong>Example:</strong> "Neon Dreams" by TSolD, accessed from TradeSolDevs.com, 2024</p>
+            </div>
+            
+            <h3 class="mt-3">📺 Media Channels & Platforms</h3>
+            
+            <div class="platform-links">
+                <!-- Main Hub -->
+                <div class="platform-card">
+                    <span class="platform-icon">🎬</span>
+                    <h4>Main Hub Page</h4>
+                    <p>Discover all mixtapes in one place</p>
+                    <a href="https://rumble.com/user/TSolD/live" target="_blank" rel="noopener noreferrer" class="platform-link">Rumble Live Stream</a>
+                </div>
+                
+                <!-- EDM Channel -->
+                <div class="platform-card">
+                    <span class="platform-icon">🎧</span>
+                    <h4>EDM Channel</h4>
+                    <p>Electronic Dance Music Mixtapes</p>
+                    <a href="https://rumble.com/c/c-7818212" target="_blank" rel="noopener noreferrer" class="platform-link">Rumble EDM Channel</a>
+                </div>
+                
+                <!-- Vaporwave Channel -->
+                <div class="platform-card">
+                    <span class="platform-icon">🌌</span>
+                    <h4>Vaporwave Channel</h4>
+                    <p>Chillwave & Vaporwave Mixtapes</p>
+                    <a href="https://rumble.com/c/c-7818480" target="_blank" rel="noopener noreferrer" class="platform-link">Rumble Vaporwave</a>
+                </div>
+                
+                <!-- Social Media -->
+                <div class="platform-card">
+                    <span class="platform-icon">🐦</span>
+                    <h4>X (Twitter)</h4>
+                    <p>Latest updates and announcements</p>
+                    <a href="https://x.com/TSolD_projects" target="_blank" rel="noopener noreferrer" class="platform-link">@TSolD_projects</a>
+                </div>
+                
+                <!-- YouTube Channels -->
+                <div class="platform-card">
+                    <span class="platform-icon">▶️</span>
+                    <h4>YouTube Channels</h4>
+                    <p>Video versions of mixtapes</p>
+                    <a href="https://www.youtube.com/@TSolD-EDM" target="_blank" rel="noopener noreferrer" class="platform-link">@TSolD-EDM</a>
+                    <a href="https://www.youtube.com/@TSolD-VAPOR" target="_blank" rel="noopener noreferrer" class="platform-link">@TSolD-VAPOR</a>
+                </div>
+                
+                <!-- Twitch -->
+                <div class="platform-card">
+                    <span class="platform-icon">🟣</span>
+                    <h4>Twitch</h4>
+                    <p>Live streaming sessions</p>
+                    <a href="https://www.twitch.tv/tsold_projects" target="_blank" rel="noopener noreferrer" class="platform-link">tsold_projects</a>
+                </div>
+                
+                <!-- SoundCloud -->
+                <div class="platform-card">
+                    <span class="platform-icon">🎶</span>
+                    <h4>SoundCloud</h4>
+                    <p>High-quality audio streaming</p>
+                    <a href="https://soundcloud.com/tradesoldev" target="_blank" rel="noopener noreferrer" class="platform-link">tradesoldev</a>
+                </div>
+                
+                <!-- PodBean -->
+                <div class="platform-card">
+                    <span class="platform-icon">🎙️</span>
+                    <h4>PodBean</h4>
+                    <p>Podcast versions of mixtapes</p>
+                    <a href="https://www.podbean.com/user-JqNmpXC2gI3G" target="_blank" rel="noopener noreferrer" class="platform-link">PodBean Profile</a>
+                    <a href="https://tradesoldev.podbean.com/" target="_blank" rel="noopener noreferrer" class="platform-link">tradesoldev.podbean.com</a>
+                </div>
+                
+                <!-- Ko-fi -->
+                <div class="platform-card">
+                    <span class="platform-icon">☕</span>
+                    <h4>Ko-fi</h4>
+                    <p>Support the project</p>
+                    <a href="https://ko-fi.com/tsold" target="_blank" rel="noopener noreferrer" class="platform-link">ko-fi.com/tsold</a>
+                </div>
+            </div>
+            
+            <div class="citation-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+                <h4>🎵 Usage Rights:</h4>
+                <p>All mixtapes are <strong>royalty-free</strong> for personal and commercial use. No attribution required but appreciated.</p>
+                <p>You can use these tracks for:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>YouTube videos & podcasts</li>
+                    <li>Streaming content & live streams</li>
+                    <li>Commercial projects & presentations</li>
+                    <li>Background music for apps & games</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Ad Container 3 - Additional Unit -->
         <div class="ad-container">
             <div class="ad-label">Advertisement</div>
             <!-- AdSense Ad Unit 3 - Additional Unit -->
@@ -435,14 +661,33 @@
             <h2>About TradeSolDevs</h2>
             <p>TradeSolDevs is a software development team specializing in creating innovative solutions for complex challenges. With expertise in financial technology, artificial intelligence, and digital media, we build applications that combine technical excellence with practical utility.</p>
             
+            <p class="mt-2">Our music division creates royalty-free AI-generated music mixtapes that are free for everyone to use in their projects. We believe in making creative resources accessible to all.</p>
+            
             <p class="mt-2">Our approach focuses on:</p>
             <ul style="margin-left: 1.5rem; margin-top: 1rem;">
                 <li><strong>Quality Code:</strong> Clean, maintainable, and well-documented codebases</li>
                 <li><strong>User Experience:</strong> Intuitive interfaces and seamless interactions</li>
                 <li><strong>Scalability:</strong> Architecture designed for growth and performance</li>
-                <li><strong>Security:</strong> Robust security practices and data protection</li>
+                <li><strong>Accessibility:</strong> Making creative resources available to everyone</li>
                 <li><strong>Innovation:</strong> Leveraging cutting-edge technologies to solve real problems</li>
             </ul>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section">
+            <h2>Get In Touch</h2>
+            <p>Interested in our projects, music mixtapes, or have a development challenge? We'd love to hear from you.</p>
+            
+            <div class="contact-email">
+                📧 Email: <a href="mailto:tradesoldev@proton.me" class="email-link">tradesoldev@proton.me</a>
+            </div>
+            
+            <p class="mt-2">We typically respond within 24-48 hours. Whether you're looking for collaboration, have questions about our mixtapes, or need custom software solutions, feel free to reach out.</p>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #f0f7ff; border-radius: 8px;">
+                <h4>🎵 Music Licensing Questions?</h4>
+                <p>All our mixtapes are completely free to use. No complicated licensing required. Just enjoy the music!</p>
+            </div>
         </section>
 
         <!-- Ad Container 4 - Bottom of Content -->
@@ -450,7 +695,6 @@
             <div class="ad-label">Advertisement</div>
             <!-- AdSense Ad Unit 4 -->
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
-            <!-- Display Ad -->
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-2958343227558642"
@@ -464,21 +708,30 @@
     </main>
 
     <!-- Footer -->
-    <footer id="contact">
+    <footer>
         <div class="container">
             <div class="footer-content">
                 <h3>TradeSolDevs</h3>
-                <p>Professional software development for innovative solutions</p>
+                <p>Professional Software Development & Royalty-Free AI Music</p>
                 
                 <div class="social-links">
-                    <a href="https://github.com/TradeSolDevs" target="_blank" rel="noopener">GitHub</a>
-                    <a href="mailto:contact@tradesoldevs.com">Email</a>
-                    <a href="https://linkedin.com/company/tradesoldevs" target="_blank" rel="noopener">LinkedIn</a>
+                    <a href="https://github.com/TradeSolDevs" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <a href="mailto:tradesoldev@proton.me">Email</a>
+                    <a href="https://x.com/TSolD_projects" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
+                    <a href="https://rumble.com/user/TSolD/live" target="_blank" rel="noopener noreferrer">Rumble</a>
+                </div>
+                
+                <div class="contact-email" style="background: rgba(255,255,255,0.1); border: none;">
+                    <strong>Contact:</strong> <a href="mailto:tradesoldev@proton.me" style="color: #3498db;">tradesoldev@proton.me</a>
+                </div>
+                
+                <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+                    <p>🎵 All music mixtapes are royalty-free. Use freely in your projects!</p>
                 </div>
                 
                 <p class="copyright">
                     &copy; 2024 TradeSolDevs. All rights reserved.<br>
-                    <small>This site complies with Google AdSense policies and includes original, high-quality content about software development projects.</small>
+                    <small>This site complies with Google AdSense policies and includes original, high-quality content about software development and AI-generated music projects.</small>
                 </p>
             </div>
         </div>
@@ -489,21 +742,35 @@
         (adsbygoogle = window.adsbygoogle || []).push({});
         
         // Smooth scrolling for navigation links
-        document.querySelectorAll('nav a').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                const targetElement = document.querySelector(targetId);
-                
-                window.scrollTo({
-                    top: targetElement.offsetTop - 20,
-                    behavior: 'smooth'
-                });
+        document.querySelectorAll('nav a, .contact-button').forEach(element => {
+            element.addEventListener('click', function(e) {
+                if (this.getAttribute('href')) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Copy email to clipboard functionality
+        const emailLinks = document.querySelectorAll('.email-link');
+        emailLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Open email client to contact tradesoldev@proton.me?')) {
+                    e.preventDefault();
+                }
             });
         });
         
         // AdSense compliance note
-        console.log('TradeSolDevs site: This site follows Google AdSense policies with original developer content, clear ad labeling, and user-friendly design.');
+        console.log('TradeSolDevs site: This site follows Google AdSense policies with original developer and music content, clear ad labeling, and user-friendly design.');
         
         // Additional ad unit initialization
         setTimeout(function() {
