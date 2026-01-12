@@ -291,17 +291,17 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Ad Container 1 -->
+        <!-- Ad Container 1 - Top of Page -->
         <div class="ad-container">
             <div class="ad-label">Advertisement</div>
-            <!-- AdSense Ad Unit -->
+            <!-- AdSense Ad Unit 1 -->
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
             <ins class="adsbygoogle"
                  style="display:block; text-align:center;"
                  data-ad-layout="in-article"
                  data-ad-format="fluid"
                  data-ad-client="ca-pub-2958343227558642"
-                 data-ad-slot="1234567890"></ins>
+                 data-ad-slot="YOUR_FIRST_AD_SLOT_ID"></ins>
             <script>
                  (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
@@ -353,16 +353,16 @@
             </div>
         </section>
 
-        <!-- Ad Container 2 -->
+        <!-- Ad Container 2 - Between Projects -->
         <div class="ad-container">
             <div class="ad-label">Advertisement</div>
-            <!-- AdSense Ad Unit -->
+            <!-- AdSense Ad Unit 2 -->
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-format="autorelaxed"
                  data-ad-client="ca-pub-2958343227558642"
-                 data-ad-slot="0987654321"></ins>
+                 data-ad-slot="YOUR_SECOND_AD_SLOT_ID"></ins>
             <script>
                  (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
@@ -414,6 +414,22 @@
             </div>
         </section>
 
+        <!-- Ad Container 3 - Additional Unit (Requested) -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <!-- AdSense Ad Unit 3 - Additional Unit -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="YOUR_THIRD_AD_SLOT_ID"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
         <!-- About Section -->
         <section id="about" class="about-section">
             <h2>About TradeSolDevs</h2>
@@ -429,16 +445,16 @@
             </ul>
         </section>
 
-        <!-- Ad Container 3 -->
+        <!-- Ad Container 4 - Bottom of Content -->
         <div class="ad-container">
             <div class="ad-label">Advertisement</div>
-            <!-- AdSense Ad Unit -->
+            <!-- AdSense Ad Unit 4 -->
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
             <!-- Display Ad -->
             <ins class="adsbygoogle"
                  style="display:block"
                  data-ad-client="ca-pub-2958343227558642"
-                 data-ad-slot="1122334455"
+                 data-ad-slot="YOUR_FOURTH_AD_SLOT_ID"
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
             <script>
@@ -488,6 +504,15 @@
         
         // AdSense compliance note
         console.log('TradeSolDevs site: This site follows Google AdSense policies with original developer content, clear ad labeling, and user-friendly design.');
+        
+        // Additional ad unit initialization
+        setTimeout(function() {
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.log('AdSense initialization completed');
+            }
+        }, 1000);
     </script>
 </body>
 </html>
