@@ -95,6 +95,28 @@
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
         }
         
+        /* GitHub Button in Header */
+        .github-button {
+            background: #24292e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+        
+        .github-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(36, 41, 46, 0.3);
+            background: #2d3339;
+        }
+        
         /* Main Content */
         main {
             padding: 3rem 0;
@@ -137,6 +159,11 @@
         
         .music-icon {
             background: linear-gradient(135deg, #8a2387, #f27121);
+            color: white;
+        }
+        
+        .github-icon {
+            background: linear-gradient(135deg, #24292e, #3c4349);
             color: white;
         }
         
@@ -183,6 +210,41 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 500;
+        }
+        
+        /* GitHub Section */
+        .github-section {
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 1px solid #30363d;
+        }
+        
+        .github-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            border: 1px solid #30363d;
+        }
+        
+        .github-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.08);
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            border: 1px solid #30363d;
         }
         
         /* Music & Media Section */
@@ -326,16 +388,22 @@
         .social-links {
             display: flex;
             gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .social-links a {
             color: white;
             text-decoration: none;
             transition: opacity 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
         }
         
         .social-links a:hover {
             opacity: 0.8;
+            background: rgba(255,255,255,0.2);
         }
         
         .copyright {
@@ -346,7 +414,7 @@
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            .project-section, .about-section, .contact-section, .media-section {
+            .project-section, .about-section, .contact-section, .media-section, .github-section {
                 padding: 1.5rem;
             }
             
@@ -367,8 +435,16 @@
                 font-size: 2rem;
             }
             
-            .contact-button {
+            .contact-button, .github-button {
                 margin-left: 0;
+                margin-top: 1rem;
+                width: 100%;
+            }
+            
+            .header-buttons {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
                 margin-top: 1rem;
             }
         }
@@ -393,10 +469,16 @@
                     <h1 class="logo">TradeSolDevs</h1>
                     <p class="tagline">Innovative Software Development & AI-Generated Music</p>
                 </div>
-                <button class="contact-button" onclick="location.href='#contact'">Contact Us</button>
+                <div class="header-buttons" style="display: flex; gap: 1rem;">
+                    <button class="github-button" onclick="window.open('https://github.com/TradeSolutionsDevelopment', '_blank')">
+                        <span>⭐</span> GitHub
+                    </button>
+                    <button class="contact-button" onclick="location.href='#contact'">Contact Us</button>
+                </div>
             </div>
             <nav>
                 <ul>
+                    <li><a href="#github">GitHub</a></li>
                     <li><a href="#trading-bot">Trading Bot</a></li>
                     <li><a href="#music-app">Music App</a></li>
                     <li><a href="#media">Music & Media</a></li>
@@ -420,6 +502,81 @@
                  data-ad-format="fluid"
                  data-ad-client="ca-pub-2958343227558642"
                  data-ad-slot="YOUR_FIRST_AD_SLOT_ID"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <!-- GitHub Section -->
+        <section id="github" class="github-section">
+            <div class="project-header">
+                <div class="project-icon github-icon">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="project-title" style="color: white;">GitHub Repository</h2>
+                    <p class="project-subtitle" style="color: #c9d1d9;">Open-source projects, code samples, and development resources</p>
+                </div>
+            </div>
+            
+            <p style="color: #c9d1d9; font-size: 1.1rem;">Explore our main GitHub repository containing development projects, code samples, and open-source contributions.</p>
+            
+            <div class="github-card">
+                <h3 style="margin-bottom: 1rem; color: white;">TradeSolutionsDevelopment</h3>
+                <p style="color: #8b949e; margin-bottom: 1.5rem;">Our primary GitHub organization for all software development projects</p>
+                
+                <div style="margin: 2rem 0;">
+                    <a href="https://github.com/TradeSolutionsDevelopment" target="_blank" rel="noopener noreferrer" 
+                       style="background: #238636; color: white; padding: 0.8rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 500; display: inline-block; transition: background 0.3s;">
+                        Visit GitHub Repository
+                    </a>
+                </div>
+                
+                <div class="github-stats">
+                    <div class="stat-item">
+                        <div style="font-size: 1.5rem; font-weight: bold;">🚀</div>
+                        <div>Active Development</div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="font-size: 1.5rem; font-weight: bold;">🔓</div>
+                        <div>Open Source</div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="font-size: 1.5rem; font-weight: bold;">📦</div>
+                        <div>Multiple Projects</div>
+                    </div>
+                    <div class="stat-item">
+                        <div style="font-size: 1.5rem; font-weight: bold;">🔄</div>
+                        <div>Regular Updates</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #30363d;">
+                <h4 style="color: white; margin-bottom: 1rem;">📁 Repository Contents:</h4>
+                <ul style="color: #c9d1d9; margin-left: 1.5rem;">
+                    <li>Trading bot algorithms and strategies</li>
+                    <li>Music application source code</li>
+                    <li>AI/ML models and implementations</li>
+                    <li>Web development projects</li>
+                    <li>API integrations and utilities</li>
+                    <li>Documentation and tutorials</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Ad Container 2 - Between Sections -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <!-- AdSense Ad Unit 2 -->
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="autorelaxed"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="YOUR_SECOND_AD_SLOT_ID"></ins>
             <script>
                  (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
@@ -470,21 +627,6 @@
                 <span class="tech-tag">WebSockets</span>
             </div>
         </section>
-
-        <!-- Ad Container 2 - Between Projects -->
-        <div class="ad-container">
-            <div class="ad-label">Advertisement</div>
-            <!-- AdSense Ad Unit 2 -->
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-format="autorelaxed"
-                 data-ad-client="ca-pub-2958343227558642"
-                 data-ad-slot="YOUR_SECOND_AD_SLOT_ID"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
 
         <!-- Music App Project -->
         <section id="music-app" class="project-section">
@@ -663,12 +805,15 @@
             
             <p class="mt-2">Our music division creates royalty-free AI-generated music mixtapes that are free for everyone to use in their projects. We believe in making creative resources accessible to all.</p>
             
+            <p class="mt-2">All our code is open-source and available on <a href="https://github.com/TradeSolutionsDevelopment" target="_blank" rel="noopener noreferrer" style="color: #3498db; font-weight: 500;">GitHub</a>. We believe in transparency and community collaboration.</p>
+            
             <p class="mt-2">Our approach focuses on:</p>
             <ul style="margin-left: 1.5rem; margin-top: 1rem;">
                 <li><strong>Quality Code:</strong> Clean, maintainable, and well-documented codebases</li>
                 <li><strong>User Experience:</strong> Intuitive interfaces and seamless interactions</li>
                 <li><strong>Scalability:</strong> Architecture designed for growth and performance</li>
                 <li><strong>Accessibility:</strong> Making creative resources available to everyone</li>
+                <li><strong>Open Source:</strong> Sharing knowledge and code with the community</li>
                 <li><strong>Innovation:</strong> Leveraging cutting-edge technologies to solve real problems</li>
             </ul>
         </section>
@@ -680,6 +825,13 @@
             
             <div class="contact-email">
                 📧 Email: <a href="mailto:tradesoldev@proton.me" class="email-link">tradesoldev@proton.me</a>
+            </div>
+            
+            <div style="margin: 1.5rem 0;">
+                <a href="https://github.com/TradeSolutionsDevelopment" target="_blank" rel="noopener noreferrer" 
+                   style="background: #24292e; color: white; padding: 0.8rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 500; display: inline-block; margin-right: 1rem;">
+                    <span>⭐</span> Visit GitHub
+                </a>
             </div>
             
             <p class="mt-2">We typically respond within 24-48 hours. Whether you're looking for collaboration, have questions about our mixtapes, or need custom software solutions, feel free to reach out.</p>
@@ -715,10 +867,21 @@
                 <p>Professional Software Development & Royalty-Free AI Music</p>
                 
                 <div class="social-links">
-                    <a href="https://github.com/TradeSolDevs" target="_blank" rel="noopener noreferrer">GitHub</a>
-                    <a href="mailto:tradesoldev@proton.me">Email</a>
-                    <a href="https://x.com/TSolD_projects" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
-                    <a href="https://rumble.com/user/TSolD/live" target="_blank" rel="noopener noreferrer">Rumble</a>
+                    <a href="https://github.com/TradeSolutionsDevelopment" target="_blank" rel="noopener noreferrer">
+                        <span>⭐</span> GitHub
+                    </a>
+                    <a href="mailto:tradesoldev@proton.me">
+                        <span>📧</span> Email
+                    </a>
+                    <a href="https://x.com/TSolD_projects" target="_blank" rel="noopener noreferrer">
+                        <span>🐦</span> X (Twitter)
+                    </a>
+                    <a href="https://rumble.com/user/TSolD/live" target="_blank" rel="noopener noreferrer">
+                        <span>🎬</span> Rumble
+                    </a>
+                    <a href="https://soundcloud.com/tradesoldev" target="_blank" rel="noopener noreferrer">
+                        <span>🎶</span> SoundCloud
+                    </a>
                 </div>
                 
                 <div class="contact-email" style="background: rgba(255,255,255,0.1); border: none;">
@@ -742,9 +905,9 @@
         (adsbygoogle = window.adsbygoogle || []).push({});
         
         // Smooth scrolling for navigation links
-        document.querySelectorAll('nav a, .contact-button').forEach(element => {
+        document.querySelectorAll('nav a, .contact-button, .github-button').forEach(element => {
             element.addEventListener('click', function(e) {
-                if (this.getAttribute('href')) {
+                if (this.getAttribute('href') && !this.classList.contains('github-button')) {
                     e.preventDefault();
                     const targetId = this.getAttribute('href');
                     const targetElement = document.querySelector(targetId);
@@ -766,6 +929,17 @@
                 if (!confirm('Open email client to contact tradesoldev@proton.me?')) {
                     e.preventDefault();
                 }
+            });
+        });
+        
+        // GitHub button animation
+        const githubButtons = document.querySelectorAll('.github-button, [href*="github"]');
+        githubButtons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
             });
         });
         
