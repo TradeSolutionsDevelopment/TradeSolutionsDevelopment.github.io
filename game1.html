@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>8-bit COMMANDO · HUGE PLAYER · ANALOG STICK · NO FULLSCREEN</title>
-    <meta name="description" content="GameBoy style. Double‑size soldier, virtual joystick, 6 enemies, 5 power‑ups. Pixel perfect.">
+    <title>8-bit COMMANDO · 6 EPIC LEVELS · HOLD JUMP = DOUBLE</title>
+    <meta name="description" content="6 unique worlds, auto double‑jump on hold, analog stick, huge sprites. Pixel perfect.">
     <style>
         * {
             margin: 0;
@@ -32,7 +32,6 @@
             border-bottom: 8px solid #2d5662;
             max-width: 1000px;
             width: 100%;
-            height: auto;
             margin: auto;
             display: flex;
             flex-direction: column;
@@ -80,6 +79,20 @@
             margin-left: 6px;
             font-size: clamp(14px, 4vw, 20px);
         }
+        .health {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #10262e;
+            padding: 4px 12px;
+            border-radius: 30px;
+            border-bottom: 4px solid #308595;
+            color: #fdffb8;
+        }
+        .health span {
+            font-size: 24px;
+            margin-left: 4px;
+        }
         .btn {
             background: #cf4e5c;
             color: white;
@@ -113,14 +126,7 @@
             justify-content: center;
             margin-top: 10px;
         }
-        .health {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .health span { font-size: 24px; }
-
-        /* ----------  TOUCH CONTROLS – ANALOG STICK (LEFT) + AB (CENTERED) – NO FULLSCREEN ---------- */
+        /* Touch controls – analog stick + AB – NO FULLSCREEN */
         .touch-controls {
             display: none;
             margin-top: 15px;
@@ -133,7 +139,6 @@
             border-bottom: 8px solid #16333a;
             touch-action: none;
         }
-        /* virtual analog stick container – clean, no arrows */
         .joystick {
             width: 140px;
             height: 140px;
@@ -166,7 +171,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 0;          /* remove any text */
+            font-size: 0;
             color: transparent;
             box-shadow: inset 0 -2px 0 #3a555e;
             transition: 0.02s;
@@ -175,15 +180,10 @@
             top: 0;
             touch-action: none;
         }
-        .joystick-handle:active {
-            border-bottom-width: 2px;
-            transform: translateY(4px);
-        }
-        /* AB buttons – centered */
         .ab-buttons {
             display: flex;
             gap: 15px;
-            margin-left: 0;       /* natural centering */
+            margin-left: 0;
             margin-right: auto;
             padding-left: 10px;
         }
@@ -208,12 +208,6 @@
             transform: translateY(5px);
             background: #c05e72;
         }
-        /* fullscreen toggle – HIDDEN ON MOBILE (removed) */
-        .fullscreen-toggle {
-            display: none;   /* completely removed – no fullscreen button */
-        }
-
-        /* Show touch controls only on narrow screens – no fullscreen, clean joystick */
         @media (max-width: 900px) {
             .touch-controls {
                 display: flex !important;
@@ -239,24 +233,6 @@
                 font-size: 26px;
             }
         }
-
-        /* Fullscreen – still usable if requested via browser, but no button */
-        .arcade-cabinet:fullscreen {
-            max-width: 100%;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: #0f1e24;
-            border-radius: 0;
-            padding: 10px;
-        }
-        .arcade-cabinet:fullscreen canvas {
-            max-height: 60vh;
-            width: auto;
-            max-width: 95%;
-        }
     </style>
 </head>
 <body>
@@ -266,32 +242,30 @@
     <div class="panel">
         <div class="scores">🎯 <span id="scoreDisplay">00000</span></div>
         <div class="scores">🏆 <span id="highScoreDisplay">00000</span></div>
+        <!-- HEALTH BAR – always visible in panel -->
+        <div class="health">❤️ <span id="healthDisplay">██████</span></div>
         <button class="btn" id="restartButton">↻ RESTART</button>
     </div>
     
     <!-- Desktop legend (hidden on mobile) -->
     <div class="legend">
         <span><i>← →</i> MOVE</span>
-        <span><i>↑ / SPACE</i> DOUBLE JUMP</span>
+        <span><i>↑ / SPACE</i> HOLD = DOUBLE JUMP</span>
         <span><i>Z</i> FIRE  &nbsp; <i>X</i> BOMB</span>
-        <div class="health">❤️ <span id="healthDisplay">██████</span></div>
-        <span id="levelDisplay">LVL 1</span>
+        <span id="levelDisplay">LVL 1 · JUNGLE</span>
     </div>
 
-    <!-- ========== TOUCH CONTROLS – CLEAN ANALOG STICK + AB BUTTONS ========== -->
+    <!-- TOUCH CONTROLS – analog stick + AB -->
     <div class="touch-controls" id="touchControls">
-        <!-- Left: virtual analog stick – no arrows, just a smooth puck -->
         <div class="joystick" id="joystickContainer">
             <div class="joystick-base" id="joystickBase">
-                <div class="joystick-handle" id="joystickHandle"></div> <!-- no text -->
+                <div class="joystick-handle" id="joystickHandle"></div>
             </div>
         </div>
-        <!-- AB buttons – centered -->
         <div class="ab-buttons">
             <div class="ab" id="touchFire">FIRE</div>
             <div class="ab" id="touchBomb">BOMB</div>
         </div>
-        <!-- NO FULLSCREEN BUTTON – removed -->
     </div>
 </div>
 
@@ -304,8 +278,9 @@
         if (!ctx) return;
         ctx.imageSmoothingEnabled = false;
 
-        // ----------  WORLD & CAMERA ----------
-        const WORLD_WIDTH = 3200;
+        // ----------  WORLD & CAMERA – now 6x longer! ----------
+        const BASE_WIDTH = 5000;      // each level is 5000px wide
+        let WORLD_WIDTH = BASE_WIDTH;
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
         const GROUND_Y = 460;
         let cameraX = 0;
@@ -315,14 +290,14 @@
         let gameOver = false;
         let victoryFlag = false;
         let currentLevel = 1;
-        const MAX_LEVEL = 3;
+        const MAX_LEVEL = 6;         // 6 EPIC LEVELS
         let frame = 0;
         let animFrameId = null;
 
         // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
-        try { highScore = localStorage.getItem('commandoElite') ? parseInt(localStorage.getItem('commandoElite')) : 0; } catch(e) { highScore = 0; }
+        try { highScore = localStorage.getItem('commandoElite6') ? parseInt(localStorage.getItem('commandoElite6')) : 0; } catch(e) { highScore = 0; }
         let playerHealth = 6;
         const MAX_HEALTH = 6;
 
@@ -346,6 +321,8 @@
             doubleJumpUsed: false,
             coyoteTime: 0,
             jumpBuffer: 0,
+            jumpHoldTime: 0,         // for auto double jump on hold
+            autoDoubleTriggered: false,
             facing: 1,
             walkCycle: 0,
             shootTimer: 0,
@@ -353,11 +330,12 @@
             bombCooldown: 0,
         };
 
-        // ----------  LEVEL DESIGN ----------
+        // ----------  LEVEL DESIGN – 6 UNIQUE THEMES ----------
         let platforms = [];
         let enemySpawners = [];
         let exitDoor = null;
         let levelName = "";
+        let levelTheme = "";
 
         // ----------  DYNAMIC ENTITIES ----------
         let bullets = [];
@@ -372,59 +350,116 @@
         // ----------  KEYBOARD STATE ----------
         const keys = { left: false, right: false, jump: false, fire: false, bomb: false, down: false, up: false };
 
-        // ----------  LEVEL DEFINITIONS – platforms lowered ----------
+        // ----------  LEVEL GENERATORS – 6x LONG, 6 THEMES ----------
         function buildLevel(level) {
             platforms = []; enemySpawners = []; exitDoor = null;
+            WORLD_WIDTH = BASE_WIDTH; // each level is 5000px
+
+            // ----- THEME 1: JUNGLE (green, waterfalls) -----
             if (level === 1) {
                 levelName = "FORGOTTEN JUNGLE";
-                platforms = [
-                    { x: 400, y: 390, w: 120, h: 14 }, { x: 650, y: 330, w: 100, h: 14 },
-                    { x: 920, y: 370, w: 110, h: 14 }, { x: 1200, y: 310, w: 120, h: 14 },
-                    { x: 1500, y: 350, w: 110, h: 14 }, { x: 1820, y: 290, w: 130, h: 14 },
-                    { x: 2180, y: 400, w: 100, h: 14 }, { x: 2500, y: 330, w: 140, h: 14 }
-                ];
-                enemySpawners = [
-                    { x: 550, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 950, type: 'drone', side: 'left', behavior: 'swoop' },
-                    { x: 1350, type: 'sniper', side: 'right', behavior: 'aim' },
-                    { x: 1850, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 2300, type: 'jumper', side: 'left', behavior: 'leap' }
-                ];
-                exitDoor = { x: 2800, y: GROUND_Y - 60 };
-            } else if (level === 2) {
+                levelTheme = "jungle";
+                // platforms – spaced for double jump, 5000px wide
+                for (let i=0; i<20; i++) {
+                    let x = 300 + i * 220;
+                    let y = 390 + (i%3===0 ? -30 : (i%2===0 ? 20 : -20));
+                    platforms.push({ x, y: Math.min(420, Math.max(300, y)), w: 120, h: 14 });
+                }
+                // enemy spawners – from both sides
+                for (let i=0; i<25; i++) {
+                    let x = 600 + i * 180;
+                    let type = ['infantry','drone','sniper','heavy','jumper'][Math.floor(Math.random()*5)];
+                    let side = Math.random()<0.5 ? 'left' : 'right';
+                    enemySpawners.push({ x, type, side, behavior: type==='infantry'?'flank':(type==='drone'?'swoop':(type==='sniper'?'aim':(type==='jumper'?'leap':'block'))) });
+                }
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
+            }
+            // ----- THEME 2: FACTORY (grey, conveyors, steam) -----
+            else if (level === 2) {
                 levelName = "MACHINE COMPLEX";
-                platforms = [
-                    { x: 380, y: 330, w: 120, h: 14 }, { x: 620, y: 270, w: 100, h: 14 },
-                    { x: 860, y: 390, w: 110, h: 14 }, { x: 1120, y: 230, w: 120, h: 14 },
-                    { x: 1400, y: 350, w: 110, h: 14 }, { x: 1720, y: 290, w: 130, h: 14 },
-                    { x: 2080, y: 400, w: 100, h: 14 }, { x: 2400, y: 250, w: 140, h: 14 }
-                ];
-                enemySpawners = [
-                    { x: 520, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 780, type: 'sniper', side: 'left', behavior: 'aim' },
-                    { x: 1150, type: 'drone', side: 'right', behavior: 'swoop' },
-                    { x: 1550, type: 'jumper', side: 'left', behavior: 'leap' },
-                    { x: 1950, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 2450, type: 'boss_lieutenant', side: 'right', behavior: 'command' }
-                ];
-                exitDoor = { x: 2900, y: GROUND_Y - 60 };
-            } else if (level === 3) {
-                levelName = "HELL HANGAR";
-                platforms = [
-                    { x: 440, y: 370, w: 140, h: 14 }, { x: 720, y: 290, w: 120, h: 14 },
-                    { x: 1000, y: 230, w: 120, h: 14 }, { x: 1300, y: 350, w: 110, h: 14 },
-                    { x: 1640, y: 290, w: 130, h: 14 }, { x: 2000, y: 400, w: 100, h: 14 },
-                    { x: 2350, y: 250, w: 140, h: 14 }
-                ];
-                enemySpawners = [
-                    { x: 580, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 840, type: 'sniper', side: 'left', behavior: 'aim' },
-                    { x: 1150, type: 'drone', side: 'right', behavior: 'swoop' },
-                    { x: 1500, type: 'jumper', side: 'left', behavior: 'leap' },
-                    { x: 1880, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 2300, type: 'boss', side: 'right', behavior: 'final' }
-                ];
-                exitDoor = { x: 2800, y: GROUND_Y - 60 };
+                levelTheme = "factory";
+                for (let i=0; i<22; i++) {
+                    let x = 300 + i * 210;
+                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : 0));
+                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
+                }
+                for (let i=0; i<28; i++) {
+                    let x = 500 + i * 170;
+                    let type = ['heavy','infantry','sniper','drone'][Math.floor(Math.random()*4)];
+                    let side = Math.random()<0.6 ? 'right' : 'left';
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='sniper'?'aim':'swoop')) });
+                }
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
+            }
+            // ----- THEME 3: ALIEN (purple, bioluminescent) -----
+            else if (level === 3) {
+                levelName = "ALIEN NEXUS";
+                levelTheme = "alien";
+                for (let i=0; i<24; i++) {
+                    let x = 350 + i * 200;
+                    let y = 350 + Math.sin(i*0.5)*40;
+                    platforms.push({ x, y, w: 110, h: 12 });
+                }
+                for (let i=0; i<30; i++) {
+                    let x = 400 + i * 160;
+                    let type = ['drone','jumper','infantry','sniper'][Math.floor(Math.random()*4)];
+                    let side = Math.random()<0.5 ? 'left' : 'right';
+                    enemySpawners.push({ x, type, side, behavior: type==='drone'?'swoop':(type==='jumper'?'leap':(type==='sniper'?'aim':'flank')) });
+                }
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
+            }
+            // ----- THEME 4: ICE (blue, slippery) -----
+            else if (level === 4) {
+                levelName = "GLACIAL PEAK";
+                levelTheme = "ice";
+                for (let i=0; i<26; i++) {
+                    let x = 300 + i * 190;
+                    let y = 380 + (i%5===0 ? -50 : 20);
+                    platforms.push({ x, y: Math.min(400, Math.max(290, y)), w: 100, h: 12 });
+                }
+                for (let i=0; i<32; i++) {
+                    let x = 450 + i * 150;
+                    let type = ['sniper','heavy','infantry','jumper'][Math.floor(Math.random()*4)];
+                    let side = Math.random()<0.5 ? 'right' : 'left';
+                    enemySpawners.push({ x, type, side, behavior: type==='sniper'?'aim':(type==='heavy'?'block':(type==='jumper'?'leap':'flank')) });
+                }
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
+            }
+            // ----- THEME 5: VOLCANO (red, lava, rising heat) -----
+            else if (level === 5) {
+                levelName = "MOLTEN CORE";
+                levelTheme = "volcano";
+                for (let i=0; i<28; i++) {
+                    let x = 280 + i * 180;
+                    let y = 370 + (i%3===0 ? -60 : (i%2===0 ? 40 : -20));
+                    platforms.push({ x, y: Math.min(410, Math.max(260, y)), w: 120, h: 14 });
+                }
+                for (let i=0; i<35; i++) {
+                    let x = 500 + i * 140;
+                    let type = ['heavy','infantry','drone','jumper','sniper'][Math.floor(Math.random()*5)];
+                    let side = Math.random()<0.6 ? 'right' : 'left';
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='drone'?'swoop':(type==='jumper'?'leap':'aim'))) });
+                }
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
+            }
+            // ----- THEME 6: FORTRESS (dark, metallic) -----
+            else if (level === 6) {
+                levelName = "FINAL FORTRESS";
+                levelTheme = "fortress";
+                for (let i=0; i<30; i++) {
+                    let x = 320 + i * 160;
+                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : -20));
+                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
+                }
+                for (let i=0; i<38; i++) {
+                    let x = 400 + i * 130;
+                    let type = i % 5 === 0 ? 'boss_lieutenant' : (['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
+                    let side = Math.random()<0.5 ? 'right' : 'left';
+                    enemySpawners.push({ x, type, side, behavior: type==='boss_lieutenant'?'command':(type==='heavy'?'block':(type==='sniper'?'aim':(type==='jumper'?'leap':(type==='infantry'?'flank':'swoop')))) });
+                }
+                // final boss
+                enemySpawners.push({ x: WORLD_WIDTH - 400, type: 'boss', side: 'right', behavior: 'final' });
+                exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             }
         }
 
@@ -436,8 +471,9 @@
             spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
             player = {
                 x: 220, y: GROUND_Y - PLAYER_HEIGHT, vx: 0, vy: 0, onGround: false,
-                doubleJumpUsed: false, coyoteTime: 0, jumpBuffer: 0, facing: 1,
-                walkCycle: 0, shootTimer: 0, invincible: 0, bombCooldown: 0
+                doubleJumpUsed: false, coyoteTime: 0, jumpBuffer: 0, jumpHoldTime: 0,
+                autoDoubleTriggered: false,
+                facing: 1, walkCycle: 0, shootTimer: 0, invincible: 0, bombCooldown: 0
             };
             bullets = []; enemies = []; enemyBullets = []; explosions = []; pickups = [];
             dustEffects = []; sparks = []; screenShake = 0;
@@ -456,7 +492,7 @@
                 let healthBar = '';
                 for (let i=0; i<playerHealth; i++) healthBar += '█';
                 document.getElementById('healthDisplay').innerText = healthBar.padEnd(6, '░');
-                document.getElementById('levelDisplay').innerText = levelName;
+                document.getElementById('levelDisplay').innerText = `LVL ${currentLevel} · ${levelName}`;
             } catch(e) {}
         }
 
@@ -475,11 +511,12 @@
         function addDust(x, y) { dustEffects.push({ x, y, life: 12 }); }
         function addSparks(x, y) { sparks.push({ x, y, life: 10 }); }
 
-        // ----------  PLAYER UPDATE – analog movement ----------
+        // ----------  PLAYER UPDATE – AUTO DOUBLE JUMP ON HOLD ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
 
+            // power-up timers
             if (rapidTimer > 0) rapidTimer--; else rapidFire = false;
             if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
@@ -495,26 +532,42 @@
             if (player.x + PLAYER_WIDTH > WORLD_WIDTH - 20) player.x = WORLD_WIDTH - PLAYER_WIDTH - 20;
 
             // coyote time
-            if (player.onGround) { player.coyoteTime = 8; player.doubleJumpUsed = false; }
-            else player.coyoteTime--;
+            if (player.onGround) {
+                player.coyoteTime = 8;
+                player.doubleJumpUsed = false;
+                player.autoDoubleTriggered = false;
+                player.jumpHoldTime = 0;
+            } else {
+                player.coyoteTime--;
+            }
+
+            // jump buffer
             if (player.jumpBuffer > 0) player.jumpBuffer--;
 
-            // jump logic – triggered by joystick up or keyboard
-            let canJump = (player.onGround || player.coyoteTime > 0) && !player.doubleJumpUsed;
-            let canDoubleJump = !player.onGround && !player.doubleJumpUsed && player.coyoteTime <= 0;
-            if (player.jumpBuffer > 0) {
-                if (canJump) {
-                    player.vy = JUMP_FORCE;
-                    player.onGround = false;
-                    player.coyoteTime = 0;
-                    player.jumpBuffer = 0;
-                    addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
-                } else if (canDoubleJump) {
+            // --- AUTO DOUBLE JUMP ON HOLD ---
+            // If jump key is held and we are in air, double jump hasn't been used, and we haven't already triggered auto double,
+            // wait 10 frames (about 160ms) then automatically double jump.
+            if (keys.jump && !player.onGround && !player.doubleJumpUsed && !player.autoDoubleTriggered) {
+                player.jumpHoldTime++;
+                if (player.jumpHoldTime > 10) { // hold threshold
                     player.vy = JUMP_FORCE * 0.9;
                     player.doubleJumpUsed = true;
-                    player.jumpBuffer = 0;
+                    player.autoDoubleTriggered = true;
                     addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
+                    player.jumpHoldTime = 0;
                 }
+            } else {
+                player.jumpHoldTime = 0;
+            }
+
+            // normal jump (tap)
+            let canJump = (player.onGround || player.coyoteTime > 0) && !player.doubleJumpUsed;
+            if (player.jumpBuffer > 0 && canJump) {
+                player.vy = JUMP_FORCE;
+                player.onGround = false;
+                player.coyoteTime = 0;
+                player.jumpBuffer = 0;
+                addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
             }
 
             // gravity
@@ -528,6 +581,7 @@
                 player.vy = 0;
                 player.onGround = true;
                 player.doubleJumpUsed = false;
+                player.autoDoubleTriggered = false;
                 addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
             }
 
@@ -542,6 +596,7 @@
                         player.vy = 0;
                         player.onGround = true;
                         player.doubleJumpUsed = false;
+                        player.autoDoubleTriggered = false;
                         addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
                     }
                 }
@@ -592,7 +647,7 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN – slightly larger for visibility ----------
+        // ----------  ENEMY SPAWN (unchanged, but uses spawners from level) ----------
         function checkSpawners() {
             for (let i = enemySpawners.length - 1; i >= 0; i--) {
                 let s = enemySpawners[i];
@@ -653,7 +708,7 @@
             }
         }
 
-        // ----------  ENEMY UPDATE – with AI ----------
+        // ----------  ENEMY UPDATE (same AI, works) ----------
         function updateEnemies() {
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
@@ -704,7 +759,7 @@
             }
         }
 
-        // ----------  BULLETS ----------
+        // ----------  BULLETS (unchanged) ----------
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -720,7 +775,7 @@
                         addSparks(e.x + e.w/2, e.y + e.h/2);
                         if (e.health <= 0) {
                             score += e.points;
-                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoElite', highScore); } catch(e) {} }
+                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoElite6', highScore); } catch(e) {} }
                             explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
                             addShake(4);
                             if (Math.random() < 0.35) {
@@ -798,7 +853,7 @@
             }
         }
 
-        // ----------  EXIT – safe when no enemies ----------
+        // ----------  EXIT – safe only when no enemies ----------
         function checkExit() {
             if (exitDoor && player.x > exitDoor.x - 40 && enemies.length === 0) {
                 if (currentLevel < MAX_LEVEL) {
@@ -815,7 +870,7 @@
             }
         }
 
-        // ----------  RENDERING – HUGE PLAYER, ENHANCED GRAPHICS ----------
+        // ----------  RENDERING – 6 THEMES, ENHANCED GRAPHICS ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
@@ -824,34 +879,85 @@
             }
             ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
             
-            // Parallax sky with stars
             let bgOffset = cameraX * 0.2;
-            ctx.fillStyle = '#0f2a33'; ctx.fillRect(0, 0, VIEWPORT_W, 130);
-            ctx.fillStyle = '#1a414a'; ctx.fillRect(0, 130, VIEWPORT_W, 70);
-            ctx.fillStyle = '#25555f'; ctx.fillRect(0, 200, VIEWPORT_W, 60);
-            // stars
-            ctx.fillStyle = '#cde3e6';
-            for (let i=0;i<20;i++) {
-                let x = (i*90 + frame*0.2) % 800;
-                let y = (i*23) % 120;
-                ctx.fillRect(x, y, 2, 2);
+
+            // ----- THEMED BACKGROUND -----
+            if (levelTheme === 'jungle') {
+                ctx.fillStyle = '#0f2a33'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#1a4a3a'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#2a6b4a'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // waterfalls
+                ctx.fillStyle = '#48a5b0';
+                for (let i=0;i<10;i++) {
+                    let x = (i*150 - bgOffset) % 1000 - 100;
+                    ctx.fillRect(x, 200, 4, 70);
+                }
+                // leaves
+                ctx.fillStyle = '#3e8a5e';
+                for (let i=0;i<15;i++) {
+                    let x = (i*90 + bgOffset) % 800;
+                    ctx.fillRect(x, 150, 10, 8);
+                }
+            } else if (levelTheme === 'factory') {
+                ctx.fillStyle = '#2a3a3a'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#3e4f4f'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#4f6363'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // steam
+                ctx.fillStyle = '#a0c0c0';
+                for (let i=0;i<8;i++) {
+                    let x = (i*200 + frame) % 900;
+                    ctx.fillRect(x, 180, 6, 20);
+                }
+                // conveyors
+                ctx.fillStyle = '#6d7a7a';
+                for (let i=0;i<12;i++) {
+                    let x = (i*120 + bgOffset) % 800;
+                    ctx.fillRect(x, 390, 30, 8);
+                }
+            } else if (levelTheme === 'alien') {
+                ctx.fillStyle = '#1f2a4a'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#2f3a6a'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#3f4a8a'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // bioluminescent dots
+                ctx.fillStyle = '#b0a0ff';
+                for (let i=0;i<20;i++) {
+                    let x = (i*70 + frame*0.5) % 800;
+                    let y = 100 + (i%5)*30;
+                    ctx.fillRect(x, y, 3, 3);
+                }
+            } else if (levelTheme === 'ice') {
+                ctx.fillStyle = '#a0c8d0'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#80b0c0'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#6098a8'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // icicles
+                ctx.fillStyle = '#e0f0ff';
+                for (let i=0;i<12;i++) {
+                    let x = (i*130 + bgOffset*0.8) % 800;
+                    ctx.fillRect(x, 180, 4, 20);
+                }
+            } else if (levelTheme === 'volcano') {
+                ctx.fillStyle = '#4a1f1f'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#6a2f2f'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#8a3f3f'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // lava glow
+                ctx.fillStyle = '#ff6f4f';
+                for (let i=0;i<15;i++) {
+                    let x = (i*100 + frame) % 800;
+                    ctx.fillRect(x, 400, 12, 6);
+                }
+            } else if (levelTheme === 'fortress') {
+                ctx.fillStyle = '#1a1a2a'; ctx.fillRect(0,0,VIEWPORT_W,130);
+                ctx.fillStyle = '#2a2a3a'; ctx.fillRect(0,130,VIEWPORT_W,70);
+                ctx.fillStyle = '#3a3a4a'; ctx.fillRect(0,200,VIEWPORT_W,60);
+                // battlements
+                ctx.fillStyle = '#5a5a6a';
+                for (let i=0;i<10;i++) {
+                    let x = (i*150 - bgOffset*0.5) % 800;
+                    ctx.fillRect(x, 250, 20, 20);
+                }
             }
-            // waterfall
-            ctx.fillStyle = '#48a5b0';
-            for (let i=0;i<8;i++) {
-                let x = (i*150 - bgOffset) % 1000 - 100;
-                ctx.fillRect(x, 200, 4, 70);
-            }
-            // hills
-            ctx.fillStyle = '#2a6b4a';
-            for (let i=0;i<5;i++) {
-                let x = (i*250 - bgOffset*0.5) % 900 - 100;
-                ctx.beginPath();
-                ctx.moveTo(x, 320);
-                ctx.quadraticCurveTo(x+100, 230, x+200, 320);
-                ctx.fill();
-            }
-            // ground with texture
+
+            // ground (common)
             ctx.fillStyle = '#4b6a3b'; ctx.fillRect(0, GROUND_Y-6, VIEWPORT_W, 20);
             ctx.fillStyle = '#6d8f4d'; ctx.fillRect(0, GROUND_Y-2, VIEWPORT_W, 8);
             for (let i=0;i<30;i++) {
@@ -961,8 +1067,8 @@
                 // backpack
                 ctx.fillStyle = '#4d3e2e';
                 ctx.fillRect(px+30, py+12, 8, 14);
-                // double jump indicator (wings)
-                if (!player.onGround && !player.doubleJumpUsed) {
+                // double jump indicator (wings) – show when ready
+                if (!player.onGround && !player.doubleJumpUsed && !player.autoDoubleTriggered) {
                     ctx.fillStyle = '#ffe082';
                     ctx.fillRect(px-4, py, 6, 10);
                     ctx.fillRect(px+PLAYER_WIDTH-2, py, 6, 10);
@@ -974,7 +1080,7 @@
                 ctx.font = 'bold 24px "Courier New", monospace';
                 ctx.fillStyle = '#ffe082';
                 ctx.shadowBlur = 8; ctx.shadowColor = 'black';
-                ctx.fillText(levelName, 40, 90);
+                ctx.fillText(`${levelName}`, 40, 90);
                 ctx.shadowBlur = 0;
             }
             ctx.restore();
@@ -1044,14 +1150,13 @@
                 stick.style.left = dx + 'px';
                 stick.style.top = dy + 'px';
 
-                // set direction keys
                 keys.left = dx < -10;
                 keys.right = dx > 10;
                 if (dy < -10) {
-                    player.jumpBuffer = 10; // up triggers jump
-                    keys.up = true;
+                    keys.jump = true;   // hold jump
+                    player.jumpBuffer = 10;
                 } else {
-                    keys.up = false;
+                    keys.jump = false;
                 }
                 keys.down = dy > 10;
             }
@@ -1061,7 +1166,7 @@
                 active = false;
                 stick.style.left = '0px';
                 stick.style.top = '0px';
-                keys.left = false; keys.right = false; keys.up = false; keys.down = false;
+                keys.left = false; keys.right = false; keys.jump = false; keys.down = false;
             }
 
             container.addEventListener('touchstart', handleStart, { passive: false });
@@ -1080,6 +1185,7 @@
             function setKey(key, state, e) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
                 keys[key] = state;
+                if (key === 'jump' && state) player.jumpBuffer = 10;
             }
             if (touchFire) {
                 touchFire.addEventListener('touchstart', (e) => setKey('fire', true, e), { passive: false });
@@ -1095,14 +1201,18 @@
             }
         }
 
-        // ----------  KEYBOARD ----------
+        // ----------  KEYBOARD – HOLD JUMP = DOUBLE ----------
         function initKeyboard() {
             window.addEventListener('keydown', (e) => {
                 if (!gameActive) return;
                 switch(e.key) {
                     case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
                     case 'ArrowRight': keys.right = true; e.preventDefault(); break;
-                    case 'ArrowUp': case ' ': keys.jump = true; player.jumpBuffer = 10; e.preventDefault(); break;
+                    case 'ArrowUp': case ' ': 
+                        keys.jump = true; 
+                        player.jumpBuffer = 10; 
+                        e.preventDefault(); 
+                        break;
                     case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
                     case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
                 }
