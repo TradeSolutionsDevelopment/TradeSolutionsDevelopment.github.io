@@ -317,7 +317,7 @@
         const WORLD_SIZE = 2000;
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
         const PLAYER_WIDTH = 44, PLAYER_HEIGHT = 44;
-        const BASE_SPEED = 3.8;
+        const MOVE_SPEED = 3.8;
 
         // ------------------------------------------------------------
         //  GLOBAL STATE
@@ -331,7 +331,8 @@
         let animFrameId = null;
 
         let score = 0;
-        let highScore = localStorage.getItem('commandoEpic2') ? parseInt(localStorage.getItem('commandoEpic2')) : 0;
+        let highScore = 0;
+        try { highScore = localStorage.getItem('commandoWorking') ? parseInt(localStorage.getItem('commandoWorking')) : 0; } catch(e) { highScore = 0; }
         let playerHealth = 8;
         const MAX_HEALTH = 8;
 
@@ -386,7 +387,115 @@
         const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false };
 
         // ------------------------------------------------------------
-        //  LEVEL BUILDING – EPIC, DETAILED, AND 100% WORKING
+        //  LEVEL BUILDING HELPERS – DEFINED BEFORE USE (CRITICAL!)
+        // ------------------------------------------------------------
+        function addRoom(x, y, w, h, thickness) {
+            walls.push({ x, y, w, h: thickness }); // top
+            walls.push({ x, y + h - thickness, w, h: thickness }); // bottom
+            walls.push({ x, y, w: thickness, h }); // left
+            walls.push({ x + w - thickness, y, w: thickness, h }); // right
+        }
+        function addPillars(x, y, cols, rows, w, h) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (w + 30), y: y + j * (h + 30), w, h });
+                }
+            }
+        }
+        function addWallCluster(x, y, cols, rows, w, h) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
+                }
+            }
+        }
+        function addMaze(x, y, cols, rows, size) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    if (Math.random() < 0.5) {
+                        walls.push({ x: x + i * (size + 30), y: y + j * (size + 30), w: size, h: size });
+                    }
+                }
+            }
+        }
+        function addConveyorLine(x, y, length, width) {
+            for (let i = 0; i < length; i++) {
+                walls.push({ x: x + i * 50, y, w: 30, h: width });
+            }
+        }
+        function addGrid(x, y, cols, rows, w, h, thickness) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    addRoom(x + i * (w + 20), y + j * (h + 20), w, h, thickness);
+                }
+            }
+        }
+        function addOrganicCluster(x, y, count, size) {
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * 2 * Math.PI;
+                let dist = Math.random() * 100;
+                let nx = x + Math.cos(angle) * dist;
+                let ny = y + Math.sin(angle) * dist;
+                walls.push({ x: nx, y: ny, w: size, h: size });
+            }
+        }
+        function addAlienHive(x, y, cols, rows, size) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (size + 20) + Math.sin(i) * 10, y: y + j * (size + 20) + Math.cos(j) * 10, w: size, h: size });
+                }
+            }
+        }
+        function addIceFortress(x, y, cols, rows, w, h) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (w + 30), y: y + j * (h + 30), w, h });
+                }
+            }
+        }
+        function addFrozenLake(x, y, w, h) {
+            decorations.push({ x, y, w, h, type: 'ice_lake' });
+        }
+        function addIceCave(x, y, count, size) {
+            for (let i = 0; i < count; i++) {
+                walls.push({ x: x + Math.random() * 200, y: y + Math.random() * 200, w: size, h: size });
+            }
+        }
+        function addLavaPit(x, y, w, h) {
+            walls.push({ x, y, w, h: 15 }); // top
+            walls.push({ x, y + h - 15, w, h: 15 }); // bottom
+            walls.push({ x, y, w: 15, h }); // left
+            walls.push({ x + w - 15, y, w: 15, h }); // right
+            decorations.push({ x: x + 15, y: y + 15, w: w - 30, h: h - 30, type: 'lava' });
+        }
+        function addStoneBridge(x, y, w, h) {
+            walls.push({ x, y, w, h });
+        }
+        function addObsidianWalls(x, y, cols, rows, w, h) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
+                }
+            }
+        }
+        function addFortressWall(x, y, cols, rows, w, h) {
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
+                }
+            }
+        }
+        function addBossArena(x, y, w, h, thickness) {
+            addRoom(x, y, w, h, thickness);
+        }
+        function spawnWave(x, y, type, count) {
+            for (let i = 0; i < count; i++) {
+                enemySpawners.push({ x: x + Math.random() * 100, y: y + Math.random() * 100, type, behavior: 'patrol' });
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  LEVEL BUILDING – EPIC, DETAILED, AND 100% SAFE
         // ------------------------------------------------------------
         function buildLevel(level) {
             walls = [];
@@ -405,26 +514,18 @@
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
                 
-                // Entrance temple
                 addRoom(300, 300, 200, 150, 20);
-                // Central ruins
                 addRoom(600, 400, 250, 200, 25);
                 addPillars(650, 450, 2, 2, 40, 40);
-                // Hidden alcove
                 addRoom(1100, 200, 120, 120, 15);
-                // Enemy barracks
                 addWallCluster(800, 700, 2, 2, 60, 60);
-                // Maze section
                 addMaze(1300, 500, 3, 3, 60);
-                // Boss arena
                 addBossArena(1600, 1600, 200, 200, 30);
                 
-                // Decorations
                 for (let i = 0; i < 50; i++) {
                     decorations.push({ x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE, type: 'tree' });
                 }
                 
-                // Enemy spawns – strategic placement
                 spawnWave(350, 350, 'infantry', 3);
                 spawnWave(700, 500, 'drone', 3);
                 spawnWave(900, 750, 'sniper', 2);
@@ -564,112 +665,6 @@
             }
         }
 
-        // ----------  LEVEL BUILDING HELPERS – ALL DEFINED AND SAFE ----------
-        function addRoom(x, y, w, h, thickness) {
-            walls.push({ x, y, w, h: thickness }); // top
-            walls.push({ x, y + h - thickness, w, h: thickness }); // bottom
-            walls.push({ x, y, w: thickness, h }); // left
-            walls.push({ x + w - thickness, y, w: thickness, h }); // right
-        }
-        function addPillars(x, y, cols, rows, w, h) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (w + 30), y: y + j * (h + 30), w, h });
-                }
-            }
-        }
-        function addWallCluster(x, y, cols, rows, w, h) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
-                }
-            }
-        }
-        function addMaze(x, y, cols, rows, size) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    if (Math.random() < 0.5) {
-                        walls.push({ x: x + i * (size + 30), y: y + j * (size + 30), w: size, h: size });
-                    }
-                }
-            }
-        }
-        function addConveyorLine(x, y, length, width) {
-            for (let i = 0; i < length; i++) {
-                walls.push({ x: x + i * 50, y, w: 30, h: width });
-            }
-        }
-        function addGrid(x, y, cols, rows, w, h, thickness) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    addRoom(x + i * (w + 20), y + j * (h + 20), w, h, thickness);
-                }
-            }
-        }
-        function addOrganicCluster(x, y, count, size) {
-            for (let i = 0; i < count; i++) {
-                let angle = Math.random() * 2 * Math.PI;
-                let dist = Math.random() * 100;
-                let nx = x + Math.cos(angle) * dist;
-                let ny = y + Math.sin(angle) * dist;
-                walls.push({ x: nx, y: ny, w: size, h: size });
-            }
-        }
-        function addAlienHive(x, y, cols, rows, size) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (size + 20) + Math.sin(i) * 10, y: y + j * (size + 20) + Math.cos(j) * 10, w: size, h: size });
-                }
-            }
-        }
-        function addIceFortress(x, y, cols, rows, w, h) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (w + 30), y: y + j * (h + 30), w, h });
-                }
-            }
-        }
-        function addFrozenLake(x, y, w, h) {
-            decorations.push({ x, y, w, h, type: 'ice_lake' });
-        }
-        function addIceCave(x, y, count, size) {
-            for (let i = 0; i < count; i++) {
-                walls.push({ x: x + Math.random() * 200, y: y + Math.random() * 200, w: size, h: size });
-            }
-        }
-        function addLavaPit(x, y, w, h) {
-            walls.push({ x, y, w, h: 15 }); // top
-            walls.push({ x, y + h - 15, w, h: 15 }); // bottom
-            walls.push({ x, y, w: 15, h }); // left
-            walls.push({ x + w - 15, y, w: 15, h }); // right
-            decorations.push({ x: x + 15, y: y + 15, w: w - 30, h: h - 30, type: 'lava' });
-        }
-        function addStoneBridge(x, y, w, h) {
-            walls.push({ x, y, w, h });
-        }
-        function addObsidianWalls(x, y, cols, rows, w, h) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
-                }
-            }
-        }
-        function addFortressWall(x, y, cols, rows, w, h) {
-            for (let i = 0; i < cols; i++) {
-                for (let j = 0; j < rows; j++) {
-                    walls.push({ x: x + i * (w + 20), y: y + j * (h + 20), w, h });
-                }
-            }
-        }
-        function addBossArena(x, y, w, h, thickness) {
-            addRoom(x, y, w, h, thickness);
-        }
-        function spawnWave(x, y, type, count) {
-            for (let i = 0; i < count; i++) {
-                enemySpawners.push({ x: x + Math.random() * 100, y: y + Math.random() * 100, type, behavior: 'patrol' });
-            }
-        }
-
         // ------------------------------------------------------------
         //  RESET GAME
         // ------------------------------------------------------------
@@ -747,10 +742,10 @@
         function handleWallCollision(entity, w, h) {
             for (let wall of walls) {
                 if (collides({ x: entity.x, y: entity.y, w, h }, wall)) {
-                    let dx = (entity.x + w / 2) - (wall.x + wall.w / 2);
-                    let dy = (entity.y + h / 2) - (wall.y + wall.h / 2);
-                    let overlapX = (w / 2 + wall.w / 2) - Math.abs(dx);
-                    let overlapY = (h / 2 + wall.h / 2) - Math.abs(dy);
+                    let dx = (entity.x + w/2) - (wall.x + wall.w/2);
+                    let dy = (entity.y + h/2) - (wall.y + wall.h/2);
+                    let overlapX = (w/2 + wall.w/2) - Math.abs(dx);
+                    let overlapY = (h/2 + wall.h/2) - Math.abs(dy);
                     if (overlapX < overlapY) {
                         entity.x += dx > 0 ? overlapX : -overlapX;
                     } else {
@@ -809,7 +804,7 @@
             if (speedTimer > 0) speedTimer--; else speedBoost = false;
             if (slowTimer > 0) slowTimer--; else timeSlow = false;
 
-            let currentSpeed = BASE_SPEED * (speedBoost ? 1.6 : 1.0);
+            let currentSpeed = MOVE_SPEED * (speedBoost ? 1.6 : 1.0);
             let accelX = 0, accelY = 0;
             if (keys.left) accelX -= 1;
             if (keys.right) accelX += 1;
@@ -1074,7 +1069,7 @@
                             score += e.points;
                             if (score > highScore) {
                                 highScore = score;
-                                try { localStorage.setItem('commandoEpic2', highScore); } catch (e) {}
+                                try { localStorage.setItem('commandoWorking', highScore); } catch (e) {}
                             }
                             explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
                             addParticles(e.x + e.w/2, e.y + e.h/2, '#ffaa00', 20);
