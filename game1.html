@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-bit SHOCK TROOPER · Contra‑style arcade</title>
-    <meta name="description" content="Professional 8-bit run’n’gun. Fluid parallax, custom sprites, 3 enemy types, power‑ups, particle explosions. Pixel perfect.">
+    <title>8-bit COMMANDO · side‑scrolling levels + power‑ups</title>
+    <meta name="description" content="Professional 8-bit run’n’gun. Three scrolling levels, enemies from both sides, 4 power‑ups, parallax, boss fight. Pixel perfect.">
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
             user-select: none;
         }
         body {
-            background: radial-gradient(circle at 20% 30%, #0e1f2a, #071016);
+            background: radial-gradient(circle at 20% 30%, #0f1f2a, #071016);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,7 +21,7 @@
             font-family: 'Courier New', Courier, monospace;
             padding: 16px;
         }
-        .arcade-machine {
+        .arcade-cabinet {
             background: #1c3840;
             padding: 25px 30px 30px;
             border-radius: 40px 40px 20px 20px;
@@ -39,7 +39,7 @@
             image-rendering: crisp-edges;
             image-rendering: pixelated;
         }
-        .control-panel {
+        .panel {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -54,7 +54,7 @@
             font-weight: 900;
             letter-spacing: 3px;
         }
-        .score-panel span {
+        .scores span {
             background: #10262e;
             padding: 8px 24px;
             border-radius: 40px;
@@ -62,7 +62,7 @@
             color: #fdffb8;
             margin-left: 12px;
         }
-        .btn-reset {
+        .btn {
             background: #cf4e5c;
             color: white;
             border: none;
@@ -77,7 +77,7 @@
             text-shadow: 3px 3px 0 #4e1e24;
             letter-spacing: 4px;
         }
-        .btn-reset:hover {
+        .btn:hover {
             background: #ec6a7a;
             border-bottom-width: 4px;
             transform: translateY(4px);
@@ -92,13 +92,6 @@
             border-radius: 40px;
             border-bottom: 5px solid #0b1f24;
         }
-        .legend i {
-            background: #0c2b30;
-            padding: 6px 16px;
-            border-radius: 30px;
-            color: #ffe082;
-            font-style: normal;
-        }
         .health {
             display: flex;
             align-items: center;
@@ -110,23 +103,24 @@
     </style>
 </head>
 <body>
-<div class="arcade-machine">
+<div class="arcade-cabinet">
     <canvas id="gameCanvas" width="800" height="500"></canvas>
     
-    <div class="control-panel">
-        <div class="score-panel">
+    <div class="panel">
+        <div class="scores">
             🎯 SCORE <span id="scoreDisplay">00000</span>
         </div>
-        <div class="score-panel">
+        <div class="scores">
             🏆 HIGH <span id="highScoreDisplay">00000</span>
         </div>
-        <button class="btn-reset" id="restartButton">↻ RESTART</button>
+        <button class="btn" id="restartButton">↻ RESTART</button>
     </div>
     <div class="legend">
         <span><i>← →</i> MOVE</span>
         <span><i>↑ / SPACE</i> JUMP</span>
-        <span><i>Z</i> FIRE  &nbsp;&nbsp; <i>X</i> BOMB</span>
+        <span><i>Z</i> FIRE  &nbsp; <i>X</i> BOMB</span>
         <div class="health">❤️ <span id="healthDisplay">██████</span></div>
+        <span id="levelDisplay">LVL 1</span>
     </div>
 </div>
 
@@ -134,85 +128,170 @@
     (function(){
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false; // preserve pixels
+        ctx.imageSmoothingEnabled = false;
 
-        // -------  PIXEL ART SCALING (no blur) -------
-        const SCALE = 1; // canvas native 800x500, we draw pixelated
+        // ----------  WORLD & CAMERA ----------
+        const WORLD_WIDTH = 2800;       // each level width
+        const VIEWPORT_W = 800, VIEWPORT_H = 500;
+        const GROUND_Y = 440;          // world ground Y (fixed)
+        
+        let cameraX = 0;              // left edge of viewport in world coordinates
 
-        // -------  GLOBAL STATE -------
+        // ----------  GLOBAL STATE ----------
         let gameActive = true;
         let gameOver = false;
+        let levelComplete = false;
+        let currentLevel = 1;
+        const MAX_LEVEL = 3;
         let frame = 0;
         let animFrameId = null;
-        let lastTimestamp = 0;
 
-        // -------  SCORE & HIGHSCORE (localStorage) -------
+        // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
-        let highScore = localStorage.getItem('shockHigh') ? parseInt(localStorage.getItem('shockHigh')) : 0;
-        let playerHealth = 6;       // 6 pips = 3 hearts
+        let highScore = localStorage.getItem('commandoHigh') ? parseInt(localStorage.getItem('commandoHigh')) : 0;
+        let playerHealth = 6;
         const MAX_HEALTH = 6;
 
-        // -------  POWER-UP FLAGS -------
+        // ----------  POWER-UPS ----------
         let rapidFire = false;
         let rapidTimer = 0;
+        let shieldActive = false;
+        let shieldTimer = 0;
+        let extraBomb = false;
 
-        // -------  PLAYER DIMENSIONS & PHYSICS -------
-        const GROUND_Y = 440;
-        const PLAYER_WIDTH = 24;
-        const PLAYER_HEIGHT = 28;
+        // ----------  PLAYER PHYSICS ----------
+        const PLAYER_WIDTH = 22, PLAYER_HEIGHT = 28;
         const GRAVITY = 0.7;
-        const JUMP_FORCE = -12.5;
-        const MOVE_SPEED = 4.2;
+        const JUMP_FORCE = -12.2;
+        const MOVE_SPEED = 4.5;
 
         let player = {
-            x: 140, y: GROUND_Y - PLAYER_HEIGHT,
+            x: 200, y: GROUND_Y - PLAYER_HEIGHT,
             vx: 0, vy: 0,
             onGround: false,
-            facing: 1,          // 1 = right, -1 = left
+            facing: 1,
             walkCycle: 0,
             shootTimer: 0,
             invincible: 0,
             bombCooldown: 0,
         };
 
-        // -------  PLATFORMS (solid, retro) -------
-        const platforms = [
-            { x: 220, y: 340, w: 110, h: 12 },
-            { x: 480, y: 270, w: 100, h: 12 },
-            { x: 60, y: 190, w: 90, h: 12 },
-            { x: 610, y: 380, w: 80, h: 12 },
-            { x: 350, y: 150, w: 70, h: 12 } // extra platform for verticality
-        ];
+        // ----------  LEVEL DESIGN (platforms, enemy spawners) ----------
+        let platforms = [];
+        let enemySpawners = [];   // triggers when player passes x
+        let exitDoor = null;      // x position to finish level
 
-        // -------  DYNAMIC ENTITIES -------
-        let bullets = [];          // player bullets
+        // ----------  DYNAMIC ENTITIES ----------
+        let bullets = [];
         let enemies = [];
         let enemyBullets = [];
         let explosions = [];
-        let pickups = [];         // health, power
+        let pickups = [];
 
-        // -------  ENEMY SPAWN -------
-        let spawnTimer = 0;
-        const SPAWN_DELAY = 445;
+        // ----------  SPAWN CONTROL ----------
+        let globalSpawnTimer = 0;
 
-        // -------  PARALLAX BACKGROUND -------
-        let bgLayers = [
-            { x: 0, speed: 0.2, color1: '#1c4e5a', color2: '#306f7c' }, // far mountains
-            { x: 0, speed: 0.6, color1: '#3f7e6b', color2: '#4f9e8a' }, // mid hills
-            { x: 0, speed: 1.2, color1: '#6f8c5d', color2: '#5c7449' }  // near foliage
-        ];
+        // ----------  LEVEL DEFINITIONS ----------
+        function buildLevel(level) {
+            platforms = [];
+            enemySpawners = [];
+            exitDoor = null;
 
-        // -------  INIT / RESET -------
+            // common ground is always there (implicit, not a platform)
+            if (level === 1) {
+                // jungle outpost
+                platforms = [
+                    { x: 400, y: 360, w: 100, h: 12 },
+                    { x: 600, y: 300, w: 80, h: 12 },
+                    { x: 850, y: 340, w: 90, h: 12 },
+                    { x: 1150, y: 280, w: 100, h: 12 },
+                    { x: 1450, y: 320, w: 90, h: 12 },
+                    { x: 1700, y: 260, w: 110, h: 12 },
+                    { x: 2000, y: 380, w: 80, h: 12 },
+                    { x: 2300, y: 300, w: 120, h: 12 },
+                ];
+                // enemy spawn triggers (when camera passes x)
+                enemySpawners = [
+                    { x: 500, type: 'infantry', side: 'right' },
+                    { x: 700, type: 'drone', side: 'left' },
+                    { x: 950, type: 'infantry', side: 'right' },
+                    { x: 1200, type: 'heavy', side: 'right' },
+                    { x: 1400, type: 'infantry', side: 'left' },
+                    { x: 1600, type: 'drone', side: 'right' },
+                    { x: 1850, type: 'infantry', side: 'left' },
+                    { x: 2050, type: 'heavy', side: 'right' },
+                    { x: 2250, type: 'infantry', side: 'left' },
+                ];
+                exitDoor = { x: 2600, y: GROUND_Y - 48 };
+            } else if (level === 2) {
+                // industrial complex – higher platforms
+                platforms = [
+                    { x: 350, y: 300, w: 100, h: 12 },
+                    { x: 550, y: 240, w: 80, h: 12 },
+                    { x: 750, y: 360, w: 90, h: 12 },
+                    { x: 1000, y: 200, w: 100, h: 12 },
+                    { x: 1250, y: 320, w: 90, h: 12 },
+                    { x: 1500, y: 260, w: 110, h: 12 },
+                    { x: 1800, y: 380, w: 80, h: 12 },
+                    { x: 2100, y: 220, w: 120, h: 12 },
+                    { x: 2400, y: 300, w: 100, h: 12 },
+                ];
+                enemySpawners = [
+                    { x: 450, type: 'infantry', side: 'right' },
+                    { x: 600, type: 'heavy', side: 'left' },
+                    { x: 800, type: 'drone', side: 'right' },
+                    { x: 1050, type: 'infantry', side: 'right' },
+                    { x: 1300, type: 'drone', side: 'left' },
+                    { x: 1550, type: 'heavy', side: 'right' },
+                    { x: 1850, type: 'infantry', side: 'left' },
+                    { x: 2150, type: 'drone', side: 'right' },
+                    { x: 2350, type: 'heavy', side: 'left' },
+                    { x: 2500, type: 'infantry', side: 'right' },
+                ];
+                exitDoor = { x: 2700, y: GROUND_Y - 48 };
+            } else if (level === 3) {
+                // boss hangar – long, with strong enemies
+                platforms = [
+                    { x: 400, y: 340, w: 120, h: 12 },
+                    { x: 650, y: 260, w: 100, h: 12 },
+                    { x: 900, y: 200, w: 100, h: 12 },
+                    { x: 1200, y: 320, w: 90, h: 12 },
+                    { x: 1500, y: 260, w: 110, h: 12 },
+                    { x: 1800, y: 380, w: 80, h: 12 },
+                    { x: 2100, y: 220, w: 120, h: 12 },
+                    { x: 2400, y: 300, w: 100, h: 12 },
+                ];
+                enemySpawners = [
+                    { x: 500, type: 'heavy', side: 'right' },
+                    { x: 700, type: 'heavy', side: 'left' },
+                    { x: 950, type: 'drone', side: 'right' },
+                    { x: 1250, type: 'infantry', side: 'right' },
+                    { x: 1550, type: 'heavy', side: 'left' },
+                    { x: 1850, type: 'drone', side: 'right' },
+                    { x: 2150, type: 'infantry', side: 'left' },
+                    { x: 2400, type: 'heavy', side: 'right' },
+                    // boss appears after most are cleared (special spawn)
+                ];
+                exitDoor = { x: 2650, y: GROUND_Y - 48 };
+                // additional boss spawn
+                enemySpawners.push({ x: 2000, type: 'boss', side: 'right', boss: true });
+            }
+        }
+
+        // ----------  INIT / RESET ----------
         function resetGame() {
             gameActive = true;
             gameOver = false;
+            levelComplete = false;
+            currentLevel = 1;
             score = 0;
             playerHealth = MAX_HEALTH;
             rapidFire = false;
-            rapidTimer = 0;
-
+            shieldActive = false;
+            extraBomb = false;
+            
             player = {
-                x: 140, y: GROUND_Y - PLAYER_HEIGHT,
+                x: 200, y: GROUND_Y - PLAYER_HEIGHT,
                 vx: 0, vy: 0,
                 onGround: false,
                 facing: 1,
@@ -221,70 +300,79 @@
                 invincible: 0,
                 bombCooldown: 0,
             };
-
             bullets = [];
             enemies = [];
             enemyBullets = [];
             explosions = [];
             pickups = [];
-            spawnTimer = 0;
+            globalSpawnTimer = 0;
+            
+            buildLevel(currentLevel);
+            cameraX = 0;
             updateUI();
         }
 
-        // -------  UI UPDATE (score, health, highscore) -------
+        // ----------  UI UPDATE ----------
         function updateUI() {
             let scr = String(Math.floor(score)).padStart(5, '0');
             document.getElementById('scoreDisplay').innerText = scr;
             let hscr = String(highScore).padStart(5, '0');
             document.getElementById('highScoreDisplay').innerText = hscr;
-            // health bar (█ blocks)
             let healthBar = '';
             for (let i=0; i<playerHealth; i++) healthBar += '█';
             document.getElementById('healthDisplay').innerText = healthBar.padEnd(6, '░');
+            document.getElementById('levelDisplay').innerText = `LVL ${currentLevel}`;
         }
 
-        // -------  KEYBOARD (classic arcade) -------
+        // ----------  KEYBOARD ----------
         const keys = {
             left: false, right: false, jump: false, fire: false, bomb: false
         };
         window.addEventListener('keydown', (e) => {
-            e.preventDefault();
+            if (!gameActive) return;
             switch(e.key) {
-                case 'ArrowLeft': keys.left = true; break;
-                case 'ArrowRight': keys.right = true; break;
-                case 'ArrowUp': case ' ': keys.jump = true; break;
-                case 'z': case 'Z': keys.fire = true; break;
-                case 'x': case 'X': keys.bomb = true; break;
+                case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
+                case 'ArrowRight': keys.right = true; e.preventDefault(); break;
+                case 'ArrowUp': case ' ': keys.jump = true; e.preventDefault(); break;
+                case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
+                case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
             }
         });
         window.addEventListener('keyup', (e) => {
             switch(e.key) {
-                case 'ArrowLeft': keys.left = false; break;
-                case 'ArrowRight': keys.right = false; break;
-                case 'ArrowUp': case ' ': keys.jump = false; break;
-                case 'z': case 'Z': keys.fire = false; break;
-                case 'x': case 'X': keys.bomb = false; break;
+                case 'ArrowLeft': keys.left = false; e.preventDefault(); break;
+                case 'ArrowRight': keys.right = false; e.preventDefault(); break;
+                case 'ArrowUp': case ' ': keys.jump = false; e.preventDefault(); break;
+                case 'z': case 'Z': keys.fire = false; e.preventDefault(); break;
+                case 'x': case 'X': keys.bomb = false; e.preventDefault(); break;
             }
         });
-        // block arrow scrolling
-        window.addEventListener('keydown', (e) => {
-            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
-        }, false);
 
-        // -------  COLLISION (AABB) -------
+        // ----------  COLLISION ----------
         function collides(r1, r2) {
             return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x &&
                    r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
         }
 
-        // -------  PLAYER UPDATE (PHYSICS, ACTIONS) -------
+        // ----------  CAMERA FOLLOW ----------
+        function updateCamera() {
+            // player center target
+            let targetX = player.x + PLAYER_WIDTH/2 - VIEWPORT_W/2;
+            // clamp to world bounds
+            targetX = Math.max(0, Math.min(targetX, WORLD_WIDTH - VIEWPORT_W));
+            // smooth follow
+            cameraX += (targetX - cameraX) * 0.1;
+            if (Math.abs(cameraX - targetX) < 1) cameraX = targetX;
+        }
+
+        // ----------  PLAYER UPDATE ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; return; }
 
-            // rapid fire timer
-            if (rapidTimer > 0) rapidTimer--;
-            else rapidFire = false;
+            // power-up timers
+            if (rapidTimer > 0) rapidTimer--; else rapidFire = false;
+            if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
 
             // horizontal movement
             let accel = 0;
@@ -293,9 +381,9 @@
             player.vx = accel * MOVE_SPEED;
             player.x += player.vx;
 
-            // boundaries
-            if (player.x < 10) player.x = 10;
-            if (player.x + PLAYER_WIDTH > 790) player.x = 790 - PLAYER_WIDTH;
+            // world horizontal bounds
+            if (player.x < 20) player.x = 20;
+            if (player.x + PLAYER_WIDTH > WORLD_WIDTH - 20) player.x = WORLD_WIDTH - PLAYER_WIDTH - 20;
 
             // jump
             if (keys.jump && player.onGround) {
@@ -315,7 +403,7 @@
                 player.onGround = true;
             }
 
-            // platform collisions (falling only)
+            // platform collisions
             for (let pl of platforms) {
                 if (player.vy >= 0) {
                     let bottom = player.y + PLAYER_HEIGHT;
@@ -329,14 +417,11 @@
                 }
             }
 
-            // ceiling
-            if (player.y < 30) player.y = 30;
-
-            // facing direction
+            // facing
             if (player.vx > 0.2) player.facing = 1;
             else if (player.vx < -0.2) player.facing = -1;
 
-            // walk animation (leg cycle)
+            // walk animation
             if (Math.abs(player.vx) > 0.5 && player.onGround) {
                 player.walkCycle = (player.walkCycle + 0.25) % 4;
             } else player.walkCycle = 0;
@@ -345,26 +430,28 @@
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 5 : 14;
                 if (player.shootTimer <= 0) {
-                    let bulletX = player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 10;
+                    let bulletX = player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 14;
                     bullets.push({
                         x: bulletX, y: player.y + PLAYER_HEIGHT/2 - 3,
-                        w: 16, h: 6, vx: player.facing * 10, vy: 0,
+                        w: 18, h: 6, vx: player.facing * 11, vy: 0
                     });
                     player.shootTimer = fireRate;
                 }
             }
             if (player.shootTimer > 0) player.shootTimer--;
 
-            // BOMB (screen clear, limited)
+            // bomb (limited)
             if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
-                // explosion effect on all enemies
-                for (let e of enemies) {
-                    explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, radius: 10, life: 20 });
-                    score += e.points;
+                // clear nearby enemies
+                for (let i=enemies.length-1; i>=0; i--) {
+                    let e = enemies[i];
+                    if (Math.abs(e.x - player.x) < 400) {
+                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 20, radius: 12 });
+                        score += e.points;
+                        enemies.splice(i,1);
+                    }
                 }
-                enemies = [];
-                player.bombCooldown = 180; // 3 seconds
-                rapidFire = false; // no bomb spamming
+                player.bombCooldown = 240;
             }
             if (player.bombCooldown > 0) player.bombCooldown--;
 
@@ -372,88 +459,85 @@
             if (player.invincible > 0) player.invincible--;
         }
 
-        // -------  BULLETS (player) -------
-        function updateBullets() {
-            for (let i=bullets.length-1; i>=0; i--) {
-                let b = bullets[i];
-                b.x += b.vx;
-                if (b.x > 820 || b.x < -30) { bullets.splice(i,1); continue; }
+        // ----------  SPAWN ENEMIES FROM SPAWNERS ----------
+        function checkSpawners() {
+            for (let i=enemySpawners.length-1; i>=0; i--) {
+                let s = enemySpawners[i];
+                // trigger when camera passes near or player approaches
+                if (player.x > s.x - 300 && player.x < s.x + 100) {
+                    // spawn enemy
+                    let side = s.side; // 'left' or 'right'
+                    let xPos = side === 'right' ? WORLD_WIDTH - 50 : 50;
+                    let yPos = GROUND_Y - 32;
+                    let type = s.type;
+                    let enemy = null;
 
-                // enemy collision
-                for (let j=enemies.length-1; j>=0; j--) {
-                    let e = enemies[j];
-                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h},
-                                 {x:e.x, y:e.y, w:e.w, h:e.h})) {
-                        bullets.splice(i,1);
-                        e.health -= 1;
-                        if (e.health <= 0) {
-                            score += e.points;
-                            if (score > highScore) { highScore = score; localStorage.setItem('shockHigh', highScore); }
-                            // explosion
-                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, radius: 12, life: 16 });
-                            enemies.splice(j,1);
-                        }
-                        break;
+                    if (type === 'infantry') {
+                        enemy = {
+                            x: xPos, y: GROUND_Y - 32, w: 26, h: 30,
+                            vx: side === 'right' ? -1.8 : 1.8,
+                            health: 1, points: 20,
+                            type: 'infantry', frame: 0, shootTimer: 40 + Math.random()*30
+                        };
+                    } else if (type === 'heavy') {
+                        enemy = {
+                            x: xPos, y: GROUND_Y - 36, w: 32, h: 34,
+                            vx: side === 'right' ? -1.0 : 1.0,
+                            health: 4, points: 70,
+                            type: 'heavy', frame: 0, shootTimer: 30
+                        };
+                    } else if (type === 'drone') {
+                        yPos = 200 + Math.random() * 180;
+                        enemy = {
+                            x: xPos, y: yPos, w: 24, h: 20,
+                            vx: side === 'right' ? -2.2 : 2.2,
+                            health: 1, points: 30,
+                            type: 'drone', frame: 0, shootTimer: 50
+                        };
+                    } else if (type === 'boss' && currentLevel === 3) {
+                        enemy = {
+                            x: WORLD_WIDTH - 100, y: GROUND_Y - 60, w: 60, h: 60,
+                            vx: -0.6, health: 25, points: 500,
+                            type: 'boss', frame: 0, shootTimer: 20,
+                            boss: true
+                        };
                     }
+                    if (enemy) enemies.push(enemy);
+                    enemySpawners.splice(i,1); // trigger once
                 }
             }
         }
 
-        // -------  ENEMIES (3 types) -------
-        function spawnEnemy() {
-            if (!gameActive) return;
-            let type = Math.random();
-            let enemy;
-            if (type < 0.5) { // infantry (ground)
-                let yPos = GROUND_Y - 32;
-                enemy = {
-                    x: 780, y: yPos, w: 26, h: 30,
-                    vx: -1.8, health: 1, points: 20,
-                    type: 'infantry', frame: 0, shootTimer: 40 + Math.floor(Math.random()*40)
-                };
-            } else if (type < 0.8) { // heavy (armor)
-                let yPos = GROUND_Y - 36;
-                enemy = {
-                    x: 780, y: yPos, w: 32, h: 34,
-                    vx: -1.0, health: 4, points: 70,
-                    type: 'heavy', frame: 0, shootTimer: 30
-                };
-            } else { // drone (fly)
-                let yPos = 200 + Math.random() * 180;
-                enemy = {
-                    x: 780, y: yPos, w: 24, h: 20,
-                    vx: -2.2, health: 1, points: 30,
-                    type: 'drone', frame: 0, shootTimer: 50
-                };
-            }
-            enemies.push(enemy);
-        }
-
+        // ----------  ENEMY UPDATE ----------
         function updateEnemies() {
             for (let i=enemies.length-1; i>=0; i--) {
                 let e = enemies[i];
                 e.x += e.vx;
                 e.frame = (e.frame + 0.2) % 4;
 
-                if (e.x + e.w < -50) { enemies.splice(i,1); continue; }
+                // remove if off world
+                if (e.x + e.w < -100 || e.x > WORLD_WIDTH + 100) {
+                    enemies.splice(i,1); continue;
+                }
 
                 // enemy shooting
                 e.shootTimer--;
                 if (e.shootTimer <= 0 && gameActive && playerHealth > 0) {
-                    let bulletVX = -5.5;
-                    if (e.type === 'drone') bulletVX = -6;
+                    let bulletVX = e.x > player.x ? -5.5 : 5.5;
+                    if (e.type === 'drone') bulletVX *= 1.2;
                     enemyBullets.push({
-                        x: e.x - 8, y: e.y + e.h/2 - 3,
+                        x: e.x + (bulletVX>0? e.w : -8), y: e.y + e.h/2 - 3,
                         w: 12, h: 6, vx: bulletVX, vy: 0
                     });
-                    e.shootTimer = e.type === 'heavy' ? 55 : 45;
+                    e.shootTimer = e.type === 'heavy' ? 55 : (e.type === 'boss' ? 20 : 45);
                 }
 
-                // collision with player (damage)
-                if (player.invincible <= 0 && gameActive && playerHealth > 0) {
+                // collision with player
+                if (player.invincible <= 0 && gameActive && playerHealth > 0 && !shieldActive) {
                     if (collides({x:player.x, y:player.y, w:PLAYER_WIDTH, h:PLAYER_HEIGHT},
                                  {x:e.x, y:e.y, w:e.w, h:e.h})) {
-                        playerHealth -= (e.type === 'heavy' ? 2 : 1);
+                        let dmg = (e.type === 'heavy' || e.type === 'boss') ? 2 : 1;
+                        playerHealth -= dmg;
                         player.invincible = 70;
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
@@ -462,14 +546,46 @@
             }
         }
 
-        // -------  ENEMY BULLETS -------
+        // ----------  BULLETS ----------
+        function updateBullets() {
+            for (let i=bullets.length-1; i>=0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                if (b.x > WORLD_WIDTH + 100 || b.x < -100) { bullets.splice(i,1); continue; }
+
+                for (let j=enemies.length-1; j>=0; j--) {
+                    let e = enemies[j];
+                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h},
+                                 {x:e.x, y:e.y, w:e.w, h:e.h})) {
+                        bullets.splice(i,1);
+                        e.health -= 1;
+                        if (e.health <= 0) {
+                            score += e.points;
+                            if (score > highScore) { highScore = score; localStorage.setItem('commandoHigh', highScore); }
+                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 20, radius: 12 });
+                            // chance to drop power-up
+                            if (Math.random() < 0.2) {
+                                pickups.push({
+                                    x: e.x, y: e.y, w: 16, h: 16,
+                                    type: ['health','rapid','shield','bomb'][Math.floor(Math.random()*4)],
+                                    vx: -1, life: 400
+                                });
+                            }
+                            enemies.splice(j,1);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         function updateEnemyBullets() {
             for (let i=enemyBullets.length-1; i>=0; i--) {
                 let eb = enemyBullets[i];
                 eb.x += eb.vx;
-                if (eb.x < -40) { enemyBullets.splice(i,1); continue; }
+                if (eb.x < -100 || eb.x > WORLD_WIDTH + 100) { enemyBullets.splice(i,1); continue; }
 
-                if (player.invincible <= 0 && gameActive && playerHealth > 0) {
+                if (player.invincible <= 0 && gameActive && playerHealth > 0 && !shieldActive) {
                     if (collides({x:player.x, y:player.y, w:PLAYER_WIDTH, h:PLAYER_HEIGHT},
                                  {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
                         playerHealth -= 1;
@@ -482,194 +598,218 @@
             }
         }
 
-        // -------  PICKUPS (power-ups) -------
-        function spawnPickup(x, y) {
-            if (Math.random() < 0.25) { // 25% drop
-                pickups.push({
-                    x: x, y: y, w: 16, h: 16,
-                    type: 'health', vx: -1, life: 300
-                });
-            }
-        }
+        // ----------  PICKUPS ----------
         function updatePickups() {
             for (let i=pickups.length-1; i>=0; i--) {
                 let p = pickups[i];
                 p.x += p.vx;
                 p.life--;
-                if (p.life <= 0 || p.x < -30) { pickups.splice(i,1); continue; }
+                if (p.life <= 0 || p.x < -100) { pickups.splice(i,1); continue; }
                 if (collides({x:player.x, y:player.y, w:PLAYER_WIDTH, h:PLAYER_HEIGHT},
                              {x:p.x, y:p.y, w:p.w, h:p.h})) {
-                    if (p.type === 'health' && playerHealth < MAX_HEALTH) {
+                    // apply power-up
+                    if (p.type === 'health') {
                         playerHealth = Math.min(MAX_HEALTH, playerHealth + 2);
-                        updateUI();
+                    } else if (p.type === 'rapid') {
+                        rapidFire = true;
+                        rapidTimer = 600;
+                    } else if (p.type === 'shield') {
+                        shieldActive = true;
+                        shieldTimer = 600;
+                    } else if (p.type === 'bomb') {
+                        player.bombCooldown = 0; // allow instant bomb use
                     }
                     pickups.splice(i,1);
+                    updateUI();
                 }
             }
         }
 
-        // -------  EXPLOSIONS (particle style) -------
+        // ----------  EXPLOSIONS ----------
         function updateExplosions() {
             for (let i=explosions.length-1; i>=0; i--) {
                 let ex = explosions[i];
                 ex.life -= 1.5;
-                ex.radius += 1.8;
+                ex.radius += 1.5;
                 if (ex.life <= 0) explosions.splice(i,1);
             }
         }
 
-        // -------  RENDERING (professional 8-bit) -------
-        function drawParallax() {
-            // sky gradient bands
-            ctx.fillStyle = '#14323b'; ctx.fillRect(0,0,800,120);
-            ctx.fillStyle = '#1d4a55'; ctx.fillRect(0,120,800,70);
-            ctx.fillStyle = '#25626b'; ctx.fillRect(0,190,800,60);
-            
-            // moving layers
-            for (let i=0; i<bgLayers.length; i++) {
-                let layer = bgLayers[i];
-                layer.x -= layer.speed;
-                if (layer.x <= -800) layer.x += 800;
-                
-                ctx.fillStyle = layer.color1;
-                for (let j=0; j<3; j++) {
-                    let offset = layer.x + j * 800;
-                    ctx.beginPath();
-                    ctx.moveTo(offset, 300 - i*35);
-                    ctx.quadraticCurveTo(offset+200, 200 - i*30, offset+400, 300 - i*35);
-                    ctx.lineTo(offset+400, 400);
-                    ctx.lineTo(offset, 400);
-                    ctx.fillStyle = layer.color1;
-                    ctx.fill();
-                    ctx.fillStyle = layer.color2;
-                    ctx.fillRect(offset+50, 300 - i*32, 40, 40);
+        // ----------  LEVEL PROGRESSION ----------
+        function checkExit() {
+            if (exitDoor && player.x > exitDoor.x - 30 && !levelComplete) {
+                // clear remaining enemies? maybe bonus
+                levelComplete = true;
+                if (currentLevel < MAX_LEVEL) {
+                    currentLevel++;
+                    buildLevel(currentLevel);
+                    // reposition player at start of new level
+                    player.x = 200;
+                    player.y = GROUND_Y - PLAYER_HEIGHT;
+                    cameraX = 0;
+                    // carry over health, score, power-ups? reset some
+                    rapidFire = false; rapidTimer = 0;
+                    shieldActive = false; shieldTimer = 0;
+                    enemies = [];
+                    enemyBullets = [];
+                    pickups = [];
+                    levelComplete = false;
+                } else {
+                    // game beaten
+                    gameActive = false;
+                    gameOver = false; // victory
                 }
             }
-
-            // ground
-            ctx.fillStyle = '#4b6a3b'; ctx.fillRect(0, GROUND_Y-6, 800, 20);
-            ctx.fillStyle = '#6d8f4d'; ctx.fillRect(0, GROUND_Y-2, 800, 8);
-            ctx.fillStyle = '#3b552a'; 
-            for (let i=0;i<25;i++) ctx.fillRect(i*36, GROUND_Y-10, 12, 8);
         }
 
-        function drawPlatforms() {
+        // ----------  RENDERING (camera transform) ----------
+        function drawWorld() {
+            // clear
+            ctx.clearRect(0,0,VIEWPORT_W,VIEWPORT_H);
+            
+            // ---- parallax background (relative to camera) ----
+            let bgOffset = cameraX * 0.3;
+            ctx.fillStyle = '#14323b'; ctx.fillRect(0,0,VIEWPORT_W,120);
+            ctx.fillStyle = '#1d4a55'; ctx.fillRect(0,120,VIEWPORT_W,70);
+            ctx.fillStyle = '#25626b'; ctx.fillRect(0,190,VIEWPORT_W,60);
+            
+            // hills
+            ctx.fillStyle = '#2a6b4a';
+            for (let i=0;i<5;i++) {
+                let x = (i*200 - bgOffset) % 900 - 100;
+                ctx.beginPath();
+                ctx.moveTo(x, 300);
+                ctx.quadraticCurveTo(x+80, 220, x+160, 300);
+                ctx.fill();
+            }
+
+            // ground (world coordinates -> screen)
+            let groundScreenY = GROUND_Y - cameraX*0; // no vertical parallax
+            ctx.fillStyle = '#4b6a3b'; 
+            ctx.fillRect(0, groundScreenY-6, VIEWPORT_W, 20);
+            ctx.fillStyle = '#6d8f4d';
+            ctx.fillRect(0, groundScreenY-2, VIEWPORT_W, 8);
+            
+            // platforms (transform world->screen)
             ctx.shadowBlur = 0;
             platforms.forEach(p => {
-                ctx.fillStyle = '#5c4934'; ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = '#846b4a'; ctx.fillRect(p.x+2, p.y-2, p.w-4, 5);
-                ctx.fillStyle = '#392e1e'; ctx.fillRect(p.x, p.y+3, p.w, 4);
-            });
-        }
-
-        function drawPlayerSprite() {
-            if (player.invincible % 8 < 4 || player.invincible === 0) {
-                let x = player.x, y = player.y;
-                // body
-                ctx.fillStyle = '#3a7251'; ctx.fillRect(x+2, y+2, 20, 22);
-                // head (helmet)
-                ctx.fillStyle = '#5a8f4c'; ctx.fillRect(x+6, y-2, 12, 10);
-                ctx.fillStyle = '#ab8b3b'; ctx.fillRect(player.facing===1? x+16 : x, y, 8, 6);
-                // legs animation
-                ctx.fillStyle = '#2b543a';
-                if (player.walkCycle < 2) {
-                    ctx.fillRect(x+2, y+24, 6, 6); ctx.fillRect(x+14, y+24, 6, 6);
-                } else {
-                    ctx.fillRect(x+2, y+24, 8, 5); ctx.fillRect(x+14, y+24, 8, 5);
+                let sx = p.x - cameraX;
+                if (sx + p.w > 0 && sx < VIEWPORT_W) {
+                    ctx.fillStyle = '#5c4934'; ctx.fillRect(sx, p.y, p.w, p.h);
+                    ctx.fillStyle = '#846b4a'; ctx.fillRect(sx+2, p.y-2, p.w-4, 5);
                 }
+            });
+
+            // exit door
+            if (exitDoor) {
+                let sx = exitDoor.x - cameraX;
+                ctx.fillStyle = '#ac8c5a'; ctx.fillRect(sx, exitDoor.y, 30, 48);
+                ctx.fillStyle = '#c9ae74'; ctx.fillRect(sx+8, exitDoor.y-8, 14, 12);
+            }
+
+            // enemies
+            enemies.forEach(e => {
+                let sx = e.x - cameraX;
+                if (sx + e.w > 0 && sx < VIEWPORT_W) {
+                    // enemy drawing (simplified but colored)
+                    if (e.type === 'infantry') {
+                        ctx.fillStyle = '#9d4e3a'; ctx.fillRect(sx, e.y, e.w, e.h);
+                    } else if (e.type === 'heavy') {
+                        ctx.fillStyle = '#6a4e4e'; ctx.fillRect(sx, e.y, e.w, e.h);
+                    } else if (e.type === 'drone') {
+                        ctx.fillStyle = '#467c7c'; ctx.fillRect(sx, e.y, e.w, e.h);
+                    } else if (e.type === 'boss') {
+                        ctx.fillStyle = '#b34b4b'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#d48c48'; ctx.fillRect(sx+10, e.y-10, 20, 12);
+                    }
+                }
+            });
+
+            // bullets
+            bullets.forEach(b => {
+                let sx = b.x - cameraX;
+                ctx.fillStyle = '#ffd966'; ctx.fillRect(sx, b.y, b.w, b.h);
+            });
+            enemyBullets.forEach(b => {
+                let sx = b.x - cameraX;
+                ctx.fillStyle = '#ff7474'; ctx.fillRect(sx, b.y, b.w, b.h);
+            });
+
+            // pickups
+            pickups.forEach(p => {
+                let sx = p.x - cameraX;
+                ctx.fillStyle = '#4caf7a'; ctx.fillRect(sx, p.y, p.w, p.h);
+                ctx.fillStyle = 'white'; ctx.font = '16px monospace';
+                if (p.type === 'health') ctx.fillText('❤️', sx, p.y+14);
+                else if (p.type === 'rapid') ctx.fillText('⚡', sx, p.y+14);
+                else if (p.type === 'shield') ctx.fillText('🛡️', sx, p.y+14);
+                else if (p.type === 'bomb') ctx.fillText('💣', sx, p.y+14);
+            });
+
+            // explosions
+            explosions.forEach(ex => {
+                let sx = ex.x - cameraX;
+                ctx.fillStyle = `rgba(255, 140, 30, ${ex.life/30})`;
+                ctx.beginPath(); ctx.arc(sx, ex.y, ex.radius, 0, 2*Math.PI);
+                ctx.fill();
+            });
+
+            // player (with invincibility flash)
+            if (player.invincible % 8 < 4 || player.invincible === 0) {
+                let px = player.x - cameraX, py = player.y;
+                ctx.fillStyle = shieldActive ? '#7fb3d5' : '#3a7251';
+                ctx.fillRect(px+2, py+2, 20, 22);
+                ctx.fillStyle = '#5a8f4c'; ctx.fillRect(px+6, py-2, 12, 10);
+                ctx.fillStyle = '#ab8b3b'; ctx.fillRect(player.facing===1? px+16 : px, py, 8, 6);
                 // gun
                 ctx.fillStyle = '#414141';
-                if (player.facing === 1) ctx.fillRect(x+20, y+10, 14, 4);
-                else ctx.fillRect(x-10, y+10, 14, 4);
+                if (player.facing === 1) ctx.fillRect(px+20, py+10, 14, 4);
+                else ctx.fillRect(px-10, py+10, 14, 4);
             }
         }
 
-        function drawEnemies() {
-            enemies.forEach(e => {
-                if (e.type === 'infantry') {
-                    ctx.fillStyle = '#9d4e3a'; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.fillStyle = '#000'; ctx.fillRect(e.x+4, e.y+6, 4, 4);
-                    ctx.fillRect(e.x+14, e.y+6, 4, 4);
-                    ctx.fillStyle = '#cec13b'; ctx.fillRect(e.x+8, e.y-3, 8, 6);
-                } else if (e.type === 'heavy') {
-                    ctx.fillStyle = '#6a4e4e'; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.fillStyle = '#3f2f2f'; ctx.fillRect(e.x+4, e.y+4, 24, 10);
-                    ctx.fillStyle = '#c0a050'; ctx.fillRect(e.x+6, e.y-4, 14, 8);
-                } else if (e.type === 'drone') {
-                    ctx.fillStyle = '#467c7c'; ctx.fillRect(e.x, e.y, e.w, e.h);
-                    ctx.fillStyle = '#2d4f4f'; ctx.fillRect(e.x+4, e.y+6, 6, 6);
-                    ctx.fillStyle = '#a0d0d0'; ctx.fillRect(e.x+10, e.y-4, 8, 6);
-                }
-            });
-        }
-
-        function drawBulletsAndEffects() {
-            bullets.forEach(b => {
-                ctx.fillStyle = '#ffd966'; ctx.fillRect(b.x, b.y, b.w, b.h);
-                ctx.fillStyle = '#ffbe2e'; ctx.fillRect(b.x-2, b.y+1, 8, 3);
-            });
-            enemyBullets.forEach(b => {
-                ctx.fillStyle = '#ff7474'; ctx.fillRect(b.x, b.y, b.w, b.h);
-            });
-            explosions.forEach(ex => {
-                ctx.fillStyle = `rgba(255, 180, 60, ${ex.life/30})`;
-                ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.radius, 0, 2*Math.PI);
-                ctx.fill();
-            });
-            pickups.forEach(p => {
-                ctx.fillStyle = '#4caf7a'; ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = 'white'; ctx.font = 'bold 16px monospace';
-                ctx.fillText('❤️', p.x, p.y+14);
-            });
-        }
-
-        // -------  GAME LOOP (FRAME) -------
+        // ----------  GAME LOOP ----------
         function gameLoop() {
             if (gameActive) {
-                // spawn enemies
-                spawnTimer++;
-                if (spawnTimer > SPAWN_DELAY && enemies.length < 8) {
-                    spawnEnemy();
-                    spawnTimer = 0;
-                }
-
+                updateCamera();
+                checkSpawners();
                 updatePlayer();
                 updateBullets();
                 updateEnemies();
                 updateEnemyBullets();
                 updatePickups();
                 updateExplosions();
+                checkExit();
 
-                if (playerHealth <= 0) { gameActive = false; gameOver = true; }
+                if (playerHealth <= 0) {
+                    gameActive = false;
+                    gameOver = true;
+                }
                 updateUI();
             }
 
-            // --- DRAW EVERYTHING (clean canvas) ---
-            ctx.clearRect(0, 0, 800, 500);
-            drawParallax();
-            drawPlatforms();
-            drawEnemies();
-            drawBulletsAndEffects();
-            drawPlayerSprite();
+            drawWorld();
 
-            // game over / mission complete
+            // game over / victory screen
             if (!gameActive) {
                 ctx.fillStyle = '#000000aa';
                 ctx.fillRect(220, 190, 360, 90);
                 ctx.fillStyle = '#ffe98c';
                 ctx.font = '36px "Courier New", monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText(gameOver ? '❌ GAME OVER' : '🏁 MISSION CLEAR', 400, 245);
+                if (gameOver) ctx.fillText('❌ GAME OVER', 400, 245);
+                else if (currentLevel >= MAX_LEVEL) ctx.fillText('🏁 VICTORY!', 400, 245);
+                else ctx.fillText('- PAUSE -', 400, 245);
             }
 
             frame++;
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // restart listener
+        // restart button
         document.getElementById('restartButton').addEventListener('click', resetGame);
 
-        // start everything
+        // start
         resetGame();
         gameLoop();
 
