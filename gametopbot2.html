@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>TOP-DOWN COMMANDO · 6 LEVELS · BOSSES · ANALOG STICK</title>
-    <meta name="description" content="Top‑down shooter. 6 unique worlds, twin‑stick controls, huge sprites, power‑ups.">
+    <title>TOP-DOWN COMMANDO · DELUXE · 6 WORLDS · 8 POWERUPS</title>
+    <meta name="description" content="Top‑down shooter. 6 hand‑crafted worlds, 8 power‑ups, epic bosses, twin‑stick controls.">
     <style>
         * {
             margin: 0;
@@ -25,7 +25,7 @@
             touch-action: pan-y;
         }
         .arcade-cabinet {
-            background: #1c3840;
+            background: linear-gradient(145deg, #1c3840, #152a30);
             padding: 15px 15px 20px;
             border-radius: 30px 30px 15px 15px;
             box-shadow: 0 15px 0 #0c1c22, 0 20px 30px rgba(0,0,0,0.8);
@@ -56,7 +56,7 @@
             margin-top: 12px;
             color: #b9f3ff;
             text-shadow: 2px 2px 0 #0f2a30;
-            background: #1f424b;
+            background: linear-gradient(145deg, #1f424b, #17323a);
             padding: 8px 16px;
             border-radius: 40px;
             border-bottom: 6px solid #0e262c;
@@ -154,11 +154,12 @@
             align-items: center;
             position: relative;
             touch-action: none;
+            box-shadow: inset 0 0 10px #0a1a1f;
         }
         .joystick-base {
             width: 100px;
             height: 100px;
-            background: #2f4f58;
+            background: radial-gradient(circle at 30% 30%, #3f5f68, #1f3a40);
             border-radius: 50%;
             border-bottom: 6px solid #1a2f35;
             display: flex;
@@ -169,7 +170,7 @@
         .joystick-handle {
             width: 60px;
             height: 60px;
-            background: #5f838c;
+            background: radial-gradient(circle at 30% 30%, #7fa3ac, #4f6f78);
             border-radius: 50%;
             border-bottom: 6px solid #3a555e;
             display: flex;
@@ -177,7 +178,7 @@
             align-items: center;
             font-size: 0;
             color: transparent;
-            box-shadow: inset 0 -2px 0 #3a555e;
+            box-shadow: inset 0 -2px 0 #3a555e, 0 0 10px #a0d0d0;
             transition: 0.02s;
             position: relative;
             left: 0;
@@ -190,7 +191,7 @@
             margin-right: 10px;
         }
         .ab {
-            background: #9e4a5c;
+            background: radial-gradient(circle at 30% 30%, #b35a6a, #9e4a5c);
             width: 80px;
             height: 80px;
             border-radius: 50%;
@@ -201,14 +202,14 @@
             font-size: 28px;
             color: white;
             text-shadow: 3px 3px 0 #3a1e24;
-            box-shadow: inset 0 -4px 0 #753a46;
+            box-shadow: inset 0 -4px 0 #753a46, 0 0 15px #ff8c8c;
             cursor: pointer;
             touch-action: none;
         }
         .ab:active {
             border-bottom-width: 3px;
             transform: translateY(5px);
-            background: #c05e72;
+            background: radial-gradient(circle at 30% 30%, #d06a7a, #b35a6a);
         }
         .mobile-info {
             display: none;
@@ -271,7 +272,8 @@
     <div class="legend">
         <span><i>← → ↑ ↓</i> MOVE</span>
         <span><i>STICK</i> AIM + SHOOT</span>
-        <span><i>FIRE</i> SHOOT &nbsp; <i>BOMB</i> BOMB</span>
+        <span><i>FIRE</i> HOLD TO SHOOT</span>
+        <span><i>BOMB</i> CLEAR</span>
         <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
     </div>
 
@@ -283,13 +285,13 @@
                 </div>
             </div>
             <div class="ab-buttons">
-                <div class="ab" id="touchFire">FIRE</div>
-                <div class="ab" id="touchBomb">BOMB</div>
+                <div class="ab" id="touchFire">🔥</div>
+                <div class="ab" id="touchBomb">💣</div>
             </div>
         </div>
         <div class="mobile-info">
             <span id="mobileLevelDisplay">LVL 1 · JUNGLE</span>
-            <span>🎮 MOVE = AIM</span>
+            <span>🎮 MOVE / AIM</span>
             <span>💣 BOMB</span>
         </div>
     </div>
@@ -304,8 +306,8 @@
         if (!ctx) return;
         ctx.imageSmoothingEnabled = false;
 
-        // ----------  WORLD & CAMERA – TOP-DOWN, 2D ----------
-        const WORLD_SIZE = 2000; // each level is 2000x2000
+        // ----------  WORLD ----------
+        const WORLD_SIZE = 2400; // larger, more detailed
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
         let cameraX = 0, cameraY = 0;
 
@@ -321,172 +323,200 @@
         // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
-        try { highScore = localStorage.getItem('topdownCommando') ? parseInt(localStorage.getItem('topdownCommando')) : 0; } catch(e) { highScore = 0; }
+        try { highScore = localStorage.getItem('commandoDeluxe') ? parseInt(localStorage.getItem('commandoDeluxe')) : 0; } catch(e) { highScore = 0; }
         let playerHealth = 8;
         const MAX_HEALTH = 8;
 
-        // ----------  POWER-UPS ----------
+        // ----------  POWER-UPS – 8 TYPES! ----------
         let rapidFire = false, rapidTimer = 0;
         let shieldActive = false, shieldTimer = 0;
         let spreadShot = false, spreadTimer = 0;
         let invincibleStar = false, starTimer = 0;
+        let homingMissiles = false, homingTimer = 0;     // NEW
+        let piercingShots = false, piercingTimer = 0;   // NEW
+        let speedBoost = false, speedTimer = 0;         // NEW
+        let timeSlow = false, slowTimer = 0;            // NEW
 
-        // ----------  PLAYER – NO GRAVITY, 8-WAY MOVEMENT ----------
+        // ----------  PLAYER ----------
         const PLAYER_WIDTH = 44;
-        const PLAYER_HEIGHT = 44; // square for top-down
-        const MOVE_SPEED = 3.8;
-
+        const PLAYER_HEIGHT = 44;
+        const BASE_SPEED = 3.8;
         let player = {
             x: 400, y: 400,
             vx: 0, vy: 0,
-            facing: 1, // 1=right, -1=left, also need up/down for aiming? We'll use angle.
-            aimAngle: 0, // radians, 0 = right
+            aimAngle: 0,
             shootTimer: 0,
             invincible: 0,
             bombCooldown: 0,
+            weaponOffset: 0, // for muzzle flash
+            walkFrame: 0,
         };
 
-        // ----------  LEVEL DESIGN – WALLS, SPAWNERS, BOSS EXIT ----------
-        let walls = []; // array of {x,y,w,h} solid obstacles
+        // ----------  LEVEL DESIGN – HAND-CRAFTED BEAUTY ----------
+        let walls = [];
+        let decorations = []; // visual only
         let enemySpawners = [];
         let exitDoor = null;
         let levelName = "";
         let levelTheme = "";
 
-        // ----------  DYNAMIC ENTITIES ----------
-        let bullets = []; // player bullets
+        // ----------  ENTITIES ----------
+        let bullets = [];
         let enemies = [];
         let enemyBullets = [];
         let explosions = [];
         let pickups = [];
+        let particles = [];
 
         // ----------  KEYBOARD STATE ----------
-        const keys = { 
-            left: false, right: false, up: false, down: false,
-            fire: false, bomb: false
-        };
+        const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false };
 
-        // ----------  LEVEL GENERATORS – 6 THEMES, WALLS, BOSSES ----------
+        // ----------  LEVEL GENERATORS – MASTERPIECES ----------
         function buildLevel(level) {
-            walls = []; enemySpawners = []; exitDoor = null;
-            // World boundary walls – keep player inside
-            walls.push({ x: 0, y: 0, w: WORLD_SIZE, h: 10 }); // top
-            walls.push({ x: 0, y: WORLD_SIZE-10, w: WORLD_SIZE, h: 10 }); // bottom
-            walls.push({ x: 0, y: 0, w: 10, h: WORLD_SIZE }); // left
-            walls.push({ x: WORLD_SIZE-10, y: 0, w: 10, h: WORLD_SIZE }); // right
+            walls = []; decorations = []; enemySpawners = []; exitDoor = null;
+            // world boundary
+            walls.push({ x: 0, y: 0, w: WORLD_SIZE, h: 10 });
+            walls.push({ x: 0, y: WORLD_SIZE-10, w: WORLD_SIZE, h: 10 });
+            walls.push({ x: 0, y: 0, w: 10, h: WORLD_SIZE });
+            walls.push({ x: WORLD_SIZE-10, y: 0, w: 10, h: WORLD_SIZE });
 
-            if (level === 1) { // JUNGLE
+            if (level === 1) { // JUNGLE – lush, winding paths
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
-                // maze-like walls
-                addWallCluster(300,300, 3,1, 100,20);
-                addWallCluster(600,500, 1,4, 20,80);
-                addWallCluster(900,200, 2,2, 80,80);
-                addWallCluster(1200,700, 4,1, 60,20);
-                addWallCluster(1500,400, 2,3, 80,60);
-                // enemy spawners (infantry, drone, sniper)
-                for (let i=0;i<12;i++) {
-                    let x = 300 + i*150;
-                    let y = 200 + (i%3)*150;
-                    let type = ['infantry','drone','sniper'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
+                // central ruins
+                addRoom(400,400, 300,200, 20);
+                addRoom(800,600, 200,300, 20);
+                addCorridor(600,500, 800,600, 20);
+                addPillars(1000,300, 3,2, 50,50);
+                // decorative trees
+                for (let i=0;i<20;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'tree' });
+                // enemies
+                spawnWave(300,300, 'infantry', 6);
+                spawnWave(900,200, 'drone', 4);
+                spawnWave(1200,700, 'sniper', 3);
                 // lieutenant boss
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
-            } else if (level === 2) { // FACTORY
+                enemySpawners.push({ x: 1900, y: 1900, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 2100, y: 2100 };
+            } else if (level === 2) { // FACTORY – industrial, conveyor lines
                 levelName = "MACHINE COMPLEX";
                 levelTheme = "factory";
-                addWallCluster(250,250, 3,2, 80,80);
-                addWallCluster(550,600, 1,5, 30,100);
-                addWallCluster(850,350, 4,1, 120,30);
-                addWallCluster(1150,750, 2,2, 100,100);
-                addWallCluster(1450,200, 3,1, 90,30);
-                for (let i=0;i<14;i++) {
-                    let x = 300 + i*130;
-                    let y = 300 + (i%4)*120;
-                    let type = ['heavy','infantry','sniper'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 3) { // ALIEN
+                addGrid(200,200, 4,3, 80,80, 20);
+                addConveyor(700,400, 5, 40);
+                addConveyor(700,600, 5, 40);
+                addRoom(1200,300, 250,200, 25);
+                addPillars(1600,500, 2,4, 60,60);
+                for (let i=0;i<15;i++) decorations.push({ x: 300+Math.random()*1800, y: 300+Math.random()*1800, type: 'machine' });
+                spawnWave(300,500, 'heavy', 4);
+                spawnWave(900,800, 'infantry', 5);
+                spawnWave(1400,200, 'sniper', 3);
+                enemySpawners.push({ x: 2000, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 2200, y: 2200 };
+            } else if (level === 3) { // ALIEN – bioluminescent, organic
                 levelName = "ALIEN NEXUS";
                 levelTheme = "alien";
-                addWallCluster(200,400, 2,3, 70,70);
-                addWallCluster(500,150, 3,2, 90,90);
-                addWallCluster(800,600, 2,2, 110,110);
-                addWallCluster(1100,300, 1,4, 40,120);
-                addWallCluster(1400,700, 3,1, 100,30);
-                for (let i=0;i<16;i++) {
-                    let x = 300 + i*120;
-                    let y = 400 + (i%5)*80;
-                    let type = ['drone','jumper','infantry'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
-            } else if (level === 4) { // ICE
+                addOrganic(400,400, 300,250);
+                addOrganic(900,600, 250,300);
+                addPillars(1300,300, 3,3, 70,70);
+                for (let i=0;i<25;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'alien' });
+                spawnWave(500,200, 'drone', 6);
+                spawnWave(1000,700, 'jumper', 4);
+                spawnWave(1500,400, 'infantry', 5);
+                enemySpawners.push({ x: 2100, y: 1900, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 2300, y: 2100 };
+            } else if (level === 4) { // ICE – frozen fortress
                 levelName = "GLACIAL PEAK";
                 levelTheme = "ice";
-                addWallCluster(300,250, 2,3, 80,80);
-                addWallCluster(600,550, 1,4, 30,100);
-                addWallCluster(900,400, 3,2, 90,90);
-                addWallCluster(1200,650, 2,2, 100,100);
-                addWallCluster(1500,200, 2,2, 70,70);
-                for (let i=0;i<15;i++) {
-                    let x = 350 + i*130;
-                    let y = 300 + (i%4)*110;
-                    let type = ['sniper','infantry','heavy'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 5) { // VOLCANO
+                addRoom(300,300, 400,200, 25);
+                addIceWall(800,500, 150,40);
+                addIceWall(1000,300, 40,150);
+                addPillars(1300,600, 2,3, 70,70);
+                for (let i=0;i<20;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'ice' });
+                spawnWave(400,500, 'sniper', 4);
+                spawnWave(900,200, 'infantry', 5);
+                spawnWave(1500,700, 'heavy', 3);
+                enemySpawners.push({ x: 2000, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 2200, y: 2200 };
+            } else if (level === 5) { // VOLCANO – lava, danger
                 levelName = "MOLTEN CORE";
                 levelTheme = "volcano";
-                addWallCluster(250,350, 3,1, 100,30);
-                addWallCluster(550,500, 2,2, 80,80);
-                addWallCluster(850,250, 1,5, 30,120);
-                addWallCluster(1150,600, 3,2, 90,90);
-                addWallCluster(1450,400, 2,3, 70,100);
-                for (let i=0;i<18;i++) {
-                    let x = 300 + i*110;
-                    let y = 400 + (i%6)*70;
-                    let type = ['heavy','drone','jumper','infantry'][Math.floor(Math.random()*4)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 6) { // FORTRESS – FINAL
+                addLavaPit(400,400, 200,200);
+                addLavaPit(900,600, 250,250);
+                addStoneBridge(1200,350, 300,40);
+                addPillars(1600,500, 3,2, 80,80);
+                for (let i=0;i<15;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'lava' });
+                spawnWave(500,200, 'heavy', 5);
+                spawnWave(1100,700, 'jumper', 4);
+                spawnWave(1700,400, 'drone', 5);
+                enemySpawners.push({ x: 2100, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 2300, y: 2200 };
+            } else if (level === 6) { // FORTRESS – final, epic
                 levelName = "FINAL FORTRESS";
                 levelTheme = "fortress";
-                addWallCluster(200,200, 4,2, 80,80);
-                addWallCluster(500,500, 3,3, 70,70);
-                addWallCluster(800,300, 2,4, 60,100);
-                addWallCluster(1100,600, 3,2, 90,90);
-                addWallCluster(1400,400, 2,3, 80,120);
-                for (let i=0;i<20;i++) {
-                    let x = 300 + i*90;
-                    let y = 300 + (i%7)*80;
-                    let type = i%5===0?'boss_lieutenant':(['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
-                }
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
+                addRoom(300,300, 500,400, 30);
+                addTurrets(600,500, 4);
+                addPillars(1200,400, 4,3, 80,80);
+                addRoom(1500,600, 400,300, 30);
+                for (let i=0;i<20;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'fortress' });
+                spawnWave(400,400, 'heavy', 6);
+                spawnWave(900,700, 'sniper', 5);
+                spawnWave(1400,200, 'jumper', 4);
+                spawnWave(1800,500, 'drone', 5);
+                enemySpawners.push({ x: 2000, y: 2000, type: 'boss', behavior: 'boss' });
+                exitDoor = { x: 2200, y: 2200 };
             }
         }
 
-        // Helper to add a cluster of walls
-        function addWallCluster(startX, startY, cols, rows, w, h) {
-            for (let i=0; i<cols; i++) {
-                for (let j=0; j<rows; j++) {
-                    walls.push({
-                        x: startX + i * (w + 20),
-                        y: startY + j * (h + 20),
-                        w, h
-                    });
-                }
+        // ----------  LEVEL BUILDING HELPERS ----------
+        function addRoom(x,y,w,h, thickness) {
+            walls.push({ x, y, w, h: thickness }); // top
+            walls.push({ x, y+h-thickness, w, h: thickness }); // bottom
+            walls.push({ x, y, w: thickness, h }); // left
+            walls.push({ x+w-thickness, y, w: thickness, h }); // right
+        }
+        function addCorridor(x1,y1,x2,y2, width) {
+            let midX = (x1+x2)/2;
+            walls.push({ x: Math.min(x1,midX)-width/2, y: y1-width/2, w: Math.abs(midX-x1)+width, h: width });
+            walls.push({ x: midX-width/2, y: Math.min(y1,y2)-width/2, w: width, h: Math.abs(y2-y1)+width });
+            walls.push({ x: Math.min(midX,x2)-width/2, y: y2-width/2, w: Math.abs(x2-midX)+width, h: width });
+        }
+        function addPillars(x,y, cols,rows, w,h) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) walls.push({ x: x+i*(w+40), y: y+j*(h+40), w, h });
+        }
+        function addConveyor(x,y, length, width) {
+            for (let i=0;i<length;i++) walls.push({ x: x + i*60, y, w: 40, h: width });
+        }
+        function addGrid(x,y, cols,rows, w,h, thickness) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) addRoom(x+i*(w+20), y+j*(h+20), w, h, thickness);
+        }
+        function addOrganic(x,y,w,h) {
+            // curved organic walls – approximated with blocks
+            for (let i=0;i<10;i++) walls.push({ x: x + Math.sin(i)*30, y: y + Math.cos(i)*30, w: 30, h: 30 });
+        }
+        function addIceWall(x,y,w,h) {
+            walls.push({ x, y, w, h });
+        }
+        function addLavaPit(x,y,w,h) {
+            // actually walls around pit
+            walls.push({ x, y, w, h: 20 }); // top
+            walls.push({ x, y+h-20, w, h:20 }); // bottom
+            walls.push({ x, y, w:20, h }); // left
+            walls.push({ x+w-20, y, w:20, h }); // right
+            // decorative lava in middle
+            decorations.push({ x: x+20, y: y+20, w: w-40, h: h-40, type: 'lava' });
+        }
+        function addStoneBridge(x,y,w,h) {
+            walls.push({ x, y, w, h });
+        }
+        function addTurrets(x,y, count) {
+            for (let i=0;i<count;i++) {
+                walls.push({ x: x + i*100, y, w: 30, h: 30 });
+                // spawners as stationary snipers
+                enemySpawners.push({ x: x + i*100, y: y-50, type: 'sniper', behavior: 'snipe' });
+            }
+        }
+        function spawnWave(x,y, type, count) {
+            for (let i=0;i<count;i++) {
+                enemySpawners.push({ x: x + Math.random()*200, y: y + Math.random()*200, type, behavior: 'patrol' });
             }
         }
 
@@ -496,21 +526,23 @@
             score = 0; playerHealth = MAX_HEALTH;
             rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
             spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
+            homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
+            speedBoost = false; speedTimer = 0; timeSlow = false; slowTimer = 0;
             player = {
                 x: 300, y: 300,
                 vx: 0, vy: 0,
-                facing: 1,
                 aimAngle: 0,
                 shootTimer: 0,
                 invincible: 0,
                 bombCooldown: 0,
+                weaponOffset: 0,
+                walkFrame: 0,
             };
-            bullets = []; enemies = []; enemyBullets = []; explosions = []; pickups = [];
+            bullets = []; enemies = []; enemyBullets = []; explosions = []; pickups = []; particles = [];
             buildLevel(currentLevel);
             cameraX = player.x - VIEWPORT_W/2;
             cameraY = player.y - VIEWPORT_H/2;
-            keys.left = false; keys.right = false; keys.up = false; keys.down = false;
-            keys.fire = false; keys.bomb = false;
+            keys.left = false; keys.right = false; keys.up = false; keys.down = false; keys.fire = false; keys.bomb = false;
             updateUI();
         }
 
@@ -531,16 +563,15 @@
             } catch(e) {}
         }
 
-        // ----------  COLLISION (AABB) ----------
+        // ----------  COLLISION ----------
         function collides(r1, r2) {
             return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
         }
 
-        // ----------  WALL COLLISION + RESPONSE ----------
+        // ----------  WALL COLLISION ----------
         function handleWallCollision(entity, w, h) {
             for (let wall of walls) {
                 if (collides({x:entity.x, y:entity.y, w, h}, wall)) {
-                    // push out
                     let dx = (entity.x + w/2) - (wall.x + wall.w/2);
                     let dy = (entity.y + h/2) - (wall.y + wall.h/2);
                     let overlapX = (w/2 + wall.w/2) - Math.abs(dx);
@@ -554,7 +585,7 @@
             }
         }
 
-        // ----------  CAMERA FOLLOW ----------
+        // ----------  CAMERA ----------
         function updateCamera() {
             let targetX = player.x + PLAYER_WIDTH/2 - VIEWPORT_W/2;
             let targetY = player.y + PLAYER_HEIGHT/2 - VIEWPORT_H/2;
@@ -564,9 +595,21 @@
             cameraY += (targetY - cameraY) * 0.12;
         }
 
-        function addSparks(x, y) { /* visual effect, simple */ }
+        // ----------  PARTICLES ----------
+        function addParticles(x,y, color, count=8) {
+            for (let i=0;i<count;i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random()-0.5)*6,
+                    vy: (Math.random()-0.5)*6,
+                    life: 20 + Math.random()*20,
+                    color,
+                    size: 2+Math.floor(Math.random()*4)
+                });
+            }
+        }
 
-        // ----------  PLAYER UPDATE – TOP-DOWN 8-WAY ----------
+        // ----------  PLAYER UPDATE – SMOOTH AS SILK ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -576,8 +619,13 @@
             if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
             if (starTimer > 0) starTimer--; else invincibleStar = false;
+            if (homingTimer > 0) homingTimer--; else homingMissiles = false;
+            if (piercingTimer > 0) piercingTimer--; else piercingShots = false;
+            if (speedTimer > 0) speedTimer--; else speedBoost = false;
+            if (slowTimer > 0) slowTimer--; else timeSlow = false;
 
-            // movement – 8-way
+            // movement with speed boost
+            let currentSpeed = BASE_SPEED * (speedBoost ? 1.6 : 1.0);
             let accelX = 0, accelY = 0;
             if (keys.left) accelX -= 1;
             if (keys.right) accelX += 1;
@@ -586,33 +634,56 @@
             if (accelX !== 0 || accelY !== 0) {
                 let len = Math.sqrt(accelX*accelX + accelY*accelY);
                 accelX /= len; accelY /= len;
-                player.aimAngle = Math.atan2(accelY, accelX); // aim in movement direction
-                player.facing = accelX > 0 ? 1 : -1;
+                player.aimAngle = Math.atan2(accelY, accelX);
+                player.walkFrame += 0.2;
+            } else {
+                player.walkFrame = 0;
             }
-            player.vx = accelX * MOVE_SPEED;
-            player.vy = accelY * MOVE_SPEED;
+            player.vx = accelX * currentSpeed;
+            player.vy = accelY * currentSpeed;
             player.x += player.vx;
             player.y += player.vy;
 
-            // wall collision
             handleWallCollision(player, PLAYER_WIDTH, PLAYER_HEIGHT);
-
-            // bounds (already have boundary walls, but keep inside)
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // shooting
+            // shooting – hold to auto-fire
             if (keys.fire && gameActive) {
-                let fireRate = rapidFire ? 6 : 16;
+                let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
                 if (player.shootTimer <= 0) {
                     let cos = Math.cos(player.aimAngle);
                     let sin = Math.sin(player.aimAngle);
+                    let bulletSpeed = timeSlow ? 8 : 12;
+                    // muzzle flash
+                    addParticles(player.x + PLAYER_WIDTH/2 + cos*25, player.y + PLAYER_HEIGHT/2 + sin*25, '#ffd966', 5);
+                    
                     if (spreadShot) {
-                        bullets.push({ x: player.x + PLAYER_WIDTH/2, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: cos * 10 + sin*2, vy: sin * 10 - cos*2, life: 60 });
-                        bullets.push({ x: player.x + PLAYER_WIDTH/2, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: cos * 12, vy: sin * 12, life: 60 });
-                        bullets.push({ x: player.x + PLAYER_WIDTH/2, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: cos * 10 - sin*2, vy: sin * 10 + cos*2, life: 60 });
+                        bullets.push(createBullet(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, cos*bulletSpeed + sin*2, sin*bulletSpeed - cos*2));
+                        bullets.push(createBullet(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, cos*bulletSpeed*1.2, sin*bulletSpeed*1.2));
+                        bullets.push(createBullet(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, cos*bulletSpeed - sin*2, sin*bulletSpeed + cos*2));
+                    } else if (homingMissiles) {
+                        // find nearest enemy
+                        let nearest = null, nearestDist = Infinity;
+                        for (let e of enemies) {
+                            let dx = e.x - player.x, dy = e.y - player.y;
+                            let dist = dx*dx + dy*dy;
+                            if (dist < nearestDist) { nearest = e; nearestDist = dist; }
+                        }
+                        bullets.push({
+                            x: player.x+PLAYER_WIDTH/2, y: player.y+PLAYER_HEIGHT/2,
+                            w: 20, h: 8,
+                            vx: cos * 8, vy: sin * 8,
+                            life: 90,
+                            homing: nearest,
+                            homingStrength: 0.1,
+                            piercing: piercingShots ? 2 : 0,
+                            damage: 1
+                        });
                     } else {
-                        bullets.push({ x: player.x + PLAYER_WIDTH/2, y: player.y + PLAYER_HEIGHT/2, w: 22, h: 8, vx: cos * 12, vy: sin * 12, life: 60 });
+                        let bullet = createBullet(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, cos*bulletSpeed, sin*bulletSpeed);
+                        bullet.piercing = piercingShots ? 2 : 0;
+                        bullets.push(bullet);
                     }
                     player.shootTimer = fireRate;
                 }
@@ -621,16 +692,18 @@
 
             // bomb
             if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
+                addParticles(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, '#ffaa00', 30);
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i];
                     let dx = e.x - player.x, dy = e.y - player.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 500) {
-                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 30 });
+                    if (Math.sqrt(dx*dx + dy*dy) < 600) {
+                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 30, maxRadius: 40 });
                         score += e.points;
+                        addParticles(e.x+e.w/2, e.y+e.h/2, '#ff8c00', 20);
                         enemies.splice(i, 1);
                     }
                 }
-                player.bombCooldown = 240;
+                player.bombCooldown = 300;
             }
             if (player.bombCooldown > 0) player.bombCooldown--;
 
@@ -638,67 +711,80 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
+        function createBullet(x,y,vx,vy) {
+            return {
+                x, y, w: 22, h: 8,
+                vx, vy,
+                life: 60,
+                piercing: 0,
+                damage: 1
+            };
+        }
+
         // ----------  ENEMY SPAWN ----------
         function checkSpawners() {
             for (let i = enemySpawners.length - 1; i >= 0; i--) {
                 let s = enemySpawners[i];
-                // spawn when player is near
                 let dx = s.x - player.x, dy = s.y - player.y;
-                if (Math.sqrt(dx*dx + dy*dy) < 600 || s.behavior === 'boss') {
+                if (Math.sqrt(dx*dx + dy*dy) < 700 || s.behavior === 'boss') {
                     let enemy = null;
                     switch (s.type) {
                         case 'infantry':
-                            enemy = { x: s.x, y: s.y, w: 30, h: 30, health: 1, points: 30, type: 'infantry',
+                            enemy = { x: s.x, y: s.y, w: 30, h: 30, health: 2, points: 30, type: 'infantry',
                                 vx: 0, vy: 0, speed: 1.2, shootTimer: 80 + Math.floor(Math.random()*80), behavior: 'chase' }; break;
                         case 'heavy':
-                            enemy = { x: s.x, y: s.y, w: 38, h: 38, health: 3, points: 100, type: 'heavy',
+                            enemy = { x: s.x, y: s.y, w: 38, h: 38, health: 5, points: 100, type: 'heavy',
                                 vx: 0, vy: 0, speed: 0.8, shootTimer: 120 + Math.floor(Math.random()*100), behavior: 'chase' }; break;
                         case 'drone':
                             enemy = { x: s.x, y: s.y, w: 28, h: 28, health: 1, points: 40, type: 'drone',
-                                vx: 0, vy: 0, speed: 1.6, shootTimer: 90 + Math.floor(Math.random()*90), behavior: 'flee' }; break;
+                                vx: 0, vy: 0, speed: 1.8, shootTimer: 90 + Math.floor(Math.random()*90), behavior: 'flee' }; break;
                         case 'sniper':
-                            enemy = { x: s.x, y: s.y, w: 28, h: 28, health: 2, points: 70, type: 'sniper',
-                                vx: 0, vy: 0, speed: 0.5, shootTimer: 150 + Math.floor(Math.random()*120), behavior: 'snipe' }; break;
+                            enemy = { x: s.x, y: s.y, w: 28, h: 28, health: 3, points: 70, type: 'sniper',
+                                vx: 0, vy: 0, speed: 0.4, shootTimer: 150 + Math.floor(Math.random()*120), behavior: 'snipe' }; break;
                         case 'jumper':
-                            enemy = { x: s.x, y: s.y, w: 28, h: 28, health: 1, points: 60, type: 'jumper',
-                                vx: 0, vy: 0, speed: 1.4, shootTimer: 100 + Math.floor(Math.random()*80), behavior: 'jump', jumpTimer: 30 }; break;
+                            enemy = { x: s.x, y: s.y, w: 28, h: 28, health: 2, points: 60, type: 'jumper',
+                                vx: 0, vy: 0, speed: 1.5, shootTimer: 100 + Math.floor(Math.random()*80), behavior: 'jump', jumpTimer: 30 }; break;
                         case 'boss_lieutenant':
-                            enemy = { x: s.x, y: s.y, w: 56, h: 56, health: 20, points: 400, type: 'boss_lieutenant',
-                                vx: 0, vy: 0, speed: 0.6, shootTimer: 80 + Math.floor(Math.random()*60), behavior: 'boss', phase: 1 }; break;
+                            enemy = { x: s.x, y: s.y, w: 60, h: 60, health: 35, points: 500, type: 'boss_lieutenant',
+                                vx: 0, vy: 0, speed: 0.7, shootTimer: 60 + Math.floor(Math.random()*40), behavior: 'boss', phase: 1, phaseTimer: 180 }; break;
                         case 'boss':
-                            enemy = { x: s.x, y: s.y, w: 70, h: 70, health: 40, points: 1000, type: 'boss',
-                                vx: 0, vy: 0, speed: 0.5, shootTimer: 60 + Math.floor(Math.random()*40), behavior: 'boss', phase: 1 }; break;
+                            enemy = { x: s.x, y: s.y, w: 80, h: 80, health: 80, points: 1500, type: 'boss',
+                                vx: 0, vy: 0, speed: 0.5, shootTimer: 50 + Math.floor(Math.random()*30), behavior: 'boss', phase: 1, phaseTimer: 240 }; break;
                     }
-                    if (enemy) enemies.push(enemy);
+                    if (enemy) {
+                        enemies.push(enemy);
+                        addParticles(s.x, s.y, '#ffaa66', 20);
+                    }
                     enemySpawners.splice(i, 1);
                 }
             }
         }
 
-        // ----------  ENEMY AI – TOP-DOWN ----------
+        // ----------  ENEMY AI ----------
         function updateEnemies() {
+            let globalSpeedFactor = timeSlow ? 0.5 : 1.0;
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
-                // simple AI: move toward player (or flee)
                 let dx = player.x - e.x, dy = player.y - e.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
+                // movement
                 if (dist > 1) {
                     if (e.behavior === 'chase' || e.behavior === 'boss') {
-                        e.vx = (dx / dist) * e.speed;
-                        e.vy = (dy / dist) * e.speed;
-                    } else if (e.behavior === 'flee') {
-                        e.vx = -(dx / dist) * e.speed;
-                        e.vy = -(dy / dist) * e.speed;
+                        e.vx = (dx / dist) * e.speed * globalSpeedFactor;
+                        e.vy = (dy / dist) * e.speed * globalSpeedFactor;
+                    } else if (e.behavior === 'flee' && dist < 300) {
+                        e.vx = -(dx / dist) * e.speed * globalSpeedFactor;
+                        e.vy = -(dy / dist) * e.speed * globalSpeedFactor;
                     } else if (e.behavior === 'snipe') {
-                        e.vx = 0; e.vy = 0; // stay still, shoot from distance
+                        e.vx *= 0.9; e.vy *= 0.9;
                     } else if (e.behavior === 'jump') {
                         e.jumpTimer--;
-                        if (e.jumpTimer <= 0 && dist < 200) {
-                            e.vx = (dx / dist) * e.speed * 2;
-                            e.vy = (dy / dist) * e.speed * 2;
+                        if (e.jumpTimer <= 0 && dist < 250) {
+                            e.vx = (dx / dist) * e.speed * 2 * globalSpeedFactor;
+                            e.vy = (dy / dist) * e.speed * 2 * globalSpeedFactor;
                             e.jumpTimer = 40 + Math.floor(Math.random()*40);
                         } else {
-                            e.vx *= 0.9; e.vy *= 0.9; // drift
+                            e.vx *= 0.9; e.vy *= 0.9;
                         }
                     }
                 }
@@ -706,6 +792,16 @@
                 handleWallCollision(e, e.w, e.h);
                 e.x = Math.max(20, Math.min(e.x, WORLD_SIZE - e.w - 20));
                 e.y = Math.max(20, Math.min(e.y, WORLD_SIZE - e.h - 20));
+
+                // boss phase changes
+                if (e.type.includes('boss')) {
+                    if (e.health < e.health/2 && e.phase === 1) {
+                        e.phase = 2;
+                        e.speed *= 1.3;
+                        e.shootTimer /= 1.5;
+                        addParticles(e.x+e.w/2, e.y+e.h/2, '#ff3333', 30);
+                    }
+                }
 
                 // shooting
                 e.shootTimer--;
@@ -716,12 +812,12 @@
                         bulletDX /= len; bulletDY /= len;
                         enemyBullets.push({
                             x: e.x + e.w/2 - 6, y: e.y + e.h/2 - 3,
-                            w: 12, h: 6, vx: bulletDX * 4, vy: bulletDY * 4, life: 60
+                            w: 12, h: 6, vx: bulletDX * 3.5, vy: bulletDY * 3.5, life: 80
                         });
                     }
                     e.shootTimer = e.type === 'heavy' ? 150 + Math.floor(Math.random()*150) :
                                    (e.type === 'sniper' ? 200 + Math.floor(Math.random()*150) :
-                                   (e.type === 'boss' || e.type === 'boss_lieutenant' ? 120 + Math.floor(Math.random()*100) :
+                                   (e.type.includes('boss') ? 80 + Math.floor(Math.random()*80) :
                                     100 + Math.floor(Math.random()*120)));
                 }
 
@@ -731,7 +827,8 @@
                     if (collides({x:player.x, y:player.y, w:PLAYER_WIDTH, h:PLAYER_HEIGHT},
                                  {x:e.x, y:e.y, w:e.w, h:e.h})) {
                         playerHealth -= 1;
-                        player.invincible = 110;
+                        player.invincible = 120;
+                        addParticles(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, '#ff5555', 15);
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
                     }
@@ -743,8 +840,9 @@
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
-                b.x += b.vx; b.y += b.vy;
-                b.life = (b.life || 60) - 1;
+                b.x += b.vx;
+                b.y += b.vy;
+                b.life--;
                 if (b.x < -100 || b.x > WORLD_SIZE+100 || b.y < -100 || b.y > WORLD_SIZE+100 || b.life <= 0) {
                     bullets.splice(i, 1); continue;
                 }
@@ -754,23 +852,49 @@
                     if (collides(bulletRect, wall)) { bullets.splice(i,1); break; }
                 }
                 if (i >= bullets.length) continue;
+
+                // homing
+                if (b.homing) {
+                    if (b.homing.health > 0) {
+                        let dx = b.homing.x + b.homing.w/2 - b.x;
+                        let dy = b.homing.y + b.homing.h/2 - b.y;
+                        let len = Math.sqrt(dx*dx + dy*dy);
+                        if (len > 0) {
+                            b.vx += (dx/len) * b.homingStrength;
+                            b.vy += (dy/len) * b.homingStrength;
+                            let sp = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+                            if (sp > 12) { b.vx = (b.vx/sp)*12; b.vy = (b.vy/sp)*12; }
+                        }
+                    } else {
+                        b.homing = null;
+                    }
+                }
+
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     let e = enemies[j];
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h})) {
-                        bullets.splice(i,1);
-                        e.health -= 1;
+                        e.health -= b.damage || 1;
+                        addParticles(b.x, b.y, '#ffe066', 6);
+                        if (b.piercing > 0) {
+                            b.piercing--;
+                            // bullet continues
+                        } else {
+                            bullets.splice(i,1);
+                            break;
+                        }
                         if (e.health <= 0) {
                             score += e.points;
-                            if (score > highScore) { highScore = score; try { localStorage.setItem('topdownCommando', highScore); } catch(e) {} }
-                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
-                            if (Math.random() < 0.5) {
-                                let types = ['health', 'rapid', 'shield', 'spread', 'star'];
+                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoDeluxe', highScore); } catch(e) {} }
+                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 20, maxRadius: 30 });
+                            addParticles(e.x+e.w/2, e.y+e.h/2, '#ffaa00', 20);
+                            if (Math.random() < 0.6) {
+                                let types = ['health', 'rapid', 'shield', 'spread', 'star', 'homing', 'piercing', 'speed', 'slow'];
                                 let type = types[Math.floor(Math.random() * types.length)];
-                                pickups.push({ x: e.x, y: e.y, w: 20, h: 20, type: type, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, life: 500 });
+                                pickups.push({ x: e.x, y: e.y, w: 20, h: 20, type, vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3, life: 600 });
                             }
                             enemies.splice(j, 1);
                         }
-                        break;
+                        if (b.piercing === 0) break;
                     }
                 }
             }
@@ -780,12 +904,12 @@
         function updateEnemyBullets() {
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 let eb = enemyBullets[i];
-                eb.x += eb.vx; eb.y += eb.vy;
-                eb.life = (eb.life || 60) - 1;
+                eb.x += eb.vx;
+                eb.y += eb.vy;
+                eb.life--;
                 if (eb.x < -100 || eb.x > WORLD_SIZE+100 || eb.y < -100 || eb.y > WORLD_SIZE+100 || eb.life <= 0) {
                     enemyBullets.splice(i, 1); continue;
                 }
-                // wall collision
                 let bulletRect = {x:eb.x, y:eb.y, w:eb.w, h:eb.h};
                 for (let wall of walls) {
                     if (collides(bulletRect, wall)) { enemyBullets.splice(i,1); break; }
@@ -797,6 +921,7 @@
                                  {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
                         playerHealth -= 1;
                         player.invincible = 100;
+                        addParticles(eb.x, eb.y, '#ff5555', 8);
                         enemyBullets.splice(i, 1);
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
@@ -809,21 +934,40 @@
         function updatePickups() {
             for (let i = pickups.length - 1; i >= 0; i--) {
                 let p = pickups[i];
-                p.x += p.vx; p.y += p.vy;
+                p.x += p.vx;
+                p.y += p.vy;
                 p.life--;
                 if (p.life <= 0 || p.x < -100 || p.x > WORLD_SIZE+100 || p.y < -100 || p.y > WORLD_SIZE+100) {
                     pickups.splice(i, 1); continue;
                 }
                 if (collides({x:player.x, y:player.y, w:PLAYER_WIDTH, h:PLAYER_HEIGHT},
                              {x:p.x, y:p.y, w:p.w, h:p.h})) {
+                    addParticles(p.x, p.y, '#ffff66', 20);
                     if (p.type === 'health') playerHealth = Math.min(MAX_HEALTH, playerHealth + 2);
                     else if (p.type === 'rapid') { rapidFire = true; rapidTimer = 600; }
                     else if (p.type === 'shield') { shieldActive = true; shieldTimer = 600; }
                     else if (p.type === 'spread') { spreadShot = true; spreadTimer = 600; }
                     else if (p.type === 'star') { invincibleStar = true; starTimer = 500; }
+                    else if (p.type === 'homing') { homingMissiles = true; homingTimer = 600; }
+                    else if (p.type === 'piercing') { piercingShots = true; piercingTimer = 600; }
+                    else if (p.type === 'speed') { speedBoost = true; speedTimer = 500; }
+                    else if (p.type === 'slow') { timeSlow = true; slowTimer = 400; }
                     pickups.splice(i, 1);
                     updateUI();
                 }
+            }
+        }
+
+        // ----------  PARTICLES ----------
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 2;
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+                if (p.life <= 0) particles.splice(i, 1);
             }
         }
 
@@ -831,8 +975,8 @@
         function updateExplosions() {
             for (let i = explosions.length - 1; i >= 0; i--) {
                 let ex = explosions[i];
-                ex.life -= 1.5;
-                ex.radius += 1.4;
+                ex.life -= 2;
+                ex.radius += 2;
                 if (ex.life <= 0) explosions.splice(i, 1);
             }
         }
@@ -841,14 +985,18 @@
         function checkExit() {
             if (exitDoor && enemies.length === 0) {
                 let dx = player.x - exitDoor.x, dy = player.y - exitDoor.y;
-                if (Math.sqrt(dx*dx + dy*dy) < 50) {
+                if (Math.sqrt(dx*dx + dy*dy) < 60) {
                     if (currentLevel < MAX_LEVEL) {
                         currentLevel++;
                         buildLevel(currentLevel);
                         player.x = 300; player.y = 300;
+                        // reset power-ups but keep health and score
                         rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
                         spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
+                        homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
+                        speedBoost = false; speedTimer = 0; timeSlow = false; slowTimer = 0;
                         enemies = []; enemyBullets = []; pickups = [];
+                        addParticles(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, '#ffff00', 40);
                         updateUI();
                     } else {
                         gameActive = false; gameOver = false; victoryFlag = true;
@@ -857,43 +1005,133 @@
             }
         }
 
-        // ----------  RENDERING – TOP-DOWN, THEMED ----------
+        // ----------  RENDERING – ABSOLUTELY GORGEOUS ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
-            ctx.translate(-cameraX, -cameraY); // camera transform
+            ctx.translate(-cameraX, -cameraY);
 
-            // background – solid color per theme
-            if (levelTheme === 'jungle') ctx.fillStyle = '#1a4a3a';
-            else if (levelTheme === 'factory') ctx.fillStyle = '#3e4f4f';
-            else if (levelTheme === 'alien') ctx.fillStyle = '#2f3a6a';
-            else if (levelTheme === 'ice') ctx.fillStyle = '#80b0c0';
-            else if (levelTheme === 'volcano') ctx.fillStyle = '#6a2f2f';
-            else if (levelTheme === 'fortress') ctx.fillStyle = '#2a2a3a';
-            ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-
-            // walls
-            walls.forEach(w => {
-                ctx.fillStyle = '#5c4934';
-                ctx.fillRect(w.x, w.y, w.w, w.h);
-                ctx.fillStyle = '#846b4a';
-                ctx.fillRect(w.x+2, w.y-2, w.w-4, 5);
-            });
-
-            // exit door
-            if (exitDoor) {
-                ctx.fillStyle = enemies.length === 0 ? '#f7d44a' : '#ac8c5a';
-                ctx.fillRect(exitDoor.x, exitDoor.y, 40, 40);
+            // ----- THEMED BACKGROUNDS -----
+            if (levelTheme === 'jungle') {
+                ctx.fillStyle = '#1f4a3a';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // vines
+                ctx.strokeStyle = '#3a6a4a';
+                ctx.lineWidth = 2;
+                for (let i=0;i<50;i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random()*WORLD_SIZE, 0);
+                    ctx.lineTo(Math.random()*WORLD_SIZE, WORLD_SIZE);
+                    ctx.stroke();
+                }
+            } else if (levelTheme === 'factory') {
+                ctx.fillStyle = '#3a4a4a';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // grid lines
+                ctx.strokeStyle = '#5a6a6a';
+                ctx.lineWidth = 1;
+                for (let i=0;i<WORLD_SIZE;i+=50) {
+                    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,WORLD_SIZE); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(WORLD_SIZE,i); ctx.stroke();
+                }
+            } else if (levelTheme === 'alien') {
+                ctx.fillStyle = '#2a2a5a';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // glowing dots
+                ctx.fillStyle = '#8a8aff';
+                for (let i=0;i<200;i++) {
+                    ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
+                }
+            } else if (levelTheme === 'ice') {
+                ctx.fillStyle = '#a0d0e0';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // sparkles
+                ctx.fillStyle = '#ffffff';
+                for (let i=0;i<150;i++) {
+                    ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
+                }
+            } else if (levelTheme === 'volcano') {
+                ctx.fillStyle = '#4a2a2a';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // lava glow
+                ctx.fillStyle = '#ff6a2a';
+                for (let i=0;i<100;i++) {
+                    ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 4, 4);
+                }
+            } else if (levelTheme === 'fortress') {
+                ctx.fillStyle = '#2a2a3a';
+                ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                // stone texture
+                ctx.fillStyle = '#4a4a6a';
+                for (let i=0;i<100;i++) {
+                    ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 8, 4);
+                }
             }
 
-            // enemies
+            // ----- DECORATIONS -----
+            decorations.forEach(d => {
+                if (d.type === 'tree') {
+                    ctx.fillStyle = '#3a8a3a';
+                    ctx.fillRect(d.x, d.y, 15, 30);
+                    ctx.fillStyle = '#2a6a2a';
+                    ctx.beginPath();
+                    ctx.arc(d.x+7, d.y, 15, 0, Math.PI*2);
+                    ctx.fill();
+                } else if (d.type === 'machine') {
+                    ctx.fillStyle = '#6a6a6a';
+                    ctx.fillRect(d.x, d.y, 20, 20);
+                    ctx.fillStyle = '#8a8a8a';
+                    ctx.fillRect(d.x+5, d.y+5, 10, 10);
+                } else if (d.type === 'alien') {
+                    ctx.fillStyle = '#8a6ad0';
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, 8, 0, Math.PI*2);
+                    ctx.fill();
+                } else if (d.type === 'ice') {
+                    ctx.fillStyle = '#c0e0ff';
+                    ctx.fillRect(d.x, d.y, 10, 20);
+                } else if (d.type === 'lava') {
+                    ctx.fillStyle = '#ff8a4a';
+                    ctx.fillRect(d.x, d.y, d.w, d.h);
+                }
+            });
+
+            // ----- WALLS WITH TEXTURE -----
+            walls.forEach(w => {
+                let baseColor;
+                if (levelTheme === 'jungle') baseColor = '#5c4a34';
+                else if (levelTheme === 'factory') baseColor = '#6a6a6a';
+                else if (levelTheme === 'alien') baseColor = '#4a3a8a';
+                else if (levelTheme === 'ice') baseColor = '#a0c0d0';
+                else if (levelTheme === 'volcano') baseColor = '#6a4a4a';
+                else baseColor = '#6a6a7a';
+                ctx.fillStyle = baseColor;
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                // highlight
+                ctx.fillStyle = '#ffffaa20';
+                ctx.fillRect(w.x, w.y-2, w.w, 4);
+                // shadow
+                ctx.fillStyle = '#00000030';
+                ctx.fillRect(w.x+2, w.y+2, w.w, w.h);
+            });
+
+            // ----- EXIT DOOR -----
+            if (exitDoor) {
+                ctx.fillStyle = enemies.length === 0 ? '#ffd966' : '#ac8c5a';
+                ctx.shadowBlur = enemies.length === 0 ? 20 : 0;
+                ctx.shadowColor = '#ffd966';
+                ctx.fillRect(exitDoor.x, exitDoor.y, 50, 50);
+                ctx.shadowBlur = 0;
+            }
+
+            // ----- ENEMIES -----
             enemies.forEach(e => {
                 let color;
-                if (e.type === 'infantry') color = '#9d4e3a';
-                else if (e.type === 'heavy') color = '#6a4e4e';
-                else if (e.type === 'drone') color = '#467c7c';
-                else if (e.type === 'sniper') color = '#7a5c3c';
-                else if (e.type === 'jumper') color = '#b3763a';
+                if (e.type === 'infantry') color = '#b35a4a';
+                else if (e.type === 'heavy') color = '#8a6a6a';
+                else if (e.type === 'drone') color = '#5a9c9c';
+                else if (e.type === 'sniper') color = '#9a7a5a';
+                else if (e.type === 'jumper') color = '#d4944a';
                 else if (e.type.includes('boss')) color = '#b34b4b';
                 ctx.fillStyle = color;
                 ctx.fillRect(e.x, e.y, e.w, e.h);
@@ -901,21 +1139,31 @@
                 ctx.fillStyle = '#000';
                 ctx.fillRect(e.x+4, e.y+4, 5,5);
                 ctx.fillRect(e.x+e.w-9, e.y+4, 5,5);
+                // boss glow
+                if (e.type.includes('boss')) {
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#ff6a6a';
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    ctx.shadowBlur = 0;
+                }
             });
 
-            // player bullets
+            // ----- BULLETS -----
             bullets.forEach(b => {
-                ctx.fillStyle = '#ffe066';
+                ctx.fillStyle = '#ffd966';
+                ctx.shadowBlur = 8; ctx.shadowColor = '#ffaa00';
                 ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.shadowBlur = 0;
             });
-            // enemy bullets
             enemyBullets.forEach(b => {
                 ctx.fillStyle = '#ff8c8c';
+                ctx.shadowBlur = 6; ctx.shadowColor = '#ff0000';
                 ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.shadowBlur = 0;
             });
 
-            // pickups
+            // ----- PICKUPS (glowing) -----
             pickups.forEach(p => {
+                ctx.shadowBlur = 12; ctx.shadowColor = '#ffffaa';
                 ctx.fillStyle = '#4caf7a';
                 ctx.fillRect(p.x, p.y, p.w, p.h);
                 ctx.fillStyle = 'white'; ctx.font = '20px monospace';
@@ -924,34 +1172,64 @@
                 else if (p.type === 'shield') ctx.fillText('🛡️', p.x, p.y+16);
                 else if (p.type === 'spread') ctx.fillText('🌟', p.x, p.y+16);
                 else if (p.type === 'star') ctx.fillText('✨', p.x, p.y+16);
+                else if (p.type === 'homing') ctx.fillText('🎯', p.x, p.y+16);
+                else if (p.type === 'piercing') ctx.fillText('🔥', p.x, p.y+16);
+                else if (p.type === 'speed') ctx.fillText('💨', p.x, p.y+16);
+                else if (p.type === 'slow') ctx.fillText('⏱️', p.x, p.y+16);
+                ctx.shadowBlur = 0;
             });
 
-            // explosions
+            // ----- EXPLOSIONS -----
             explosions.forEach(ex => {
                 ctx.fillStyle = `rgba(255, 140, 30, ${ex.life/30})`;
                 ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.radius, 0, 2*Math.PI);
                 ctx.fill();
             });
 
-            // player
+            // ----- PARTICLES -----
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+
+            // ----- PLAYER – DETAILED SPRITE -----
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
                 let px = player.x, py = player.y;
-                ctx.fillStyle = shieldActive ? '#7fb3d5' : (invincibleStar ? '#ffd966' : '#3a7251');
+                // shield effect
+                if (shieldActive) {
+                    ctx.shadowBlur = 20; ctx.shadowColor = '#7fb3d5';
+                }
+                // body
+                ctx.fillStyle = invincibleStar ? '#ffd966' : '#3a7251';
                 ctx.fillRect(px, py, PLAYER_WIDTH, PLAYER_HEIGHT);
-                // helmet / gun direction
+                // helmet
                 ctx.fillStyle = '#5a8f4c';
-                ctx.fillRect(px + 10, py-2, 24, 8);
-                // gun
-                ctx.fillStyle = '#414141';
-                let gunX = px + PLAYER_WIDTH/2 + Math.cos(player.aimAngle) * 20;
-                let gunY = py + PLAYER_HEIGHT/2 + Math.sin(player.aimAngle) * 20;
-                ctx.beginPath();
-                ctx.moveTo(px + PLAYER_WIDTH/2, py + PLAYER_HEIGHT/2);
-                ctx.lineTo(gunX, gunY);
-                ctx.lineWidth = 6;
+                ctx.fillRect(px+10, py-2, 24, 8);
+                // gun – dynamic aiming
                 ctx.strokeStyle = '#414141';
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(px+PLAYER_WIDTH/2, py+PLAYER_HEIGHT/2);
+                ctx.lineTo(px+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*30, py+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*30);
                 ctx.stroke();
+                // legs animation
+                ctx.fillStyle = '#2b543a';
+                let walkOffset = Math.sin(player.walkFrame) * 3;
+                ctx.fillRect(px+8, py+PLAYER_HEIGHT-6, 6, 8);
+                ctx.fillRect(px+PLAYER_WIDTH-14, py+PLAYER_HEIGHT-6, 6, 8);
+                // shadow
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#00000040';
+                ctx.fillRect(px-2, py+PLAYER_HEIGHT-2, PLAYER_WIDTH+4, 8);
             }
+
+            // ----- CROSSHAIR / AIM LINE -----
+            ctx.strokeStyle = '#ffffff80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2);
+            ctx.lineTo(player.x+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*60, player.y+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*60);
+            ctx.stroke();
 
             ctx.restore();
         }
@@ -967,11 +1245,26 @@
                 updateEnemyBullets();
                 updatePickups();
                 updateExplosions();
+                updateParticles();
                 checkExit();
                 if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; }
                 updateUI();
             }
             drawWorld();
+
+            // ----- HUD OVERLAY (cooldown, etc) -----
+            ctx.save();
+            ctx.font = '20px "Courier New", monospace';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('💣 ' + Math.floor(player.bombCooldown/60), 20, 50);
+            if (rapidFire) ctx.fillText('⚡', 120, 50);
+            if (spreadShot) ctx.fillText('🌟', 160, 50);
+            if (homingMissiles) ctx.fillText('🎯', 200, 50);
+            if (piercingShots) ctx.fillText('🔥', 240, 50);
+            if (speedBoost) ctx.fillText('💨', 280, 50);
+            if (timeSlow) ctx.fillText('⏱️', 320, 50);
+            ctx.restore();
+
             if (!gameActive) {
                 ctx.save();
                 ctx.fillStyle = '#000000bb';
@@ -988,7 +1281,7 @@
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ----------  ANALOG STICK – 8-WAY MOVEMENT ----------
+        // ----------  ANALOG STICK – SILKY ----------
         function initAnalogStick() {
             const stick = document.getElementById('joystickHandle');
             const base = document.getElementById('joystickBase');
@@ -1006,9 +1299,8 @@
                 let distance = Math.sqrt(dx*dx + dy*dy);
                 if (distance > maxDist) { dx = (dx/distance)*maxDist; dy = (dy/distance)*maxDist; }
                 stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
-                // set movement keys
-                keys.left = dx < -10; keys.right = dx > 10;
-                keys.up = dy < -10; keys.down = dy > 10;
+                keys.left = dx < -8; keys.right = dx > 8;
+                keys.up = dy < -8; keys.down = dy > 8;
             }
             function handleEnd(e) { e.preventDefault(); active = false; stick.style.left = '0px'; stick.style.top = '0px'; 
                 keys.left = false; keys.right = false; keys.up = false; keys.down = false; }
