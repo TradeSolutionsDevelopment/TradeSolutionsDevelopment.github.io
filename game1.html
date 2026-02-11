@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>8-bit COMMANDO · GameBoy mobile · centered AB · fixed canvas</title>
-    <meta name="description" content="Fullscreen GameBoy mode. D‑pad left, AB centered. Tactical enemies, 6 power‑ups, spread shot, star. Pixel perfect.">
+    <title>8-bit COMMANDO · DOUBLE SIZE · analog stick</title>
+    <meta name="description" content="Fullscreen GameBoy mode. Giant player, analog joystick, 6 enemies, 5 power‑ups. Pixel perfect.">
     <style>
         * {
             margin: 0;
@@ -48,7 +48,7 @@
             aspect-ratio: 800 / 500;
             image-rendering: crisp-edges;
             image-rendering: pixelated;
-            background: #10262e; /* fallback – will be overwritten by game */
+            background: #10262e;
         }
         .panel {
             display: flex;
@@ -100,7 +100,6 @@
             border-bottom-width: 3px;
             transform: translateY(3px);
         }
-        /* Desktop legend (hidden on mobile) */
         .legend {
             color: #b3ecff;
             font-size: 15px;
@@ -121,7 +120,7 @@
         }
         .health span { font-size: 24px; }
 
-        /* ----------  GAMEBOY TOUCH CONTROLS – DPAD LEFT, AB CENTERED, FULL RIGHT ---------- */
+        /* ----------  TOUCH CONTROLS – ANALOG STICK (LEFT) + AB (CENTERED) + FULL (RIGHT) ---------- */
         .touch-controls {
             display: none;
             margin-top: 15px;
@@ -134,42 +133,58 @@
             border-bottom: 8px solid #16333a;
             touch-action: none;
         }
-        .dpad {
-            display: grid;
-            grid-template-columns: 60px 60px 60px;
-            grid-template-rows: 60px 60px;
-            gap: 5px;
+        /* virtual analog stick container */
+        .joystick {
+            width: 140px;
+            height: 140px;
             background: #1f3a40;
-            padding: 10px;
-            border-radius: 40px;
-            border-bottom: 6px solid #0f262c;
-        }
-        .dpad-btn {
-            background: #3f5f68;
-            border-radius: 16px;
-            border-bottom: 6px solid #1e353b;
+            border-radius: 50%;
+            border-bottom: 8px solid #0f262c;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
-            color: #e3f2fd;
-            text-shadow: 3px 3px 0 #142f39;
-            box-shadow: inset 0 -2px 0 #2e4e57;
-            cursor: pointer;
-            user-select: none;
-            aspect-ratio: 1 / 1;
+            position: relative;
             touch-action: none;
         }
-        .dpad-btn:active {
+        .joystick-base {
+            width: 100px;
+            height: 100px;
+            background: #2f4f58;
+            border-radius: 50%;
+            border-bottom: 6px solid #1a2f35;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .joystick-handle {
+            width: 60px;
+            height: 60px;
+            background: #5f838c;
+            border-radius: 50%;
+            border-bottom: 6px solid #3a555e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: #e3f2fd;
+            text-shadow: 3px 3px 0 #142f39;
+            box-shadow: inset 0 -2px 0 #3a555e;
+            transition: 0.02s;
+            position: relative;
+            left: 0;
+            top: 0;
+            touch-action: none;
+        }
+        .joystick-handle:active {
             border-bottom-width: 2px;
             transform: translateY(4px);
-            background: #527a86;
         }
+        /* AB buttons – pulled toward center */
         .ab-buttons {
             display: flex;
-            gap: 10px;           /* reduced from 20px – 50% closer */
-            margin-right: 0;     /* removed right margin – pulls buttons toward center */
-            margin-left: -10px;  /* shift left to center on narrow screens */
+            gap: 8px;
+            margin-left: -15px;  /* shift left toward center */
         }
         .ab {
             background: #9e4a5c;
@@ -211,7 +226,6 @@
             transform: translateY(4px);
         }
 
-        /* Show touch controls on narrow screens – DPAD LEFT, AB CENTERED, FULL RIGHT */
         @media (max-width: 900px) {
             .touch-controls {
                 display: flex !important;
@@ -219,18 +233,23 @@
             .legend {
                 display: none;
             }
-            .dpad {
-                grid-template-columns: 55px 55px 55px;
-                grid-template-rows: 55px 55px;
+            .joystick {
+                width: 120px;
+                height: 120px;
+            }
+            .joystick-base {
+                width: 90px;
+                height: 90px;
+            }
+            .joystick-handle {
+                width: 55px;
+                height: 55px;
+                font-size: 26px;
             }
             .ab {
                 width: 65px;
                 height: 65px;
                 font-size: 24px;
-            }
-            .fullscreen-toggle {
-                padding: 10px 12px;
-                font-size: 20px;
             }
         }
 
@@ -272,18 +291,15 @@
         <span id="levelDisplay">LVL 1</span>
     </div>
 
-    <!-- ========== GAMEBOY TOUCH CONTROLS – DPAD LEFT, AB CENTERED, FULL RIGHT ========== -->
+    <!-- ========== TOUCH CONTROLS – ANALOG STICK + AB CENTERED ========== -->
     <div class="touch-controls" id="touchControls">
-        <!-- D‑pad left -->
-        <div class="dpad">
-            <div></div>
-            <div class="dpad-btn" id="touchUp">⬆️</div>
-            <div></div>
-            <div class="dpad-btn" id="touchLeft">⬅️</div>
-            <div class="dpad-btn" id="touchDown">⬇️</div>
-            <div class="dpad-btn" id="touchRight">➡️</div>
+        <!-- Left: virtual analog stick -->
+        <div class="joystick" id="joystickContainer">
+            <div class="joystick-base" id="joystickBase">
+                <div class="joystick-handle" id="joystickHandle">⬆️⬇️⬅️➡️</div>
+            </div>
         </div>
-        <!-- AB buttons – centered (pulled inward) -->
+        <!-- AB buttons – centered -->
         <div class="ab-buttons">
             <div class="ab" id="touchFire">FIRE</div>
             <div class="ab" id="touchBomb">BOMB</div>
@@ -296,17 +312,16 @@
 <script>
     (function(){
         'use strict';
-        console.log('Game initializing...');
         const canvas = document.getElementById('gameCanvas');
-        if (!canvas) { console.error('Canvas not found'); return; }
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        if (!ctx) { console.error('No 2d context'); return; }
+        if (!ctx) return;
         ctx.imageSmoothingEnabled = false;
 
         // ----------  WORLD & CAMERA ----------
-        const WORLD_WIDTH = 2800;
+        const WORLD_WIDTH = 3200;        // wider to accommodate bigger player
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
-        const GROUND_Y = 440;
+        const GROUND_Y = 460;           // lowered a bit for larger player
         let cameraX = 0;
 
         // ----------  GLOBAL STATE ----------
@@ -318,7 +333,7 @@
         let frame = 0;
         let animFrameId = null;
 
-        // ----------  SCORE & HIGHSCORE (with fallback) ----------
+        // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
         try { highScore = localStorage.getItem('commandoElite') ? parseInt(localStorage.getItem('commandoElite')) : 0; } catch(e) { highScore = 0; }
@@ -331,13 +346,15 @@
         let spreadShot = false, spreadTimer = 0;
         let invincibleStar = false, starTimer = 0;
 
-        // ----------  PLAYER PHYSICS ----------
-        const PLAYER_WIDTH = 22, PLAYER_HEIGHT = 28;
+        // ----------  PLAYER PHYSICS – DOUBLE SIZE ----------
+        const PLAYER_WIDTH = 44;
+        const PLAYER_HEIGHT = 56;
         const GRAVITY = 0.7;
-        const JUMP_FORCE = -12.2;
-        const MOVE_SPEED = 4.6;
+        const JUMP_FORCE = -13.5;       // slightly stronger for larger sprite
+        const MOVE_SPEED = 4.8;
+
         let player = {
-            x: 200, y: GROUND_Y - PLAYER_HEIGHT,
+            x: 220, y: GROUND_Y - PLAYER_HEIGHT,
             vx: 0, vy: 0,
             onGround: false,
             doubleJumpUsed: false,
@@ -350,7 +367,7 @@
             bombCooldown: 0,
         };
 
-        // ----------  LEVEL DESIGN ----------
+        // ----------  LEVEL DESIGN – platforms lowered for double‑height player ----------
         let platforms = [];
         let enemySpawners = [];
         let exitDoor = null;
@@ -367,61 +384,61 @@
         let screenShake = 0;
 
         // ----------  KEYBOARD STATE ----------
-        const keys = { left: false, right: false, jump: false, fire: false, bomb: false, down: false };
+        const keys = { left: false, right: false, jump: false, fire: false, bomb: false, down: false, up: false };
 
-        // ----------  LEVEL DEFINITIONS (COMPLETE) ----------
+        // ----------  LEVEL DEFINITIONS – platforms lowered by 30–40px ----------
         function buildLevel(level) {
             platforms = []; enemySpawners = []; exitDoor = null;
             if (level === 1) {
                 levelName = "FORGOTTEN JUNGLE";
                 platforms = [
-                    { x: 400, y: 360, w: 100, h: 12 }, { x: 620, y: 300, w: 80, h: 12 },
-                    { x: 880, y: 340, w: 90, h: 12 }, { x: 1150, y: 280, w: 100, h: 12 },
-                    { x: 1450, y: 320, w: 90, h: 12 }, { x: 1750, y: 260, w: 110, h: 12 },
-                    { x: 2100, y: 380, w: 80, h: 12 }, { x: 2400, y: 300, w: 120, h: 12 }
+                    { x: 400, y: 390, w: 120, h: 14 }, { x: 650, y: 330, w: 100, h: 14 },
+                    { x: 920, y: 370, w: 110, h: 14 }, { x: 1200, y: 310, w: 120, h: 14 },
+                    { x: 1500, y: 350, w: 110, h: 14 }, { x: 1820, y: 290, w: 130, h: 14 },
+                    { x: 2180, y: 400, w: 100, h: 14 }, { x: 2500, y: 330, w: 140, h: 14 }
                 ];
                 enemySpawners = [
                     { x: 550, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 900, type: 'drone', side: 'left', behavior: 'swoop' },
-                    { x: 1300, type: 'sniper', side: 'right', behavior: 'aim' },
-                    { x: 1800, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 2200, type: 'jumper', side: 'left', behavior: 'leap' }
+                    { x: 950, type: 'drone', side: 'left', behavior: 'swoop' },
+                    { x: 1350, type: 'sniper', side: 'right', behavior: 'aim' },
+                    { x: 1850, type: 'heavy', side: 'right', behavior: 'block' },
+                    { x: 2300, type: 'jumper', side: 'left', behavior: 'leap' }
                 ];
-                exitDoor = { x: 2650, y: GROUND_Y - 48 };
+                exitDoor = { x: 2800, y: GROUND_Y - 60 };
             } else if (level === 2) {
                 levelName = "MACHINE COMPLEX";
                 platforms = [
-                    { x: 380, y: 300, w: 100, h: 12 }, { x: 600, y: 240, w: 80, h: 12 },
-                    { x: 820, y: 360, w: 90, h: 12 }, { x: 1080, y: 200, w: 100, h: 12 },
-                    { x: 1350, y: 320, w: 90, h: 12 }, { x: 1650, y: 260, w: 110, h: 12 },
-                    { x: 2000, y: 380, w: 80, h: 12 }, { x: 2300, y: 220, w: 120, h: 12 }
+                    { x: 380, y: 330, w: 120, h: 14 }, { x: 620, y: 270, w: 100, h: 14 },
+                    { x: 860, y: 390, w: 110, h: 14 }, { x: 1120, y: 230, w: 120, h: 14 },
+                    { x: 1400, y: 350, w: 110, h: 14 }, { x: 1720, y: 290, w: 130, h: 14 },
+                    { x: 2080, y: 400, w: 100, h: 14 }, { x: 2400, y: 250, w: 140, h: 14 }
                 ];
                 enemySpawners = [
-                    { x: 500, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 750, type: 'sniper', side: 'left', behavior: 'aim' },
-                    { x: 1100, type: 'drone', side: 'right', behavior: 'swoop' },
-                    { x: 1500, type: 'jumper', side: 'left', behavior: 'leap' },
-                    { x: 1900, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 2350, type: 'boss_lieutenant', side: 'right', behavior: 'command' }
+                    { x: 520, type: 'heavy', side: 'right', behavior: 'block' },
+                    { x: 780, type: 'sniper', side: 'left', behavior: 'aim' },
+                    { x: 1150, type: 'drone', side: 'right', behavior: 'swoop' },
+                    { x: 1550, type: 'jumper', side: 'left', behavior: 'leap' },
+                    { x: 1950, type: 'infantry', side: 'right', behavior: 'flank' },
+                    { x: 2450, type: 'boss_lieutenant', side: 'right', behavior: 'command' }
                 ];
-                exitDoor = { x: 2700, y: GROUND_Y - 48 };
+                exitDoor = { x: 2900, y: GROUND_Y - 60 };
             } else if (level === 3) {
                 levelName = "HELL HANGAR";
                 platforms = [
-                    { x: 420, y: 340, w: 120, h: 12 }, { x: 680, y: 260, w: 100, h: 12 },
-                    { x: 950, y: 200, w: 100, h: 12 }, { x: 1250, y: 320, w: 90, h: 12 },
-                    { x: 1580, y: 260, w: 110, h: 12 }, { x: 1920, y: 380, w: 80, h: 12 },
-                    { x: 2250, y: 220, w: 120, h: 12 }
+                    { x: 440, y: 370, w: 140, h: 14 }, { x: 720, y: 290, w: 120, h: 14 },
+                    { x: 1000, y: 230, w: 120, h: 14 }, { x: 1300, y: 350, w: 110, h: 14 },
+                    { x: 1640, y: 290, w: 130, h: 14 }, { x: 2000, y: 400, w: 100, h: 14 },
+                    { x: 2350, y: 250, w: 140, h: 14 }
                 ];
                 enemySpawners = [
-                    { x: 550, type: 'heavy', side: 'right', behavior: 'block' },
-                    { x: 800, type: 'sniper', side: 'left', behavior: 'aim' },
-                    { x: 1100, type: 'drone', side: 'right', behavior: 'swoop' },
-                    { x: 1450, type: 'jumper', side: 'left', behavior: 'leap' },
-                    { x: 1800, type: 'infantry', side: 'right', behavior: 'flank' },
-                    { x: 2200, type: 'boss', side: 'right', behavior: 'final' }
+                    { x: 580, type: 'heavy', side: 'right', behavior: 'block' },
+                    { x: 840, type: 'sniper', side: 'left', behavior: 'aim' },
+                    { x: 1150, type: 'drone', side: 'right', behavior: 'swoop' },
+                    { x: 1500, type: 'jumper', side: 'left', behavior: 'leap' },
+                    { x: 1880, type: 'infantry', side: 'right', behavior: 'flank' },
+                    { x: 2300, type: 'boss', side: 'right', behavior: 'final' }
                 ];
-                exitDoor = { x: 2650, y: GROUND_Y - 48 };
+                exitDoor = { x: 2800, y: GROUND_Y - 60 };
             }
         }
 
@@ -432,14 +449,14 @@
             rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
             spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
             player = {
-                x: 200, y: GROUND_Y - PLAYER_HEIGHT, vx: 0, vy: 0, onGround: false,
+                x: 220, y: GROUND_Y - PLAYER_HEIGHT, vx: 0, vy: 0, onGround: false,
                 doubleJumpUsed: false, coyoteTime: 0, jumpBuffer: 0, facing: 1,
                 walkCycle: 0, shootTimer: 0, invincible: 0, bombCooldown: 0
             };
             bullets = []; enemies = []; enemyBullets = []; explosions = []; pickups = [];
             dustEffects = []; sparks = []; screenShake = 0;
             buildLevel(currentLevel); cameraX = 0;
-            keys.left = false; keys.right = false; keys.jump = false; keys.fire = false; keys.bomb = false; keys.down = false;
+            keys.left = false; keys.right = false; keys.jump = false; keys.fire = false; keys.bomb = false; keys.down = false; keys.up = false;
             updateUI();
         }
 
@@ -472,7 +489,7 @@
         function addDust(x, y) { dustEffects.push({ x, y, life: 12 }); }
         function addSparks(x, y) { sparks.push({ x, y, life: 10 }); }
 
-        // ----------  PLAYER UPDATE (COMPLETE) ----------
+        // ----------  PLAYER UPDATE – double size, analog movement ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -482,18 +499,25 @@
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
             if (starTimer > 0) starTimer--; else invincibleStar = false;
 
-            let accel = 0;
-            if (keys.left) accel -= 1;
-            if (keys.right) accel += 1;
-            player.vx = accel * MOVE_SPEED;
+            // analog movement: keys.left/right/up/down set by joystick
+            let accelX = 0, accelY = 0;
+            if (keys.left) accelX -= 1;
+            if (keys.right) accelX += 1;
+            if (keys.up) accelY -= 1;    // not used for horizontal movement, but we keep for jump? Actually jump is separate.
+            if (keys.down) accelY += 1;   // not used, maybe crouch later.
+            
+            player.vx = accelX * MOVE_SPEED;
             player.x += player.vx;
+
             if (player.x < 20) player.x = 20;
             if (player.x + PLAYER_WIDTH > WORLD_WIDTH - 20) player.x = WORLD_WIDTH - PLAYER_WIDTH - 20;
 
+            // coyote time
             if (player.onGround) { player.coyoteTime = 8; player.doubleJumpUsed = false; }
             else player.coyoteTime--;
             if (player.jumpBuffer > 0) player.jumpBuffer--;
 
+            // jump logic – triggered by joystick up or keyboard
             let canJump = (player.onGround || player.coyoteTime > 0) && !player.doubleJumpUsed;
             let canDoubleJump = !player.onGround && !player.doubleJumpUsed && player.coyoteTime <= 0;
             if (player.jumpBuffer > 0) {
@@ -511,9 +535,11 @@
                 }
             }
 
+            // gravity
             player.vy += GRAVITY;
             player.y += player.vy;
 
+            // ground collision
             player.onGround = false;
             if (player.y + PLAYER_HEIGHT > GROUND_Y) {
                 player.y = GROUND_Y - PLAYER_HEIGHT;
@@ -523,6 +549,7 @@
                 addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
             }
 
+            // platform collisions
             for (let pl of platforms) {
                 if (player.vy >= 0) {
                     let bottom = player.y + PLAYER_HEIGHT;
@@ -539,33 +566,38 @@
             }
             if (player.y < 30) player.y = 30;
 
+            // facing direction
             if (player.vx > 0.2) player.facing = 1;
             else if (player.vx < -0.2) player.facing = -1;
+
+            // walk cycle
             if (Math.abs(player.vx) > 0.5 && player.onGround) {
-                player.walkCycle = (player.walkCycle + 0.25) % 4;
+                player.walkCycle = (player.walkCycle + 0.2) % 4;
             } else player.walkCycle = 0;
 
+            // shooting
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 5 : 14;
                 if (player.shootTimer <= 0) {
                     if (spreadShot) {
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 16, y: player.y + PLAYER_HEIGHT/2 - 6, w: 16, h: 6, vx: player.facing * 10, vy: -2.5 });
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 16, y: player.y + PLAYER_HEIGHT/2 - 3, w: 16, h: 6, vx: player.facing * 11, vy: 0 });
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 16, y: player.y + PLAYER_HEIGHT/2, w: 16, h: 6, vx: player.facing * 10, vy: 2.5 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 8, w: 20, h: 8, vx: player.facing * 11, vy: -3 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 20, h: 8, vx: player.facing * 12, vy: 0 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: player.facing * 11, vy: 3 });
                     } else {
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 2 : player.x - 16, y: player.y + PLAYER_HEIGHT/2 - 3, w: 18, h: 6, vx: player.facing * 11, vy: 0 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 22, h: 8, vx: player.facing * 12, vy: 0 });
                     }
                     player.shootTimer = fireRate;
                 }
             }
             if (player.shootTimer > 0) player.shootTimer--;
 
+            // bomb
             if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
                 addShake(8);
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i];
                     if (Math.abs(e.x - player.x) < 500) {
-                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 24, radius: 16 });
+                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 24, radius: 20 });
                         score += e.points;
                         addSparks(e.x + e.w/2, e.y + e.h/2);
                         enemies.splice(i, 1);
@@ -578,58 +610,58 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN (COMPLETE) ----------
+        // ----------  ENEMY SPAWN – same as before, but enemy sizes slightly larger for visibility ----------
         function checkSpawners() {
             for (let i = enemySpawners.length - 1; i >= 0; i--) {
                 let s = enemySpawners[i];
                 if (player.x > s.x - 300 && player.x < s.x + 100) {
                     let side = s.side;
-                    let xPos = side === 'right' ? WORLD_WIDTH - 60 : 60;
-                    let yPos = GROUND_Y - 32;
+                    let xPos = side === 'right' ? WORLD_WIDTH - 80 : 80;
+                    let yPos = GROUND_Y - 40;
                     let enemy = null;
                     switch (s.type) {
                         case 'infantry':
                             enemy = {
-                                x: xPos, y: GROUND_Y - 32, w: 26, h: 30,
-                                vx: side === 'right' ? -2.0 : 2.0, health: 1, points: 30,
+                                x: xPos, y: GROUND_Y - 40, w: 30, h: 36,
+                                vx: side === 'right' ? -2.2 : 2.2, health: 2, points: 40,
                                 type: 'infantry', behavior: s.behavior, frame: 0,
-                                shootTimer: 40 + Math.random() * 20, patrolDir: side === 'right' ? -1 : 1
+                                shootTimer: 40 + Math.random() * 20
                             }; break;
                         case 'heavy':
                             enemy = {
-                                x: xPos, y: GROUND_Y - 36, w: 32, h: 34,
-                                vx: side === 'right' ? -1.1 : 1.1, health: 5, points: 100,
+                                x: xPos, y: GROUND_Y - 44, w: 38, h: 42,
+                                vx: side === 'right' ? -1.2 : 1.2, health: 6, points: 120,
                                 type: 'heavy', behavior: s.behavior, frame: 0, shootTimer: 30
                             }; break;
                         case 'drone':
-                            yPos = 200 + Math.random() * 180;
+                            yPos = 220 + Math.random() * 180;
                             enemy = {
-                                x: xPos, y: yPos, w: 24, h: 20,
-                                vx: side === 'right' ? -2.8 : 2.8, health: 1, points: 40,
-                                type: 'drone', behavior: s.behavior, frame: 0, shootTimer: 50, swoopTimer: 0
+                                x: xPos, y: yPos, w: 28, h: 24,
+                                vx: side === 'right' ? -3.0 : 3.0, health: 1, points: 50,
+                                type: 'drone', behavior: s.behavior, frame: 0, shootTimer: 50
                             }; break;
                         case 'sniper':
                             enemy = {
-                                x: xPos, y: GROUND_Y - 36, w: 24, h: 30,
-                                vx: side === 'right' ? -0.8 : 0.8, health: 2, points: 80,
-                                type: 'sniper', behavior: s.behavior, frame: 0, shootTimer: 80, aimTimer: 0
+                                x: xPos, y: GROUND_Y - 44, w: 28, h: 36,
+                                vx: side === 'right' ? -0.9 : 0.9, health: 3, points: 90,
+                                type: 'sniper', behavior: s.behavior, frame: 0, shootTimer: 80
                             }; break;
                         case 'jumper':
                             enemy = {
-                                x: xPos, y: GROUND_Y - 32, w: 24, h: 28,
-                                vx: side === 'right' ? -2.2 : 2.2, health: 2, points: 70,
+                                x: xPos, y: GROUND_Y - 40, w: 28, h: 34,
+                                vx: side === 'right' ? -2.4 : 2.4, health: 2, points: 80,
                                 type: 'jumper', behavior: s.behavior, frame: 0, shootTimer: 60, jumpTimer: 20
                             }; break;
                         case 'boss_lieutenant':
                             enemy = {
-                                x: WORLD_WIDTH - 100, y: GROUND_Y - 48, w: 48, h: 48,
-                                vx: -0.8, health: 15, points: 300, type: 'boss_lieutenant',
+                                x: WORLD_WIDTH - 120, y: GROUND_Y - 60, w: 56, h: 56,
+                                vx: -0.9, health: 20, points: 400, type: 'boss_lieutenant',
                                 behavior: s.behavior, frame: 0, shootTimer: 25, phase: 1
                             }; break;
                         case 'boss':
                             enemy = {
-                                x: WORLD_WIDTH - 120, y: GROUND_Y - 60, w: 60, h: 60,
-                                vx: -0.6, health: 35, points: 800, type: 'boss',
+                                x: WORLD_WIDTH - 140, y: GROUND_Y - 70, w: 70, h: 70,
+                                vx: -0.7, health: 45, points: 1000, type: 'boss',
                                 behavior: s.behavior, frame: 0, shootTimer: 18, phase: 1
                             }; break;
                     }
@@ -639,7 +671,7 @@
             }
         }
 
-        // ----------  ENEMY UPDATE (COMPLETE) ----------
+        // ----------  ENEMY UPDATE – minor AI tweaks ----------
         function updateEnemies() {
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
@@ -647,12 +679,10 @@
                 e.frame = (e.frame + 0.15) % 4;
                 if (e.x + e.w < -150 || e.x > WORLD_WIDTH + 150) { enemies.splice(i, 1); continue; }
 
-                if (e.type === 'drone' && e.behavior === 'swoop') {
-                    e.y += Math.sin(frame * 0.1) * 0.7;
-                }
+                if (e.type === 'drone' && e.behavior === 'swoop') e.y += Math.sin(frame * 0.1) * 0.7;
                 if (e.type === 'jumper' && e.behavior === 'leap') {
                     e.jumpTimer--;
-                    if (e.jumpTimer <= 0 && Math.abs(e.x - player.x) < 200 && e.y + e.h >= GROUND_Y - 5) {
+                    if (e.jumpTimer <= 0 && Math.abs(e.x - player.x) < 250 && e.y + e.h >= GROUND_Y - 5) {
                         e.vy = JUMP_FORCE * 0.8;
                         e.jumpTimer = 50 + Math.random() * 40;
                     }
@@ -660,25 +690,21 @@
                     e.vy = (e.vy || 0) + GRAVITY * 0.5;
                     if (e.y + e.h > GROUND_Y) { e.y = GROUND_Y - e.h; e.vy = 0; }
                 }
-                if (e.type === 'sniper' && e.behavior === 'aim') {
-                    e.vx = 0;
-                    e.shootTimer = 40;
-                }
+                if (e.type === 'sniper' && e.behavior === 'aim') { e.vx = 0; e.shootTimer = 40; }
                 if (e.type === 'infantry' && e.behavior === 'flank') {
-                    if (player.x > e.x) e.vx = 1.2; else e.vx = -1.2;
+                    if (player.x > e.x) e.vx = 1.4; else e.vx = -1.4;
                 }
 
                 e.shootTimer--;
-                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 600) {
-                    let bulletVX = e.x > player.x ? -5.5 : 5.5;
+                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 650) {
+                    let bulletVX = e.x > player.x ? -6 : 6;
                     if (e.type === 'drone') bulletVX *= 1.3;
-                    if (e.type === 'sniper') bulletVX *= 1.5;
+                    if (e.type === 'sniper') bulletVX *= 1.6;
                     enemyBullets.push({
-                        x: e.x + (bulletVX > 0 ? e.w : -8), y: e.y + e.h/2 - 3,
-                        w: 10, h: 5, vx: bulletVX, vy: 0
+                        x: e.x + (bulletVX > 0 ? e.w : -10), y: e.y + e.h/2 - 4,
+                        w: 12, h: 6, vx: bulletVX, vy: 0
                     });
-                    e.shootTimer = e.type === 'heavy' ? 55 : (e.type === 'sniper' ? 70 :
-                        (e.type === 'boss' || e.type === 'boss_lieutenant' ? 22 : 45));
+                    e.shootTimer = e.type === 'heavy' ? 55 : (e.type === 'sniper' ? 70 : (e.type === 'boss' || e.type === 'boss_lieutenant' ? 22 : 45));
                 }
 
                 let inv = player.invincible > 0 || invincibleStar;
@@ -688,7 +714,7 @@
                         let dmg = (e.type === 'heavy' || e.type === 'boss' || e.type === 'boss_lieutenant') ? 2 : 1;
                         playerHealth -= dmg;
                         player.invincible = 70;
-                        addShake(4);
+                        addShake(5);
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
                     }
@@ -696,7 +722,7 @@
             }
         }
 
-        // ----------  BULLETS (COMPLETE) ----------
+        // ----------  BULLETS, PICKUPS, EFFECTS – same logic, slightly adjusted sizes ----------
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -713,12 +739,12 @@
                         if (e.health <= 0) {
                             score += e.points;
                             if (score > highScore) { highScore = score; try { localStorage.setItem('commandoElite', highScore); } catch(e) {} }
-                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 20, radius: 14 });
-                            addShake(3);
-                            if (Math.random() < 0.3) {
+                            explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
+                            addShake(4);
+                            if (Math.random() < 0.35) {
                                 let types = ['health', 'rapid', 'shield', 'spread', 'star'];
                                 let type = types[Math.floor(Math.random() * types.length)];
-                                pickups.push({ x: e.x, y: e.y, w: 16, h: 16, type: type, vx: -1, life: 500 });
+                                pickups.push({ x: e.x, y: e.y, w: 20, h: 20, type: type, vx: -1, life: 500 });
                             }
                             enemies.splice(j, 1);
                         }
@@ -748,7 +774,6 @@
             }
         }
 
-        // ----------  PICKUPS ----------
         function updatePickups() {
             for (let i = pickups.length - 1; i >= 0; i--) {
                 let p = pickups[i];
@@ -768,7 +793,6 @@
             }
         }
 
-        // ----------  EFFECTS ----------
         function updateDust() {
             for (let i = dustEffects.length - 1; i >= 0; i--) {
                 dustEffects[i].life -= 1.2;
@@ -790,13 +814,12 @@
             }
         }
 
-        // ----------  EXIT ----------
         function checkExit() {
             if (exitDoor && player.x > exitDoor.x - 40 && enemies.length === 0) {
                 if (currentLevel < MAX_LEVEL) {
                     currentLevel++;
                     buildLevel(currentLevel);
-                    player.x = 200; player.y = GROUND_Y - PLAYER_HEIGHT; cameraX = 0;
+                    player.x = 220; player.y = GROUND_Y - PLAYER_HEIGHT; cameraX = 0;
                     rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
                     spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
                     enemies = []; enemyBullets = []; pickups = [];
@@ -807,98 +830,167 @@
             }
         }
 
-        // ----------  RENDERING (COMPLETE) ----------
+        // ----------  RENDERING – HUGE PLAYER, ENHANCED GRAPHICS ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
             if (screenShake > 0.5) {
-                let sx = (Math.random() * 2 - 1) * screenShake;
-                let sy = (Math.random() * 2 - 1) * screenShake;
-                ctx.translate(sx, sy);
+                ctx.translate((Math.random()*2-1)*screenShake, (Math.random()*2-1)*screenShake);
             }
             ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
+            
+            // Parallax sky with stars
             let bgOffset = cameraX * 0.2;
-            ctx.fillStyle = '#0f3340'; ctx.fillRect(0, 0, VIEWPORT_W, 120);
-            ctx.fillStyle = '#1f4f5a'; ctx.fillRect(0, 120, VIEWPORT_W, 70);
-            ctx.fillStyle = '#2f6b75'; ctx.fillRect(0, 190, VIEWPORT_W, 60);
-            ctx.fillStyle = '#48a5b0';
-            for (let i = 0; i < 6; i++) { let x = (i * 180 - bgOffset) % 1000 - 100; ctx.fillRect(x, 200, 4, 60); }
-            ctx.fillStyle = '#2a6b4a';
-            for (let i = 0; i < 5; i++) {
-                let x = (i * 220 - bgOffset * 0.6) % 900 - 100;
-                ctx.beginPath(); ctx.moveTo(x, 310); ctx.quadraticCurveTo(x + 80, 220, x + 160, 310); ctx.fill();
+            ctx.fillStyle = '#0f2a33'; ctx.fillRect(0, 0, VIEWPORT_W, 130);
+            ctx.fillStyle = '#1a414a'; ctx.fillRect(0, 130, VIEWPORT_W, 70);
+            ctx.fillStyle = '#25555f'; ctx.fillRect(0, 200, VIEWPORT_W, 60);
+            // stars
+            ctx.fillStyle = '#cde3e6';
+            for (let i=0;i<20;i++) {
+                let x = (i*90 + frame*0.2) % 800;
+                let y = (i*23) % 120;
+                ctx.fillRect(x, y, 2, 2);
             }
-            ctx.fillStyle = '#4b6a3b'; ctx.fillRect(0, GROUND_Y - 6, VIEWPORT_W, 20);
-            ctx.fillStyle = '#6d8f4d'; ctx.fillRect(0, GROUND_Y - 2, VIEWPORT_W, 8);
+            // waterfall
+            ctx.fillStyle = '#48a5b0';
+            for (let i=0;i<8;i++) {
+                let x = (i*150 - bgOffset) % 1000 - 100;
+                ctx.fillRect(x, 200, 4, 70);
+            }
+            // hills
+            ctx.fillStyle = '#2a6b4a';
+            for (let i=0;i<5;i++) {
+                let x = (i*250 - bgOffset*0.5) % 900 - 100;
+                ctx.beginPath();
+                ctx.moveTo(x, 320);
+                ctx.quadraticCurveTo(x+100, 230, x+200, 320);
+                ctx.fill();
+            }
+            // ground with texture
+            ctx.fillStyle = '#4b6a3b'; ctx.fillRect(0, GROUND_Y-6, VIEWPORT_W, 20);
+            ctx.fillStyle = '#6d8f4d'; ctx.fillRect(0, GROUND_Y-2, VIEWPORT_W, 8);
+            for (let i=0;i<30;i++) {
+                ctx.fillStyle = '#3b552a';
+                ctx.fillRect(i*30 + (cameraX*0.1)%30, GROUND_Y-10, 8, 6);
+            }
+            
+            // platforms – wooden with grain
             platforms.forEach(p => {
                 let sx = p.x - cameraX;
                 if (sx + p.w > 0 && sx < VIEWPORT_W) {
                     ctx.fillStyle = '#5c4934'; ctx.fillRect(sx, p.y, p.w, p.h);
-                    ctx.fillStyle = '#846b4a'; ctx.fillRect(sx + 2, p.y - 2, p.w - 4, 5);
+                    ctx.fillStyle = '#846b4a'; ctx.fillRect(sx+2, p.y-3, p.w-4, 5);
+                    for (let i=0;i<4;i++) {
+                        ctx.fillStyle = '#3d2e1e';
+                        ctx.fillRect(sx+10+i*20, p.y+2, 6, 4);
+                    }
                 }
             });
+
+            // exit door
             if (exitDoor) {
                 let sx = exitDoor.x - cameraX;
                 ctx.fillStyle = enemies.length === 0 ? '#f7d44a' : '#ac8c5a';
                 if (enemies.length === 0) { ctx.shadowBlur = 12; ctx.shadowColor = '#ffd966'; }
-                ctx.fillRect(sx, exitDoor.y, 30, 48);
-                ctx.fillStyle = '#c9ae74'; ctx.fillRect(sx + 8, exitDoor.y - 8, 14, 12);
+                ctx.fillRect(sx, exitDoor.y, 36, 60);
+                ctx.fillStyle = '#c9ae74'; ctx.fillRect(sx+10, exitDoor.y-10, 16, 14);
                 ctx.shadowBlur = 0;
             }
+
+            // enemies – detailed
             enemies.forEach(e => {
                 let sx = e.x - cameraX;
                 if (sx + e.w > 0 && sx < VIEWPORT_W) {
-                    if (e.type === 'infantry') ctx.fillStyle = '#9d4e3a';
-                    else if (e.type === 'heavy') ctx.fillStyle = '#6a4e4e';
-                    else if (e.type === 'drone') ctx.fillStyle = '#467c7c';
-                    else if (e.type === 'sniper') ctx.fillStyle = '#7a5c3c';
-                    else if (e.type === 'jumper') ctx.fillStyle = '#b3763a';
-                    else if (e.type.includes('boss')) ctx.fillStyle = '#b34b4b';
-                    ctx.fillRect(sx, e.y, e.w, e.h);
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(sx + 4, e.y + 6, 4, 4);
-                    ctx.fillRect(sx + e.w - 8, e.y + 6, 4, 4);
+                    if (e.type === 'infantry') {
+                        ctx.fillStyle = '#9d4e3a'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#000'; ctx.fillRect(sx+4, e.y+6, 5, 5); ctx.fillRect(sx+e.w-9, e.y+6, 5, 5);
+                        ctx.fillStyle = '#cec13b'; ctx.fillRect(sx+8, e.y-4, 12, 8);
+                    } else if (e.type === 'heavy') {
+                        ctx.fillStyle = '#6a4e4e'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#3f2f2f'; ctx.fillRect(sx+4, e.y+4, e.w-8, 10);
+                        ctx.fillStyle = '#c0a050'; ctx.fillRect(sx+10, e.y-6, 16, 10);
+                    } else if (e.type === 'drone') {
+                        ctx.fillStyle = '#467c7c'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#2d4f4f'; ctx.fillRect(sx+4, e.y+6, 6, 6);
+                        ctx.fillStyle = '#a0d0d0'; ctx.fillRect(sx+10, e.y-5, 8, 8);
+                    } else if (e.type === 'sniper') {
+                        ctx.fillStyle = '#7a5c3c'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#000'; ctx.fillRect(sx+6, e.y+4, 4, 6);
+                        ctx.fillStyle = '#b38b5b'; ctx.fillRect(sx+e.w-8, e.y-2, 8, 6);
+                    } else if (e.type === 'jumper') {
+                        ctx.fillStyle = '#b3763a'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#8a5a2e'; ctx.fillRect(sx+4, e.y-4, e.w-8, 6);
+                    } else if (e.type.includes('boss')) {
+                        ctx.fillStyle = '#b34b4b'; ctx.fillRect(sx, e.y, e.w, e.h);
+                        ctx.fillStyle = '#d48c48'; ctx.fillRect(sx+10, e.y-10, 20, 14);
+                        ctx.fillStyle = '#ffd966'; ctx.fillRect(sx+20, e.y-16, 12, 8);
+                    }
                 }
             });
-            bullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ffd966'; ctx.fillRect(sx, b.y, b.w, b.h); });
-            enemyBullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ff7474'; ctx.fillRect(sx, b.y, b.w, b.h); });
+
+            // bullets
+            bullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ffe066'; ctx.fillRect(sx, b.y, b.w, b.h); });
+            enemyBullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ff8c8c'; ctx.fillRect(sx, b.y, b.w, b.h); });
+
+            // pickups – larger icons
             pickups.forEach(p => {
                 let sx = p.x - cameraX;
                 ctx.fillStyle = '#4caf7a'; ctx.fillRect(sx, p.y, p.w, p.h);
-                ctx.fillStyle = 'white'; ctx.font = '16px monospace';
-                if (p.type === 'health') ctx.fillText('❤️', sx, p.y + 14);
-                else if (p.type === 'rapid') ctx.fillText('⚡', sx, p.y + 14);
-                else if (p.type === 'shield') ctx.fillText('🛡️', sx, p.y + 14);
-                else if (p.type === 'spread') ctx.fillText('🌟', sx, p.y + 14);
-                else if (p.type === 'star') ctx.fillText('✨', sx, p.y + 14);
+                ctx.fillStyle = 'white'; ctx.font = '20px monospace';
+                if (p.type === 'health') ctx.fillText('❤️', sx, p.y+16);
+                else if (p.type === 'rapid') ctx.fillText('⚡', sx, p.y+16);
+                else if (p.type === 'shield') ctx.fillText('🛡️', sx, p.y+16);
+                else if (p.type === 'spread') ctx.fillText('🌟', sx, p.y+16);
+                else if (p.type === 'star') ctx.fillText('✨', sx, p.y+16);
             });
+
+            // explosions
             explosions.forEach(ex => {
                 let sx = ex.x - cameraX;
-                ctx.fillStyle = `rgba(255, 140, 30, ${ex.life / 30})`;
-                ctx.beginPath(); ctx.arc(sx, ex.y, ex.radius, 0, 2 * Math.PI); ctx.fill();
+                ctx.fillStyle = `rgba(255, 140, 30, ${ex.life/30})`;
+                ctx.beginPath(); ctx.arc(sx, ex.y, ex.radius, 0, 2*Math.PI);
+                ctx.fill();
             });
-            dustEffects.forEach(d => { let sx = d.x - cameraX; ctx.fillStyle = `rgba(220,200,120,${d.life / 15})`; ctx.fillRect(sx - 2, d.y - 2, 6, 4); });
-            sparks.forEach(s => { let sx = s.x - cameraX; ctx.fillStyle = '#ffaa66'; ctx.fillRect(sx, s.y, 3, 3); });
+
+            // dust & sparks
+            dustEffects.forEach(d => { let sx = d.x - cameraX; ctx.fillStyle = `rgba(220,200,120,${d.life/15})`; ctx.fillRect(sx-3, d.y-3, 8, 6); });
+            sparks.forEach(s => { let sx = s.x - cameraX; ctx.fillStyle = '#ffaa66'; ctx.fillRect(sx, s.y, 4, 4); });
+
+            // ----- DOUBLE SIZE PLAYER with DETAIL -----
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
                 let px = player.x - cameraX, py = player.y;
+                // body
                 ctx.fillStyle = shieldActive ? '#7fb3d5' : (invincibleStar ? '#ffd966' : '#3a7251');
-                ctx.fillRect(px + 2, py + 2, 20, 22);
-                ctx.fillStyle = '#5a8f4c'; ctx.fillRect(px + 6, py - 2, 12, 10);
-                ctx.fillStyle = '#ab8b3b'; ctx.fillRect(player.facing === 1 ? px + 16 : px, py, 8, 6);
+                ctx.fillRect(px+4, py+4, 36, 44);
+                // helmet
+                ctx.fillStyle = '#5a8f4c'; ctx.fillRect(px+10, py-4, 24, 14);
+                ctx.fillStyle = '#ab8b3b'; ctx.fillRect(player.facing===1 ? px+28 : px, py, 12, 8);
+                // gun
                 ctx.fillStyle = '#414141';
-                if (player.facing === 1) ctx.fillRect(px + 20, py + 10, 14, 4);
-                else ctx.fillRect(px - 10, py + 10, 14, 4);
+                if (player.facing === 1) ctx.fillRect(px+36, py+18, 18, 6);
+                else ctx.fillRect(px-12, py+18, 18, 6);
+                // legs with animation
+                ctx.fillStyle = '#2b543a';
+                let legOffset = Math.floor(player.walkCycle) * 2;
+                ctx.fillRect(px+6, py+46, 10, 10);
+                ctx.fillRect(px+26, py+46, 10, 10);
+                // backpack
+                ctx.fillStyle = '#4d3e2e';
+                ctx.fillRect(px+30, py+12, 8, 14);
+                // double jump indicator (wings)
                 if (!player.onGround && !player.doubleJumpUsed) {
                     ctx.fillStyle = '#ffe082';
-                    ctx.fillRect(px - 2, py - 4, 4, 6);
-                    ctx.fillRect(px + PLAYER_WIDTH - 2, py - 4, 4, 6);
+                    ctx.fillRect(px-4, py, 6, 10);
+                    ctx.fillRect(px+PLAYER_WIDTH-2, py, 6, 10);
                 }
             }
+
+            // level title
             if (frame % 120 < 60 && gameActive) {
-                ctx.font = 'bold 22px "Courier New", monospace';
+                ctx.font = 'bold 24px "Courier New", monospace';
                 ctx.fillStyle = '#ffe082';
                 ctx.shadowBlur = 8; ctx.shadowColor = 'black';
-                ctx.fillText(levelName, 40, 80);
+                ctx.fillText(levelName, 40, 90);
                 ctx.shadowBlur = 0;
             }
             ctx.restore();
@@ -936,40 +1028,123 @@
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ----------  TOUCH CONTROLS – HARDENED, DPAD LEFT, AB CENTERED ----------
-        function initTouchControls() {
-            const touchUp = document.getElementById('touchUp');
-            const touchLeft = document.getElementById('touchLeft');
-            const touchRight = document.getElementById('touchRight');
-            const touchDown = document.getElementById('touchDown');
+        // ----------  ANALOG STICK – 8‑WAY MOVEMENT ----------
+        function initAnalogStick() {
+            const stick = document.getElementById('joystickHandle');
+            const base = document.getElementById('joystickBase');
+            const container = document.getElementById('joystickContainer');
+            if (!stick || !base || !container) return;
+
+            let active = false;
+            const maxDist = 40; // max displacement from center
+
+            function handleStart(e) {
+                e.preventDefault();
+                active = true;
+            }
+
+            function handleMove(e) {
+                if (!active) return;
+                e.preventDefault();
+                let touch = e.touches ? e.touches[0] : e;
+                let rect = base.getBoundingClientRect();
+                let centerX = rect.left + rect.width/2;
+                let centerY = rect.top + rect.height/2;
+                let dx = touch.clientX - centerX;
+                let dy = touch.clientY - centerY;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance > maxDist) {
+                    dx = (dx / distance) * maxDist;
+                    dy = (dy / distance) * maxDist;
+                }
+                // move handle
+                stick.style.left = dx + 'px';
+                stick.style.top = dy + 'px';
+
+                // set direction keys based on angle
+                let angle = Math.atan2(dy, dx);
+                let threshold = 0.8; // 45° sectors
+                // left/right
+                if (Math.abs(dx) > 10) {
+                    keys.right = dx > 0;
+                    keys.left = dx < 0;
+                } else {
+                    keys.left = false; keys.right = false;
+                }
+                // up/down (jump is separate button, but we also allow stick up to jump)
+                if (Math.abs(dy) > 10) {
+                    if (dy < 0) {
+                        // up – trigger jump buffer
+                        player.jumpBuffer = 10;
+                        keys.up = true;
+                    } else {
+                        keys.down = true;
+                    }
+                } else {
+                    keys.up = false; keys.down = false;
+                }
+            }
+
+            function handleEnd(e) {
+                e.preventDefault();
+                active = false;
+                stick.style.left = '0px';
+                stick.style.top = '0px';
+                keys.left = false; keys.right = false; keys.up = false; keys.down = false;
+            }
+
+            container.addEventListener('touchstart', handleStart, { passive: false });
+            container.addEventListener('touchmove', handleMove, { passive: false });
+            container.addEventListener('touchend', handleEnd, { passive: false });
+            container.addEventListener('touchcancel', handleEnd, { passive: false });
+            // mouse fallback
+            container.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleEnd);
+        }
+
+        // ----------  TOUCH CONTROLS – AB BUTTONS ----------
+        function initTouchButtons() {
             const touchFire = document.getElementById('touchFire');
             const touchBomb = document.getElementById('touchBomb');
-
             function setKey(key, state, e) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
                 keys[key] = state;
-                if (key === 'jump' && state) player.jumpBuffer = 10;
             }
+            if (touchFire) {
+                touchFire.addEventListener('touchstart', (e) => setKey('fire', true, e), { passive: false });
+                touchFire.addEventListener('touchend', (e) => setKey('fire', false, e), { passive: false });
+                touchFire.addEventListener('mousedown', (e) => setKey('fire', true, e));
+                touchFire.addEventListener('mouseup', (e) => setKey('fire', false, e));
+            }
+            if (touchBomb) {
+                touchBomb.addEventListener('touchstart', (e) => setKey('bomb', true, e), { passive: false });
+                touchBomb.addEventListener('touchend', (e) => setKey('bomb', false, e), { passive: false });
+                touchBomb.addEventListener('mousedown', (e) => setKey('bomb', true, e));
+                touchBomb.addEventListener('mouseup', (e) => setKey('bomb', false, e));
+            }
+        }
 
-            const btnMap = [
-                { el: touchUp, key: 'jump' },
-                { el: touchLeft, key: 'left' },
-                { el: touchRight, key: 'right' },
-                { el: touchDown, key: 'down' },
-                { el: touchFire, key: 'fire' },
-                { el: touchBomb, key: 'bomb' }
-            ];
-
-            btnMap.forEach(item => {
-                const el = item.el, key = item.key;
-                if (!el) return;
-                el.addEventListener('touchstart', (e) => setKey(key, true, e), { passive: false });
-                el.addEventListener('touchend', (e) => setKey(key, false, e), { passive: false });
-                el.addEventListener('touchcancel', (e) => setKey(key, false, e), { passive: false });
-                el.addEventListener('mousedown', (e) => setKey(key, true, e));
-                el.addEventListener('mouseup', (e) => setKey(key, false, e));
-                el.addEventListener('mouseleave', (e) => { if (keys[key]) setKey(key, false, e); });
-                el.addEventListener('contextmenu', (e) => e.preventDefault());
+        // ----------  KEYBOARD (desktop) ----------
+        function initKeyboard() {
+            window.addEventListener('keydown', (e) => {
+                if (!gameActive) return;
+                switch(e.key) {
+                    case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
+                    case 'ArrowRight': keys.right = true; e.preventDefault(); break;
+                    case 'ArrowUp': case ' ': keys.jump = true; player.jumpBuffer = 10; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
+                    case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                switch(e.key) {
+                    case 'ArrowLeft': keys.left = false; e.preventDefault(); break;
+                    case 'ArrowRight': keys.right = false; e.preventDefault(); break;
+                    case 'ArrowUp': case ' ': keys.jump = false; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = false; e.preventDefault(); break;
+                    case 'x': case 'X': keys.bomb = false; e.preventDefault(); break;
+                }
             });
         }
 
@@ -987,32 +1162,29 @@
             }
         }
 
-        // ----------  INIT – ensure DOM is ready ----------
+        // ----------  INIT ----------
         function init() {
-            console.log('init() called');
             resetGame();
-            initTouchControls();
+            initAnalogStick();
+            initTouchButtons();
+            initKeyboard();
             initFullscreen();
             const restartBtn = document.getElementById('restartButton');
             if (restartBtn) {
                 restartBtn.addEventListener('click', resetGame);
                 restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); resetGame(); }, { passive: false });
             }
-            // Force a draw immediately
             drawWorld();
             if (animFrameId) cancelAnimationFrame(animFrameId);
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // Run init after everything is loaded
         window.addEventListener('load', init);
-        // Also try immediately in case load already fired
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             setTimeout(init, 1);
         } else {
             window.addEventListener('DOMContentLoaded', init);
         }
-
         window.addEventListener('beforeunload', () => cancelAnimationFrame(animFrameId));
     })();
 </script>
