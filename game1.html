@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8‑bit SHOCK TROOPER · Contra‑style shooter</title>
+    <meta name="description" content="Full 8‑bit run’n’gun shooter. Fight waves of enemies, collect points, beat the highscore. Pure canvas, pixel perfect.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: crisp-edges; 
+            image-rendering: pixelated;
+        }
+        body {
+            background: #0a1c2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+        }
+        .game-wrapper {
+            background: #1f3a4b;
+            padding: 25px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 0 #0e1e26, 0 15px 30px rgba(0,0,0,0.6);
+            border-bottom: 6px solid #3f6a7a;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 6px solid #3e6c7a;
+            border-radius: 10px;
+            box-shadow: inset 0 0 0 2px #7fa5b3, 0 0 0 4px #28434b;
+            width: 800px;
+            height: 500px;
+        }
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            color: #b3e4f5;
+            text-shadow: 2px 2px 0 #0e1e26;
+            background: #1d3e4c;
+            padding: 12px 25px;
+            border-radius: 50px;
+            border-bottom: 6px solid #0f262e;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        .scores span {
+            background: #0f1e24;
+            padding: 8px 20px;
+            border-radius: 40px;
+            border-bottom: 4px solid #47a3b3;
+            color: #f0ffad;
+            margin-left: 15px;
+        }
+        .restart-btn {
+            background: #d44a5c;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 30px;
+            font-size: 22px;
+            font-weight: bold;
+            border-bottom: 6px solid #8e2c3a;
+            cursor: pointer;
+            transition: 0.05s linear;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 0 #4e1e24;
+            letter-spacing: 3px;
+        }
+        .restart-btn:hover {
+            background: #e85c6e;
+            border-bottom-width: 2px;
+            transform: translateY(4px);
+        }
+        .controls {
+            color: #b7e2fa;
+            font-size: 16px;
+            display: flex;
+            gap: 30px;
+            background: #15323b;
+            padding: 8px 20px;
+            border-radius: 30px;
+            border-bottom: 4px solid #0b1f26;
+        }
+        .controls i {
+            background: #0e282f;
+            padding: 5px 12px;
+            border-radius: 30px;
+            color: #ffd966;
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    
+    <div class="info-panel">
+        <div class="scores">
+            🔫 SCORE <span id="scoreDisplay">00000</span>
+        </div>
+        <div class="scores">
+            🏆 HIGH <span id="highScoreDisplay">00000</span>
+        </div>
+        <button class="restart-btn" id="restartButton">↺ MISSION</button>
+    </div>
+    <div class="controls">
+        <span><i>←→</i> MOVE</span>
+        <span><i>↑</i> or <i>SPACE</i> JUMP</span>
+        <span><i>Z</i> / <i>X</i> FIRE</span>
+        <span>❤️ HEALTH <span id="healthIndicator">■■■</span></span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;   // keep pixels sharp
+
+        // ----------  GLOBAL GAME STATE ----------
+        let gameActive = true;
+        let gameOver = false;
+        let victory = false;
+        let frame = 0;
+        let animFrameId = null;
+
+        // ----------  SCORE & HIGHSCORE (localStorage) ----------
+        let score = 0;
+        let highScore = localStorage.getItem('contraHighScore') ? parseInt(localStorage.getItem('contraHighScore')) : 0;
+        let playerHealth = 6;        // 6 hits = 3 hearts
+        const MAX_HEALTH = 6;
+
+        // ----------  PLAYER ----------
+        let player = {
+            x: 120, y: 330,          // ground level will be set after platform collision
+            vx: 0, vy: 0,
+            width: 22, height: 28,
+            onGround: false,
+            facing: 1,              // 1 = right, -1 = left
+            walkFrame: 0,
+            shootTimer: 0,
+            invincible: 0,          // flashes after hit
+            canShoot: true
+        };
+
+        // ----------  PHYSICS & WORLD ----------
+        const GRAVITY = 0.65;
+        const JUMP_FORCE = -12;
+        const MOVE_SPEED = 3.8;
+        const GROUND_Y = 440;       // y coordinate of the main ground (top of ground block)
+        // ----- platforms (like oldschool contra) -----
+        let platforms = [
+            { x: 250, y: 320, w: 110, h: 12 },
+            { x: 520, y: 260, w: 100, h: 12 },
+            { x: 70, y: 190, w: 90, h: 12 },
+            { x: 630, y: 360, w: 80, h: 12 }
+        ];
+
+        // ----------  DYNAMIC ENTITIES ----------
+        let bullets = [];           // player bullets
+        let enemies = [];
+        let enemyBullets = [];      // enemies fire back!
+
+        // ----------  SPAWN CONTROL ----------
+        let enemySpawnCounter = 0;
+        const ENEMY_SPAWN_DELAY = 38; // frames
+
+        // ----------  ANIMATION TILES / BACKGROUND ----------
+        let bgOffset = 0;
+
+        // ----------  HIGHSCORE DISPLAY ----------
+        function updateUI() {
+            let scr = String(Math.floor(score)).padStart(5, '0');
+            document.getElementById('scoreDisplay').innerText = scr;
+            let hscr = String(highScore).padStart(5, '0');
+            document.getElementById('highScoreDisplay').innerText = hscr;
+
+            // health as hearts (2px per heart)
+            let hearts = '';
+            for (let i = 0; i < playerHealth/2; i++) hearts += '❤️';
+            if (playerHealth <= 0) hearts = '💀';
+            document.getElementById('healthIndicator').innerHTML = hearts || '💔';
+        }
+
+        // ----------  RESET GAME ----------
+        function resetGame() {
+            gameActive = true;
+            gameOver = false;
+            victory = false;
+            score = 0;
+            playerHealth = MAX_HEALTH;
+            player = {
+                x: 120, y: 330,
+                vx: 0, vy: 0,
+                width: 22, height: 28,
+                onGround: false,
+                facing: 1,
+                walkFrame: 0,
+                shootTimer: 0,
+                invincible: 0,
+                canShoot: true
+            };
+            bullets = [];
+            enemies = [];
+            enemyBullets = [];
+            enemySpawnCounter = 0;
+            updateUI();
+        }
+
+        // ----------  KEY HANDLING (8-bit style) ----------
+        const keys = {
+            left: false, right: false,
+            up: false, jump: false,
+            fire1: false, fire2: false
+        };
+
+        window.addEventListener('keydown', (e) => {
+            e.preventDefault(); // avoid page scroll
+            const k = e.key;
+            if (k === 'ArrowLeft') keys.left = true;
+            if (k === 'ArrowRight') keys.right = true;
+            if (k === 'ArrowUp' || k === ' ') keys.jump = true;
+            if (k === 'z' || k === 'Z') keys.fire1 = true;
+            if (k === 'x' || k === 'X') keys.fire2 = true;
+            if (k === 'r' || k === 'R') resetGame();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key;
+            if (k === 'ArrowLeft') keys.left = false;
+            if (k === 'ArrowRight') keys.right = false;
+            if (k === 'ArrowUp' || k === ' ') keys.jump = false;
+            if (k === 'z' || k === 'Z') keys.fire1 = false;
+            if (k === 'x' || k === 'X') keys.fire2 = false;
+        });
+
+        // block arrow scrolling
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+        }, false);
+
+        // ----------  RESTART BUTTON ----------
+        document.getElementById('restartButton').addEventListener('click', resetGame);
+
+        // ----------  HELPER: COLLISION (AABB) ----------
+        function rectCollide(r1, r2) {
+            return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x &&
+                   r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
+        }
+
+        // ----------  PLAYER UPDATE (MOVEMENT, PLATFORMS) ----------
+        function updatePlayer() {
+            if (!gameActive) return;
+            if (playerHealth <= 0) {
+                gameActive = false;
+                gameOver = true;
+                return;
+            }
+
+            // invincibility frames
+            if (player.invincible > 0) player.invincible--;
+
+            // horizontal input
+            let accel = 0;
+            if (keys.left) accel -= 1;
+            if (keys.right) accel += 1;
+            player.vx = accel * MOVE_SPEED;
+            player.x += player.vx;
+
+            // horizontal bounds
+            if (player.x < 10) player.x = 10;
+            if (player.x + player.width > 790) player.x = 790 - player.width;
+
+            // jump
+            if (keys.jump && player.onGround) {
+                player.vy = JUMP_FORCE;
+                player.onGround = false;
+            }
+
+            // gravity
+            player.vy += GRAVITY;
+            player.y += player.vy;
+
+            // ---- PLATFORM + GROUND COLLISION (vertical) ----
+            player.onGround = false;
+
+            // ground collision (main floor)
+            if (player.y + player.height > GROUND_Y) {
+                player.y = GROUND_Y - player.height;
+                player.vy = 0;
+                player.onGround = true;
+            }
+
+            // platforms
+            for (let pl of platforms) {
+                if (player.vy >= 0) { // falling
+                    let playerBottom = player.y + player.height;
+                    let prevBottom = playerBottom - player.vy;
+                    if (prevBottom <= pl.y && playerBottom >= pl.y &&
+                        player.x + player.width > pl.x && player.x < pl.x + pl.w) {
+                        player.y = pl.y - player.height;
+                        player.vy = 0;
+                        player.onGround = true;
+                    }
+                }
+            }
+
+            // ceiling bump
+            if (player.y < 20) player.y = 20;
+
+            // walking animation (simple)
+            if (Math.abs(player.vx) > 0.5 && player.onGround) {
+                player.walkFrame = (player.walkFrame + 0.25) % 4;
+            } else {
+                player.walkFrame = 0;
+            }
+
+            // facing direction
+            if (player.vx > 0.1) player.facing = 1;
+            else if (player.vx < -0.1) player.facing = -1;
+
+            // shooting
+            if (keys.fire1 || keys.fire2) {
+                if (player.shootTimer <= 0) {
+                    let bulletX = player.facing === 1 ? player.x + player.width : player.x - 8;
+                    bullets.push({
+                        x: bulletX, y: player.y + player.height/2 - 4,
+                        w: 12, h: 6,
+                        vx: player.facing * 9,
+                        vy: 0,
+                        active: true
+                    });
+                    player.shootTimer = 14; // fire rate
+                }
+            }
+            if (player.shootTimer > 0) player.shootTimer--;
+        }
+
+        // ----------  UPDATE BULLETS ----------
+        function updateBullets() {
+            for (let i = bullets.length-1; i>=0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                if (b.x > 820 || b.x < -30) {
+                    bullets.splice(i,1);
+                    continue;
+                }
+                // enemy collision
+                for (let j = enemies.length-1; j>=0; j--) {
+                    let e = enemies[j];
+                    if (rectCollide(
+                        {x:b.x, y:b.y, w:b.w, h:b.h},
+                        {x:e.x, y:e.y, w:e.w, h:e.h}
+                    )) {
+                        // HIT!
+                        bullets.splice(i,1);
+                        e.health -= 1;
+                        if (e.health <= 0) {
+                            // score!
+                            score += e.points;
+                            if (score > highScore) {
+                                highScore = score;
+                                localStorage.setItem('contraHighScore', highScore);
+                            }
+                            enemies.splice(j,1);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ----------  ENEMY AI & SPAWN ----------
+        function spawnEnemy() {
+            if (!gameActive) return;
+            let type = Math.random() > 0.6 ? 2 : 1;  // type2 = tougher
+            let health = type === 2 ? 3 : 1;
+            let points = type === 2 ? 30 : 15;
+            let yPos = GROUND_Y - 32;  // stand on ground
+            // sometimes spawn on platform? 
+            if (Math.random() < 0.4) {
+                let plat = platforms[Math.floor(Math.random() * platforms.length)];
+                yPos = plat.y - 30;
+            }
+            enemies.push({
+                x: 780, y: yPos,
+                w: 24, h: 28,
+                vx: -1.8 - (Math.random() * 0.8),
+                health: health,
+                points: points,
+                type: type,
+                frame: 0,
+                shootCooldown: 25 + Math.floor(Math.random() * 30)
+            });
+        }
+
+        function updateEnemies() {
+            for (let i = enemies.length-1; i>=0; i--) {
+                let e = enemies[i];
+                e.x += e.vx;
+                e.frame = (e.frame + 0.2) % 4;
+
+                // remove if offscreen
+                if (e.x + e.w < -30) {
+                    enemies.splice(i,1);
+                    continue;
+                }
+
+                // enemy shooting
+                e.shootCooldown--;
+                if (e.shootCooldown <= 0 && gameActive && playerHealth > 0) {
+                    enemyBullets.push({
+                        x: e.x - 6, y: e.y + e.h/2 - 4,
+                        w: 12, h: 6,
+                        vx: -6, vy: 0,
+                        active: true
+                    });
+                    e.shootCooldown = 45 + Math.floor(Math.random() * 40);
+                }
+
+                // enemy vs player collision (hurt player)
+                if (player.invincible <= 0 && gameActive && playerHealth > 0) {
+                    if (rectCollide(
+                        {x: player.x, y: player.y, w: player.width, h: player.height},
+                        {x: e.x, y: e.y, w: e.w, h: e.h}
+                    )) {
+                        playerHealth -= 2;  // big damage
+                        player.invincible = 60;
+                        if (playerHealth < 0) playerHealth = 0;
+                        updateUI();
+                    }
+                }
+            }
+        }
+
+        // ----------  ENEMY BULLETS ----------
+        function updateEnemyBullets() {
+            for (let i=enemyBullets.length-1; i>=0; i--) {
+                let eb = enemyBullets[i];
+                eb.x += eb.vx;
+                if (eb.x < -40 || eb.x > 840) {
+                    enemyBullets.splice(i,1);
+                    continue;
+                }
+                // hit player?
+                if (player.invincible <= 0 && gameActive && playerHealth > 0) {
+                    if (rectCollide(
+                        {x: player.x, y: player.y, w: player.width, h: player.height},
+                        {x: eb.x, y: eb.y, w: eb.w, h: eb.h}
+                    )) {
+                        playerHealth -= 1;
+                        player.invincible = 50;
+                        enemyBullets.splice(i,1);
+                        if (playerHealth < 0) playerHealth = 0;
+                        updateUI();
+                    }
+                }
+            }
+        }
+
+        // ----------  8‑BIT DRAWING (PURE PIXEL LOVE) ----------
+        function drawBackground() {
+            // sky gradient (8‑bit bands)
+            ctx.fillStyle = '#1a4750';
+            ctx.fillRect(0,0,800,140);
+            ctx.fillStyle = '#296d73';
+            ctx.fillRect(0,140,800,70);
+            ctx.fillStyle = '#35878f';
+            ctx.fillRect(0,210,800,60);
+            // parallax hills
+            ctx.fillStyle = '#306f42';
+            ctx.beginPath();
+            ctx.moveTo(0,300);
+            for (let i=0;i<10;i++) {
+                ctx.quadraticCurveTo(i*100+30, 250, i*100+80, 300);
+            }
+            ctx.lineTo(800,400);
+            ctx.lineTo(0,400);
+            ctx.fillStyle = '#205d34';
+            ctx.fill();
+            // ground stripe
+            ctx.fillStyle = '#6b4f32';
+            ctx.fillRect(0, GROUND_Y-4, 800, 12);
+            ctx.fillStyle = '#8f6b45';
+            ctx.fillRect(0, GROUND_Y-2, 800, 6);
+            ctx.fillStyle = '#5a3e28';
+            for (let i=0;i<20;i++) {
+                ctx.fillRect(i*42 + (bgOffset%42)/2, GROUND_Y-6, 12, 8);
+            }
+
+            // platforms (wood)
+            for (let pl of platforms) {
+                ctx.fillStyle = '#6b4a30';
+                ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+                ctx.fillStyle = '#9c7c5b';
+                ctx.fillRect(pl.x+2, pl.y-2, pl.w-4, 4);
+                ctx.fillStyle = '#3d2c1e';
+                ctx.fillRect(pl.x, pl.y+2, pl.w, 4);
+            }
+            bgOffset+=2;
+        }
+
+        function drawPlayer() {
+            if (player.invincible % 8 < 4 || player.invincible === 0) {
+                let px = player.x, py = player.y;
+                ctx.fillStyle = '#3e7a3a';
+                ctx.fillRect(px, py, player.width, player.height);
+                // gear
+                ctx.fillStyle = '#3d3d3d';
+                ctx.fillRect(px+ (player.facing===1?14:2), py+6, 8, 8);
+                ctx.fillStyle = '#b33e3e';
+                ctx.fillRect(px+ (player.facing===1?18:0), py+10, 12, 5);
+                // helmet
+                ctx.fillStyle = '#597d45';
+                ctx.fillRect(px+4, py-4, 14, 8);
+                ctx.fillStyle = '#ac8c3d';
+                ctx.fillRect(px+ (player.facing===1?14:2), py-2, 6, 4);
+            }
+        }
+
+        function drawEnemies() {
+            enemies.forEach(e => {
+                ctx.fillStyle = e.type === 2 ? '#b3544b' : '#8e5a4b';
+                ctx.fillRect(e.x, e.y, e.w, e.h);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(e.x+4, e.y+6, 4, 4);
+                ctx.fillRect(e.x+14, e.y+6, 4, 4);
+                ctx.fillStyle = '#e0d64b';
+                ctx.fillRect(e.x+6 + Math.sin(e.frame)*2, e.y-2, 8, 6);
+            });
+        }
+
+        function drawBullets() {
+            bullets.forEach(b => {
+                ctx.fillStyle = '#ffe045';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.fillStyle = '#ffb82b';
+                ctx.fillRect(b.x-2, b.y+1, 6, 3);
+            });
+            enemyBullets.forEach(b => {
+                ctx.fillStyle = '#fa5e5e';
+                ctx.fillRect(b.x, b.y, 10, 5);
+            });
+        }
+
+        // ----------  GAME LOOP ----------
+        function gameLoop() {
+            if (gameActive) {
+                // spawn enemies
+                enemySpawnCounter++;
+                if (enemySpawnCounter > ENEMY_SPAWN_DELAY && enemies.length < 7) {
+                    spawnEnemy();
+                    enemySpawnCounter = 0;
+                }
+
+                updatePlayer();
+                updateBullets();
+                updateEnemies();
+                updateEnemyBullets();
+
+                if (playerHealth <= 0) {
+                    gameActive = false;
+                    gameOver = true;
+                }
+
+                updateUI();
+            }
+
+            // DRAW EVERYTHING
+            drawBackground();
+
+            // platforms (already drawn)
+            drawEnemies();
+            drawBullets();
+            drawPlayer();
+
+            // game over / mission message
+            if (!gameActive) {
+                ctx.fillStyle = '#000000aa';
+                ctx.fillRect(200, 180, 400, 100);
+                ctx.fillStyle = '#f5e67b';
+                ctx.font = '32px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                if (gameOver) ctx.fillText('❌ MISSION FAILED', 400, 240);
+                else if (victory) ctx.fillText('🏁 VICTORY!', 400, 240);
+                else ctx.fillText('❚ PAUSED', 400, 240);
+            }
+
+            // score and highscore updated via UI
+
+            frame++;
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // start game
+        resetGame();
+        updateUI();
+        gameLoop();
+
+        // cleanup on page unload
+        window.addEventListener('beforeunload', ()=> cancelAnimationFrame(animFrameId));
+    })();
+</script>
+
+</body>
+</html>
