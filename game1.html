@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>8-bit COMMANDO · 6 EPIC LEVELS · HOLD JUMP = DOUBLE</title>
-    <meta name="description" content="6 unique worlds, auto double‑jump on hold, analog stick, huge sprites. Pixel perfect.">
+    <title>8-bit COMMANDO · 6 EPIC LEVELS · FIRE FIXED · FAIR</title>
+    <meta name="description" content="6 unique worlds, auto double‑jump, analog stick, huge sprites. Balanced difficulty.">
     <style>
         * {
             margin: 0;
@@ -126,18 +126,23 @@
             justify-content: center;
             margin-top: 10px;
         }
-        /* Touch controls – analog stick + AB – NO FULLSCREEN */
+        /* Touch controls – analog stick + AB */
         .touch-controls {
             display: none;
             margin-top: 15px;
+            flex-direction: column;
+            gap: 10px;
+            background: #2b4b55;
+            border-radius: 40px;
+            border-bottom: 8px solid #16333a;
+            padding: 15px 10px;
+            touch-action: none;
+        }
+        .touch-row {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 5px;
-            padding: 10px 5px;
-            background: #2b4b55;
-            border-radius: 60px;
-            border-bottom: 8px solid #16333a;
-            touch-action: none;
+            width: 100%;
         }
         .joystick {
             width: 140px;
@@ -183,9 +188,7 @@
         .ab-buttons {
             display: flex;
             gap: 15px;
-            margin-left: 0;
-            margin-right: auto;
-            padding-left: 10px;
+            margin-right: 10px;
         }
         .ab {
             background: #9e4a5c;
@@ -208,12 +211,33 @@
             transform: translateY(5px);
             background: #c05e72;
         }
+        /* Mobile info bar – replicates desktop info */
+        .mobile-info {
+            display: none;
+            color: #b3ecff;
+            background: #16353f;
+            padding: 8px 16px;
+            border-radius: 40px;
+            border-bottom: 5px solid #0b1f24;
+            font-size: 15px;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+        .mobile-info span {
+            background: #0c2a30;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
         @media (max-width: 900px) {
             .touch-controls {
                 display: flex !important;
             }
             .legend {
                 display: none;
+            }
+            .mobile-info {
+                display: flex !important;
             }
             .joystick {
                 width: 120px;
@@ -242,7 +266,6 @@
     <div class="panel">
         <div class="scores">🎯 <span id="scoreDisplay">00000</span></div>
         <div class="scores">🏆 <span id="highScoreDisplay">00000</span></div>
-        <!-- HEALTH BAR – always visible in panel -->
         <div class="health">❤️ <span id="healthDisplay">██████</span></div>
         <button class="btn" id="restartButton">↻ RESTART</button>
     </div>
@@ -252,19 +275,27 @@
         <span><i>← →</i> MOVE</span>
         <span><i>↑ / SPACE</i> HOLD = DOUBLE JUMP</span>
         <span><i>Z</i> FIRE  &nbsp; <i>X</i> BOMB</span>
-        <span id="levelDisplay">LVL 1 · JUNGLE</span>
+        <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
     </div>
 
-    <!-- TOUCH CONTROLS – analog stick + AB -->
+    <!-- TOUCH CONTROLS – analog stick + AB + mobile info bar -->
     <div class="touch-controls" id="touchControls">
-        <div class="joystick" id="joystickContainer">
-            <div class="joystick-base" id="joystickBase">
-                <div class="joystick-handle" id="joystickHandle"></div>
+        <div class="touch-row">
+            <div class="joystick" id="joystickContainer">
+                <div class="joystick-base" id="joystickBase">
+                    <div class="joystick-handle" id="joystickHandle"></div>
+                </div>
+            </div>
+            <div class="ab-buttons">
+                <div class="ab" id="touchFire">FIRE</div>
+                <div class="ab" id="touchBomb">BOMB</div>
             </div>
         </div>
-        <div class="ab-buttons">
-            <div class="ab" id="touchFire">FIRE</div>
-            <div class="ab" id="touchBomb">BOMB</div>
+        <!-- Mobile info bar – shows level and controls -->
+        <div class="mobile-info">
+            <span id="mobileLevelDisplay">LVL 1 · JUNGLE</span>
+            <span>⬆️ HOLD = DOUBLE</span>
+            <span>💣 BOMB</span>
         </div>
     </div>
 </div>
@@ -278,8 +309,8 @@
         if (!ctx) return;
         ctx.imageSmoothingEnabled = false;
 
-        // ----------  WORLD & CAMERA – now 6x longer! ----------
-        const BASE_WIDTH = 5000;      // each level is 5000px wide
+        // ----------  WORLD & CAMERA ----------
+        const BASE_WIDTH = 5000;
         let WORLD_WIDTH = BASE_WIDTH;
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
         const GROUND_Y = 460;
@@ -290,16 +321,16 @@
         let gameOver = false;
         let victoryFlag = false;
         let currentLevel = 1;
-        const MAX_LEVEL = 6;         // 6 EPIC LEVELS
+        const MAX_LEVEL = 6;
         let frame = 0;
         let animFrameId = null;
 
         // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
-        try { highScore = localStorage.getItem('commandoElite6') ? parseInt(localStorage.getItem('commandoElite6')) : 0; } catch(e) { highScore = 0; }
-        let playerHealth = 6;
-        const MAX_HEALTH = 6;
+        try { highScore = localStorage.getItem('commandoFair6') ? parseInt(localStorage.getItem('commandoFair6')) : 0; } catch(e) { highScore = 0; }
+        let playerHealth = 8;        // increased for fairness
+        const MAX_HEALTH = 8;
 
         // ----------  POWER-UPS ----------
         let rapidFire = false, rapidTimer = 0;
@@ -310,8 +341,8 @@
         // ----------  PLAYER PHYSICS – DOUBLE SIZE ----------
         const PLAYER_WIDTH = 44;
         const PLAYER_HEIGHT = 56;
-        const GRAVITY = 0.7;
-        const JUMP_FORCE = -13.5;
+        const GRAVITY = 0.65;        // slightly lighter
+        const JUMP_FORCE = -13.2;
         const MOVE_SPEED = 4.8;
 
         let player = {
@@ -321,7 +352,7 @@
             doubleJumpUsed: false,
             coyoteTime: 0,
             jumpBuffer: 0,
-            jumpHoldTime: 0,         // for auto double jump on hold
+            jumpHoldTime: 0,
             autoDoubleTriggered: false,
             facing: 1,
             walkCycle: 0,
@@ -330,7 +361,7 @@
             bombCooldown: 0,
         };
 
-        // ----------  LEVEL DESIGN – 6 UNIQUE THEMES ----------
+        // ----------  LEVEL DESIGN – same 6 themes, but reduced enemy counts ----------
         let platforms = [];
         let enemySpawners = [];
         let exitDoor = null;
@@ -347,123 +378,117 @@
         let sparks = [];
         let screenShake = 0;
 
-        // ----------  KEYBOARD STATE ----------
-        const keys = { left: false, right: false, jump: false, fire: false, bomb: false, down: false, up: false };
+        // ----------  KEYBOARD STATE – FIRE IS ISOLATED ----------
+        const keys = { 
+            left: false, 
+            right: false, 
+            jump: false, 
+            fire: false, 
+            bomb: false, 
+            down: false, 
+            up: false 
+        };
 
-        // ----------  LEVEL GENERATORS – 6x LONG, 6 THEMES ----------
+        // ----------  LEVEL GENERATORS – reduced enemy density, lower health ----------
         function buildLevel(level) {
             platforms = []; enemySpawners = []; exitDoor = null;
-            WORLD_WIDTH = BASE_WIDTH; // each level is 5000px
+            WORLD_WIDTH = BASE_WIDTH;
 
-            // ----- THEME 1: JUNGLE (green, waterfalls) -----
-            if (level === 1) {
+            if (level === 1) { // JUNGLE
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
-                // platforms – spaced for double jump, 5000px wide
-                for (let i=0; i<20; i++) {
-                    let x = 300 + i * 220;
+                for (let i=0; i<18; i++) {
+                    let x = 300 + i * 240;
                     let y = 390 + (i%3===0 ? -30 : (i%2===0 ? 20 : -20));
                     platforms.push({ x, y: Math.min(420, Math.max(300, y)), w: 120, h: 14 });
                 }
-                // enemy spawners – from both sides
-                for (let i=0; i<25; i++) {
-                    let x = 600 + i * 180;
-                    let type = ['infantry','drone','sniper','heavy','jumper'][Math.floor(Math.random()*5)];
+                for (let i=0; i<20; i++) {  // fewer enemies
+                    let x = 600 + i * 200;
+                    let type = ['infantry','drone','sniper'][Math.floor(Math.random()*3)];
                     let side = Math.random()<0.5 ? 'left' : 'right';
-                    enemySpawners.push({ x, type, side, behavior: type==='infantry'?'flank':(type==='drone'?'swoop':(type==='sniper'?'aim':(type==='jumper'?'leap':'block'))) });
+                    enemySpawners.push({ x, type, side, behavior: type==='infantry'?'flank':(type==='drone'?'swoop':'aim') });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
-            }
-            // ----- THEME 2: FACTORY (grey, conveyors, steam) -----
-            else if (level === 2) {
+            } else if (level === 2) { // FACTORY
                 levelName = "MACHINE COMPLEX";
                 levelTheme = "factory";
-                for (let i=0; i<22; i++) {
-                    let x = 300 + i * 210;
+                for (let i=0; i<20; i++) {
+                    let x = 300 + i * 220;
                     let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : 0));
                     platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
                 }
-                for (let i=0; i<28; i++) {
-                    let x = 500 + i * 170;
-                    let type = ['heavy','infantry','sniper','drone'][Math.floor(Math.random()*4)];
+                for (let i=0; i<22; i++) {
+                    let x = 500 + i * 190;
+                    let type = ['heavy','infantry','sniper'][Math.floor(Math.random()*3)];
                     let side = Math.random()<0.6 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='sniper'?'aim':'swoop')) });
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':'aim') });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
-            }
-            // ----- THEME 3: ALIEN (purple, bioluminescent) -----
-            else if (level === 3) {
+            } else if (level === 3) { // ALIEN
                 levelName = "ALIEN NEXUS";
                 levelTheme = "alien";
-                for (let i=0; i<24; i++) {
+                for (let i=0; i<22; i++) {
                     let x = 350 + i * 200;
                     let y = 350 + Math.sin(i*0.5)*40;
                     platforms.push({ x, y, w: 110, h: 12 });
                 }
-                for (let i=0; i<30; i++) {
-                    let x = 400 + i * 160;
-                    let type = ['drone','jumper','infantry','sniper'][Math.floor(Math.random()*4)];
+                for (let i=0; i<24; i++) {
+                    let x = 400 + i * 180;
+                    let type = ['drone','jumper','infantry'][Math.floor(Math.random()*3)];
                     let side = Math.random()<0.5 ? 'left' : 'right';
-                    enemySpawners.push({ x, type, side, behavior: type==='drone'?'swoop':(type==='jumper'?'leap':(type==='sniper'?'aim':'flank')) });
+                    enemySpawners.push({ x, type, side, behavior: type==='drone'?'swoop':(type==='jumper'?'leap':'flank') });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
-            }
-            // ----- THEME 4: ICE (blue, slippery) -----
-            else if (level === 4) {
+            } else if (level === 4) { // ICE
                 levelName = "GLACIAL PEAK";
                 levelTheme = "ice";
-                for (let i=0; i<26; i++) {
-                    let x = 300 + i * 190;
+                for (let i=0; i<24; i++) {
+                    let x = 300 + i * 200;
                     let y = 380 + (i%5===0 ? -50 : 20);
                     platforms.push({ x, y: Math.min(400, Math.max(290, y)), w: 100, h: 12 });
                 }
-                for (let i=0; i<32; i++) {
-                    let x = 450 + i * 150;
-                    let type = ['sniper','heavy','infantry','jumper'][Math.floor(Math.random()*4)];
+                for (let i=0; i<26; i++) {
+                    let x = 450 + i * 170;
+                    let type = ['sniper','infantry','jumper'][Math.floor(Math.random()*3)];
                     let side = Math.random()<0.5 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='sniper'?'aim':(type==='heavy'?'block':(type==='jumper'?'leap':'flank')) });
+                    enemySpawners.push({ x, type, side, behavior: type==='sniper'?'aim':(type==='jumper'?'leap':'flank') });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
-            }
-            // ----- THEME 5: VOLCANO (red, lava, rising heat) -----
-            else if (level === 5) {
+            } else if (level === 5) { // VOLCANO
                 levelName = "MOLTEN CORE";
                 levelTheme = "volcano";
-                for (let i=0; i<28; i++) {
-                    let x = 280 + i * 180;
+                for (let i=0; i<26; i++) {
+                    let x = 280 + i * 190;
                     let y = 370 + (i%3===0 ? -60 : (i%2===0 ? 40 : -20));
                     platforms.push({ x, y: Math.min(410, Math.max(260, y)), w: 120, h: 14 });
                 }
-                for (let i=0; i<35; i++) {
-                    let x = 500 + i * 140;
-                    let type = ['heavy','infantry','drone','jumper','sniper'][Math.floor(Math.random()*5)];
+                for (let i=0; i<28; i++) {
+                    let x = 500 + i * 160;
+                    let type = ['heavy','infantry','drone','jumper'][Math.floor(Math.random()*4)];
                     let side = Math.random()<0.6 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='drone'?'swoop':(type==='jumper'?'leap':'aim'))) });
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='drone'?'swoop':'leap')) });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
-            }
-            // ----- THEME 6: FORTRESS (dark, metallic) -----
-            else if (level === 6) {
+            } else if (level === 6) { // FORTRESS
                 levelName = "FINAL FORTRESS";
                 levelTheme = "fortress";
-                for (let i=0; i<30; i++) {
-                    let x = 320 + i * 160;
+                for (let i=0; i<28; i++) {
+                    let x = 320 + i * 170;
                     let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : -20));
                     platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
                 }
-                for (let i=0; i<38; i++) {
-                    let x = 400 + i * 130;
-                    let type = i % 5 === 0 ? 'boss_lieutenant' : (['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
+                for (let i=0; i<30; i++) {
+                    let x = 400 + i * 150;
+                    let type = i % 6 === 0 ? 'boss_lieutenant' : (['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
                     let side = Math.random()<0.5 ? 'right' : 'left';
                     enemySpawners.push({ x, type, side, behavior: type==='boss_lieutenant'?'command':(type==='heavy'?'block':(type==='sniper'?'aim':(type==='jumper'?'leap':(type==='infantry'?'flank':'swoop')))) });
                 }
-                // final boss
                 enemySpawners.push({ x: WORLD_WIDTH - 400, type: 'boss', side: 'right', behavior: 'final' });
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             }
         }
 
-        // ----------  RESET GAME ----------
+        // ----------  RESET GAME – more health, lower enemy damage ----------
         function resetGame() {
             gameActive = true; gameOver = false; victoryFlag = false; currentLevel = 1;
             score = 0; playerHealth = MAX_HEALTH;
@@ -482,7 +507,7 @@
             updateUI();
         }
 
-        // ----------  UI ----------
+        // ----------  UI – update both desktop and mobile level displays ----------
         function updateUI() {
             try {
                 let scr = String(Math.floor(score)).padStart(5, '0');
@@ -491,8 +516,11 @@
                 document.getElementById('highScoreDisplay').innerText = hscr;
                 let healthBar = '';
                 for (let i=0; i<playerHealth; i++) healthBar += '█';
-                document.getElementById('healthDisplay').innerText = healthBar.padEnd(6, '░');
-                document.getElementById('levelDisplay').innerText = `LVL ${currentLevel} · ${levelName}`;
+                document.getElementById('healthDisplay').innerText = healthBar.padEnd(MAX_HEALTH, '░');
+                let levelText = `LVL ${currentLevel} · ${levelName}`;
+                document.getElementById('levelDisplayDesktop').innerText = levelText;
+                let mobileLevel = document.getElementById('mobileLevelDisplay');
+                if (mobileLevel) mobileLevel.innerText = levelText;
             } catch(e) {}
         }
 
@@ -501,7 +529,7 @@
             return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
         }
 
-        function addShake(amount) { screenShake = Math.min(screenShake + amount, 12); }
+        function addShake(amount) { screenShake = Math.min(screenShake + amount, 10); }
         function updateCamera() {
             let targetX = player.x + PLAYER_WIDTH/2 - VIEWPORT_W/2;
             targetX = Math.max(0, Math.min(targetX, WORLD_WIDTH - VIEWPORT_W));
@@ -511,7 +539,7 @@
         function addDust(x, y) { dustEffects.push({ x, y, life: 12 }); }
         function addSparks(x, y) { sparks.push({ x, y, life: 10 }); }
 
-        // ----------  PLAYER UPDATE – AUTO DOUBLE JUMP ON HOLD ----------
+        // ----------  PLAYER UPDATE – AUTO DOUBLE JUMP, FIRE ISOLATED ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -522,7 +550,7 @@
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
             if (starTimer > 0) starTimer--; else invincibleStar = false;
 
-            // analog movement
+            // --- MOVEMENT: only left/right keys affect horizontal velocity ---
             let accelX = 0;
             if (keys.left) accelX -= 1;
             if (keys.right) accelX += 1;
@@ -545,11 +573,9 @@
             if (player.jumpBuffer > 0) player.jumpBuffer--;
 
             // --- AUTO DOUBLE JUMP ON HOLD ---
-            // If jump key is held and we are in air, double jump hasn't been used, and we haven't already triggered auto double,
-            // wait 10 frames (about 160ms) then automatically double jump.
             if (keys.jump && !player.onGround && !player.doubleJumpUsed && !player.autoDoubleTriggered) {
                 player.jumpHoldTime++;
-                if (player.jumpHoldTime > 10) { // hold threshold
+                if (player.jumpHoldTime > 12) { // slightly longer for fairness
                     player.vy = JUMP_FORCE * 0.9;
                     player.doubleJumpUsed = true;
                     player.autoDoubleTriggered = true;
@@ -612,7 +638,7 @@
                 player.walkCycle = (player.walkCycle + 0.2) % 4;
             } else player.walkCycle = 0;
 
-            // shooting
+            // --- SHOOTING: ONLY keys.fire affects this ---
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 5 : 14;
                 if (player.shootTimer <= 0) {
@@ -647,7 +673,7 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN (unchanged, but uses spawners from level) ----------
+        // ----------  ENEMY SPAWN – reduced health, less damage ----------
         function checkSpawners() {
             for (let i = enemySpawners.length - 1; i >= 0; i--) {
                 let s = enemySpawners[i];
@@ -660,46 +686,46 @@
                         case 'infantry':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 40, w: 30, h: 36,
-                                vx: side === 'right' ? -2.2 : 2.2, health: 2, points: 40,
+                                vx: side === 'right' ? -1.8 : 1.8, health: 1, points: 30,
                                 type: 'infantry', behavior: s.behavior, frame: 0,
-                                shootTimer: 40 + Math.random() * 20
+                                shootTimer: 50 + Math.random() * 30
                             }; break;
                         case 'heavy':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 44, w: 38, h: 42,
-                                vx: side === 'right' ? -1.2 : 1.2, health: 6, points: 120,
-                                type: 'heavy', behavior: s.behavior, frame: 0, shootTimer: 30
+                                vx: side === 'right' ? -1.0 : 1.0, health: 4, points: 100,
+                                type: 'heavy', behavior: s.behavior, frame: 0, shootTimer: 45
                             }; break;
                         case 'drone':
                             yPos = 220 + Math.random() * 180;
                             enemy = {
                                 x: xPos, y: yPos, w: 28, h: 24,
-                                vx: side === 'right' ? -3.0 : 3.0, health: 1, points: 50,
-                                type: 'drone', behavior: s.behavior, frame: 0, shootTimer: 50
+                                vx: side === 'right' ? -2.5 : 2.5, health: 1, points: 40,
+                                type: 'drone', behavior: s.behavior, frame: 0, shootTimer: 60
                             }; break;
                         case 'sniper':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 44, w: 28, h: 36,
-                                vx: side === 'right' ? -0.9 : 0.9, health: 3, points: 90,
-                                type: 'sniper', behavior: s.behavior, frame: 0, shootTimer: 80
+                                vx: side === 'right' ? -0.7 : 0.7, health: 2, points: 70,
+                                type: 'sniper', behavior: s.behavior, frame: 0, shootTimer: 90
                             }; break;
                         case 'jumper':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 40, w: 28, h: 34,
-                                vx: side === 'right' ? -2.4 : 2.4, health: 2, points: 80,
-                                type: 'jumper', behavior: s.behavior, frame: 0, shootTimer: 60, jumpTimer: 20
+                                vx: side === 'right' ? -2.0 : 2.0, health: 1, points: 60,
+                                type: 'jumper', behavior: s.behavior, frame: 0, shootTimer: 70, jumpTimer: 30
                             }; break;
                         case 'boss_lieutenant':
                             enemy = {
                                 x: WORLD_WIDTH - 120, y: GROUND_Y - 60, w: 56, h: 56,
-                                vx: -0.9, health: 20, points: 400, type: 'boss_lieutenant',
-                                behavior: s.behavior, frame: 0, shootTimer: 25, phase: 1
+                                vx: -0.7, health: 15, points: 300, type: 'boss_lieutenant',
+                                behavior: s.behavior, frame: 0, shootTimer: 30, phase: 1
                             }; break;
                         case 'boss':
                             enemy = {
                                 x: WORLD_WIDTH - 140, y: GROUND_Y - 70, w: 70, h: 70,
-                                vx: -0.7, health: 45, points: 1000, type: 'boss',
-                                behavior: s.behavior, frame: 0, shootTimer: 18, phase: 1
+                                vx: -0.6, health: 35, points: 800, type: 'boss',
+                                behavior: s.behavior, frame: 0, shootTimer: 25, phase: 1
                             }; break;
                     }
                     if (enemy) enemies.push(enemy);
@@ -708,7 +734,7 @@
             }
         }
 
-        // ----------  ENEMY UPDATE (same AI, works) ----------
+        // ----------  ENEMY UPDATE – lower damage, longer cooldown ----------
         function updateEnemies() {
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
@@ -716,42 +742,42 @@
                 e.frame = (e.frame + 0.15) % 4;
                 if (e.x + e.w < -150 || e.x > WORLD_WIDTH + 150) { enemies.splice(i, 1); continue; }
 
-                if (e.type === 'drone' && e.behavior === 'swoop') e.y += Math.sin(frame * 0.1) * 0.7;
+                if (e.type === 'drone' && e.behavior === 'swoop') e.y += Math.sin(frame * 0.1) * 0.5;
                 if (e.type === 'jumper' && e.behavior === 'leap') {
                     e.jumpTimer--;
-                    if (e.jumpTimer <= 0 && Math.abs(e.x - player.x) < 250 && e.y + e.h >= GROUND_Y - 5) {
-                        e.vy = JUMP_FORCE * 0.8;
-                        e.jumpTimer = 50 + Math.random() * 40;
+                    if (e.jumpTimer <= 0 && Math.abs(e.x - player.x) < 200 && e.y + e.h >= GROUND_Y - 5) {
+                        e.vy = JUMP_FORCE * 0.7;
+                        e.jumpTimer = 60 + Math.random() * 40;
                     }
                     e.y += e.vy || 0;
                     e.vy = (e.vy || 0) + GRAVITY * 0.5;
                     if (e.y + e.h > GROUND_Y) { e.y = GROUND_Y - e.h; e.vy = 0; }
                 }
-                if (e.type === 'sniper' && e.behavior === 'aim') { e.vx = 0; e.shootTimer = 40; }
+                if (e.type === 'sniper' && e.behavior === 'aim') { e.vx = 0; e.shootTimer = 50; }
                 if (e.type === 'infantry' && e.behavior === 'flank') {
-                    if (player.x > e.x) e.vx = 1.4; else e.vx = -1.4;
+                    if (player.x > e.x) e.vx = 1.2; else e.vx = -1.2;
                 }
 
                 e.shootTimer--;
-                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 650) {
-                    let bulletVX = e.x > player.x ? -6 : 6;
-                    if (e.type === 'drone') bulletVX *= 1.3;
-                    if (e.type === 'sniper') bulletVX *= 1.6;
+                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 600) {
+                    let bulletVX = e.x > player.x ? -5 : 5;
+                    if (e.type === 'drone') bulletVX *= 1.2;
+                    if (e.type === 'sniper') bulletVX *= 1.4;
                     enemyBullets.push({
                         x: e.x + (bulletVX > 0 ? e.w : -10), y: e.y + e.h/2 - 4,
                         w: 12, h: 6, vx: bulletVX, vy: 0
                     });
-                    e.shootTimer = e.type === 'heavy' ? 55 : (e.type === 'sniper' ? 70 : (e.type === 'boss' || e.type === 'boss_lieutenant' ? 22 : 45));
+                    e.shootTimer = e.type === 'heavy' ? 65 : (e.type === 'sniper' ? 85 : (e.type === 'boss' || e.type === 'boss_lieutenant' ? 28 : 55));
                 }
 
                 let inv = player.invincible > 0 || invincibleStar;
                 if (!inv && gameActive && playerHealth > 0 && !shieldActive) {
                     if (collides({ x: player.x, y: player.y, w: PLAYER_WIDTH, h: PLAYER_HEIGHT },
                                  { x: e.x, y: e.y, w: e.w, h: e.h })) {
-                        let dmg = (e.type === 'heavy' || e.type === 'boss' || e.type === 'boss_lieutenant') ? 2 : 1;
+                        let dmg = (e.type === 'heavy' || e.type === 'boss' || e.type === 'boss_lieutenant') ? 1 : 1; // all do 1 damage
                         playerHealth -= dmg;
-                        player.invincible = 70;
-                        addShake(5);
+                        player.invincible = 90; // longer invincibility
+                        addShake(4);
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
                     }
@@ -759,7 +785,7 @@
             }
         }
 
-        // ----------  BULLETS (unchanged) ----------
+        // ----------  BULLETS (same, but reduced enemy bullet speed) ----------
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -775,10 +801,10 @@
                         addSparks(e.x + e.w/2, e.y + e.h/2);
                         if (e.health <= 0) {
                             score += e.points;
-                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoElite6', highScore); } catch(e) {} }
+                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoFair6', highScore); } catch(e) {} }
                             explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
-                            addShake(4);
-                            if (Math.random() < 0.35) {
+                            addShake(3);
+                            if (Math.random() < 0.4) { // more power-ups
                                 let types = ['health', 'rapid', 'shield', 'spread', 'star'];
                                 let type = types[Math.floor(Math.random() * types.length)];
                                 pickups.push({ x: e.x, y: e.y, w: 20, h: 20, type: type, vx: -1, life: 500 });
@@ -801,7 +827,7 @@
                     if (collides({ x: player.x, y: player.y, w: PLAYER_WIDTH, h: PLAYER_HEIGHT },
                                  { x: eb.x, y: eb.y, w: eb.w, h: eb.h })) {
                         playerHealth -= 1;
-                        player.invincible = 50;
+                        player.invincible = 70;
                         addShake(3);
                         enemyBullets.splice(i, 1);
                         if (playerHealth < 0) playerHealth = 0;
@@ -811,7 +837,7 @@
             }
         }
 
-        // ----------  PICKUPS ----------
+        // ----------  PICKUPS – same ----------
         function updatePickups() {
             for (let i = pickups.length - 1; i >= 0; i--) {
                 let p = pickups[i];
@@ -853,7 +879,7 @@
             }
         }
 
-        // ----------  EXIT – safe only when no enemies ----------
+        // ----------  EXIT – safe ----------
         function checkExit() {
             if (exitDoor && player.x > exitDoor.x - 40 && enemies.length === 0) {
                 if (currentLevel < MAX_LEVEL) {
@@ -870,7 +896,7 @@
             }
         }
 
-        // ----------  RENDERING – 6 THEMES, ENHANCED GRAPHICS ----------
+        // ----------  RENDERING – FIXED PARALLAX (seamless, no modulo glitches) ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
@@ -879,49 +905,48 @@
             }
             ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
             
-            let bgOffset = cameraX * 0.2;
+            // Fixed parallax: use fractional camera offset to avoid seams
+            let bgOffset = (cameraX * 0.2) % 800;
+            let bgOffset2 = (cameraX * 0.4) % 800;
 
-            // ----- THEMED BACKGROUND -----
+            // ----- THEMED BACKGROUND – seamless tiling -----
             if (levelTheme === 'jungle') {
                 ctx.fillStyle = '#0f2a33'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#1a4a3a'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#2a6b4a'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // waterfalls
+                // waterfalls – seamless wrap
                 ctx.fillStyle = '#48a5b0';
-                for (let i=0;i<10;i++) {
-                    let x = (i*150 - bgOffset) % 1000 - 100;
-                    ctx.fillRect(x, 200, 4, 70);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 150 - bgOffset;
+                    if (x < 800 && x > -150) ctx.fillRect(x, 200, 4, 70);
                 }
                 // leaves
                 ctx.fillStyle = '#3e8a5e';
-                for (let i=0;i<15;i++) {
-                    let x = (i*90 + bgOffset) % 800;
-                    ctx.fillRect(x, 150, 10, 8);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 90 + bgOffset2;
+                    if (x < 800 && x > -50) ctx.fillRect(x, 150, 10, 8);
                 }
             } else if (levelTheme === 'factory') {
                 ctx.fillStyle = '#2a3a3a'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#3e4f4f'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#4f6363'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // steam
                 ctx.fillStyle = '#a0c0c0';
-                for (let i=0;i<8;i++) {
-                    let x = (i*200 + frame) % 900;
-                    ctx.fillRect(x, 180, 6, 20);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 200 + (frame * 0.5 % 200);
+                    if (x < 800 && x > -50) ctx.fillRect(x, 180, 6, 20);
                 }
-                // conveyors
                 ctx.fillStyle = '#6d7a7a';
-                for (let i=0;i<12;i++) {
-                    let x = (i*120 + bgOffset) % 800;
-                    ctx.fillRect(x, 390, 30, 8);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 120 + bgOffset;
+                    if (x < 800 && x > -50) ctx.fillRect(x, 390, 30, 8);
                 }
             } else if (levelTheme === 'alien') {
                 ctx.fillStyle = '#1f2a4a'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#2f3a6a'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#3f4a8a'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // bioluminescent dots
                 ctx.fillStyle = '#b0a0ff';
-                for (let i=0;i<20;i++) {
-                    let x = (i*70 + frame*0.5) % 800;
+                for (let i=0;i<25;i++) {
+                    let x = (i * 70 + frame * 0.5) % 800;
                     let y = 100 + (i%5)*30;
                     ctx.fillRect(x, y, 3, 3);
                 }
@@ -929,31 +954,28 @@
                 ctx.fillStyle = '#a0c8d0'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#80b0c0'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#6098a8'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // icicles
                 ctx.fillStyle = '#e0f0ff';
-                for (let i=0;i<12;i++) {
-                    let x = (i*130 + bgOffset*0.8) % 800;
-                    ctx.fillRect(x, 180, 4, 20);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 130 + bgOffset2;
+                    if (x < 800 && x > -50) ctx.fillRect(x, 180, 4, 20);
                 }
             } else if (levelTheme === 'volcano') {
                 ctx.fillStyle = '#4a1f1f'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#6a2f2f'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#8a3f3f'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // lava glow
                 ctx.fillStyle = '#ff6f4f';
-                for (let i=0;i<15;i++) {
-                    let x = (i*100 + frame) % 800;
-                    ctx.fillRect(x, 400, 12, 6);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 100 + (frame * 1.5 % 100);
+                    if (x < 800 && x > -50) ctx.fillRect(x, 400, 12, 6);
                 }
             } else if (levelTheme === 'fortress') {
                 ctx.fillStyle = '#1a1a2a'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#2a2a3a'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#3a3a4a'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // battlements
                 ctx.fillStyle = '#5a5a6a';
-                for (let i=0;i<10;i++) {
-                    let x = (i*150 - bgOffset*0.5) % 800;
-                    ctx.fillRect(x, 250, 20, 20);
+                for (let i=-2; i<12; i++) {
+                    let x = i * 150 + bgOffset;
+                    if (x < 800 && x > -50) ctx.fillRect(x, 250, 20, 20);
                 }
             }
 
@@ -978,7 +1000,7 @@
                 }
             });
 
-            // exit door – glows when safe
+            // exit door
             if (exitDoor) {
                 let sx = exitDoor.x - cameraX;
                 ctx.fillStyle = enemies.length === 0 ? '#f7d44a' : '#ac8c5a';
@@ -1023,7 +1045,7 @@
             bullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ffe066'; ctx.fillRect(sx, b.y, b.w, b.h); });
             enemyBullets.forEach(b => { let sx = b.x - cameraX; ctx.fillStyle = '#ff8c8c'; ctx.fillRect(sx, b.y, b.w, b.h); });
 
-            // pickups – larger icons
+            // pickups
             pickups.forEach(p => {
                 let sx = p.x - cameraX;
                 ctx.fillStyle = '#4caf7a'; ctx.fillRect(sx, p.y, p.w, p.h);
@@ -1047,27 +1069,21 @@
             dustEffects.forEach(d => { let sx = d.x - cameraX; ctx.fillStyle = `rgba(220,200,120,${d.life/15})`; ctx.fillRect(sx-3, d.y-3, 8, 6); });
             sparks.forEach(s => { let sx = s.x - cameraX; ctx.fillStyle = '#ffaa66'; ctx.fillRect(sx, s.y, 4, 4); });
 
-            // ----- DOUBLE SIZE PLAYER with DETAIL -----
+            // DOUBLE SIZE PLAYER
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
                 let px = player.x - cameraX, py = player.y;
-                // body
                 ctx.fillStyle = shieldActive ? '#7fb3d5' : (invincibleStar ? '#ffd966' : '#3a7251');
                 ctx.fillRect(px+4, py+4, 36, 44);
-                // helmet
                 ctx.fillStyle = '#5a8f4c'; ctx.fillRect(px+10, py-4, 24, 14);
                 ctx.fillStyle = '#ab8b3b'; ctx.fillRect(player.facing===1 ? px+28 : px, py, 12, 8);
-                // gun
                 ctx.fillStyle = '#414141';
                 if (player.facing === 1) ctx.fillRect(px+36, py+18, 18, 6);
                 else ctx.fillRect(px-12, py+18, 18, 6);
-                // legs with animation
                 ctx.fillStyle = '#2b543a';
                 ctx.fillRect(px+6, py+46, 10, 10);
                 ctx.fillRect(px+26, py+46, 10, 10);
-                // backpack
                 ctx.fillStyle = '#4d3e2e';
                 ctx.fillRect(px+30, py+12, 8, 14);
-                // double jump indicator (wings) – show when ready
                 if (!player.onGround && !player.doubleJumpUsed && !player.autoDoubleTriggered) {
                     ctx.fillStyle = '#ffe082';
                     ctx.fillRect(px-4, py, 6, 10);
@@ -1150,10 +1166,11 @@
                 stick.style.left = dx + 'px';
                 stick.style.top = dy + 'px';
 
+                // Movement keys – completely separate from fire
                 keys.left = dx < -10;
                 keys.right = dx > 10;
                 if (dy < -10) {
-                    keys.jump = true;   // hold jump
+                    keys.jump = true;
                     player.jumpBuffer = 10;
                 } else {
                     keys.jump = false;
@@ -1178,14 +1195,14 @@
             window.addEventListener('mouseup', handleEnd);
         }
 
-        // ----------  TOUCH BUTTONS – FIRE & BOMB ----------
+        // ----------  TOUCH BUTTONS – FIRE & BOMB (NEVER AFFECT MOVEMENT) ----------
         function initTouchButtons() {
             const touchFire = document.getElementById('touchFire');
             const touchBomb = document.getElementById('touchBomb');
             function setKey(key, state, e) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
                 keys[key] = state;
-                if (key === 'jump' && state) player.jumpBuffer = 10;
+                // No interference with movement keys
             }
             if (touchFire) {
                 touchFire.addEventListener('touchstart', (e) => setKey('fire', true, e), { passive: false });
@@ -1201,7 +1218,7 @@
             }
         }
 
-        // ----------  KEYBOARD – HOLD JUMP = DOUBLE ----------
+        // ----------  KEYBOARD – FIRE IS FIRE, NOT MOVEMENT ----------
         function initKeyboard() {
             window.addEventListener('keydown', (e) => {
                 if (!gameActive) return;
@@ -1213,7 +1230,7 @@
                         player.jumpBuffer = 10; 
                         e.preventDefault(); 
                         break;
-                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break; // ONLY fire
                     case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
                 }
             });
