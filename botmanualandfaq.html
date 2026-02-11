@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Advanced Crypto Trading System – complete user manual and frequently asked questions. Setup, harmonic patterns, AI analysis, and risk management.">
+    <meta name="keywords" content="crypto trading bot, harmonic patterns, AI trading, Binance API, GPT4All, documentation, FAQ, manual">
+    <meta name="author" content="TradeSolDevs">
+    
+    <!-- Google AdSense (same publisher) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2958343227558642" crossorigin="anonymous"></script>
+    
+    <title>TradeSolDevs · Crypto Trading System – Manual & FAQ</title>
+    
+    <style>
+        /* ——— RESET & BASE (identical to original, keep consistency) ——— */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* header – gradient, same vibe */
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        nav a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .contact-button, .github-button {
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-left: 1rem;
+        }
+        .github-button {
+            background: #24292e;
+            margin-left: 0;
+        }
+        .contact-button:hover, .github-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52,152,219,0.3);
+        }
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        /* main sections – white cards with shadow */
+        main {
+            padding: 3rem 0;
+        }
+        .doc-section, .faq-section, .manual-section {
+            background: white;
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+        .doc-section:hover, .faq-section:hover, .manual-section:hover {
+            transform: translateY(-5px);
+        }
+        .section-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-right: 1rem;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 2rem;
+            color: #2c3e50;
+        }
+        .section-sub {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        /* FAQ card – like feature-card but full width */
+        .faq-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 1.2rem;
+        }
+        .faq-question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: baseline;
+        }
+        .faq-question span {
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .faq-answer {
+            color: #2c3e50;
+            margin-left: 38px;
+        }
+        .faq-answer ul, .faq-answer ol {
+            margin-left: 1.2rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* manual – parameter cards, recommendation boxes, TOC */
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .toc-item {
+            background: #ecf0f1;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            border-left: 3px solid #2ecc71;
+        }
+        .toc-item a {
+            color: #2c3e50;
+            text-decoration: none;
+            display: block;
+        }
+        .toc-item:hover {
+            background: #d5dbdb;
+        }
+        
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .param-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+        .param-card h5 {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px dashed #bdc3c7;
+            padding-bottom: 0.4rem;
+        }
+        .rec-box {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            margin: 1.8rem 0;
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        .tech-tag {
+            background: #e8f4fc;
+            color: #2980b9;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .ad-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 3rem 0;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+        }
+        .ad-label {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* footer same style */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+        .social-links a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .copyright {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52,152,219,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            .doc-section, .faq-section, .manual-section { padding: 1.5rem; }
+            .section-title { font-size: 1.6rem; }
+            nav ul { flex-direction: column; gap: 0.8rem; }
+            .header-buttons { flex-direction: column; width: 100%; }
+            .contact-button, .github-button { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER (brand adapted for documentation) -->
+    <header>
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <h1 class="logo">TradeSolDevs</h1>
+                    <p class="tagline">📘 Advanced Crypto Trading System – Manual & FAQ</p>
+                </div>
+                <div class="header-buttons">
+                    <button class="github-button" onclick="window.open('https://github.com/TradeSolutionsDevelopment', '_blank')">
+                        <span>⭐</span> GitHub
+                    </button>
+                    <button class="contact-button" onclick="location.href='#contact'">Contact Us</button>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#manual">Manual</a></li>
+                    <li><a href="#tabs-overview">Tabs reference</a></li>
+                    <li><a href="#workflows">Workflows</a></li>
+                    <li><a href="#troubleshooting">Troubleshoot</a></li>
+                    <li><a href="#contact">Support</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- BACK TO TOP -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+
+    <main class="container">
+        <!-- === AD CONTAINER 1 (top) === -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <ins class="adsbygoogle"
+                 style="display:block; text-align:center;"
+                 data-ad-layout="in-article"
+                 data-ad-format="fluid"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="DOC_TOP_SLOT"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+
+        <!-- === GITHUB CARD (light version, contextual) === -->
+        <div class="doc-section" style="background: linear-gradient(145deg, #0d1117, #161b22); color: white;">
+            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                <div style="font-size: 3rem;">🐙</div>
+                <div>
+                    <h2 style="color: white; margin-bottom: 0.5rem;">Open‑source core</h2>
+                    <p style="color: #c9d1d9; margin-bottom: 1rem;">Report bugs, suggest features, or explore the codebase. All manuals refer to the latest release.</p>
+                    <a href="https://github.com/TradeSolutionsDevelopment" target="_blank" style="background: #238636; color: white; padding: 0.6rem 1.8rem; border-radius: 6px; text-decoration: none; display: inline-block;">GitHub organization →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FAQ SECTION ========== -->
+        <section id="faq" class="faq-section">
+            <div class="section-header">
+                <div class="section-icon" style="background: #3498db; color: white;">❓</div>
+                <div>
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                    <p class="section-sub">32 answers — from API setup to copyright</p>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1rem; font-style: italic; color: #555;">Click question or scroll – all expanded for quick reference.</div>
+            
+            <!-- FAQ items, numbered 1..32 -->
+            <div class="faq-item">
+                <div class="faq-question"><span>1</span> What is the purpose of the Advanced Crypto Trading System?</div>
+                <div class="faq-answer">Comprehensive tool for crypto market analysis, harmonic pattern detection, AI‑driven insights, arbitrage detection, and automated/manual trading. Integrates multiple strategies.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>2</span> How do I set up Binance API credentials?</div>
+                <div class="faq-answer">In “Crypto Trading” or “Arbitrage Pattern” → Configuration. Generate from Binance API Management with trading & read permissions. Never share them.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>3</span> What if I enter wrong API credentials?</div>
+                <div class="faq-answer">Error message on data fetch. Verify key/secret, permissions, internet. Delete stored credentials and re‑enter.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>4</span> Why no patterns in Harmonics tab?</div>
+                <div class="faq-answer">Possible: insufficient lookback, too strict tolerance, adaptive ZigZag off, or market not exhibiting patterns. Try lower tolerance, enable Adaptive ZigZag, change symbol.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>5</span> How does Cycle Mode work?</div>
+                <div class="faq-answer">Scans all Binance pairs for selected patterns, recurring scan (default 2 min). Shows top 10 markets by risk/reward; navigate via Previous/Next in Visualization tab.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>6</span> Market vs Limit orders?</div>
+                <div class="faq-answer"><strong>Market</strong> = immediate execution, possible slippage. <strong>Limit</strong> = set price, may not fill, precise entry.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>7</span> Change encryption password?</div>
+                <div class="faq-answer">Settings tab → “Change Password”. Enter current, then new (twice). Re‑encrypts all stored data.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>8</span> “Delete All Stored Data” – what happens?</div>
+                <div class="faq-answer">Removes encrypted credentials & config (encrypted_data.bin, salt.bin). Irreversible; you must re‑enter API keys.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>9</span> Why does Market Analyzer need Crypto Trading credentials?</div>
+                <div class="faq-answer">Uses same Binance API for market data & trades. Centralised management, warning if missing.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>10</span> Optimize trading bot performance?</div>
+                <div class="faq-answer">Adjust Time Window/Data Interval, CCI threshold, Bollinger periods. Use stop loss (e.g. 30%). Test in simulation first, monitor logs.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>11</span> App crashes / freezes?</div>
+                <div class="faq-answer">Check Python 3.8+, required libs (ccxt, PyQt5, torch). View System Logs, reduce lookback, delete stored data, lower dataset size.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>12</span> Run multiple bots simultaneously?</div>
+                <div class="faq-answer">Yes – Market Analyzer tab: “Add New Bot”. Each bot independent symbol/strategy. Monitor via Active Bots table and individual logs.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>13</span> How does AI Analysis tab work?</div>
+                <div class="faq-answer">Load local GPT4All model, import data (LSTM, harmonics, market, logs). Configure risk per trade, stop loss, take profit. AI generates BUY/SELL/HOLD with reasoning.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>14</span> Which GPT4All models supported?</div>
+                <div class="faq-answer">Any .bin / .gguf file, e.g. Falcon, Wizard, Mistral variants. Choose size per hardware (CPU/GPU).</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>15</span> Import data for AI analysis?</div>
+                <div class="faq-answer">Use import buttons: Log data, Market data, LSTM results, Harmonic results, Market Analyzer results. All combined in prompt.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>16</span> harmonics.py vs integrated Harmonics tab?</div>
+                <div class="faq-answer"><strong>harmonics.py</strong> standalone Tkinter app with backtesting & simulation. <strong>Integrated tab</strong> PyQt5, shares data with other modules, AI integration. Same detection core.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>17</span> Combined Trading tab?</div>
+                <div class="faq-answer">Enable/disable LSTM, Harmonic, Market Analyzer, AI modules; set weights; Live Trading or Scan Mode. Weighted signals for higher confidence.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>18</span> Adaptive ZigZag – when to use?</div>
+                <div class="faq-answer">Dynamically adjusts threshold (0.005‑0.05) based on volatility. Recommended for multi‑symbol scanning or volatile markets.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>19</span> Harmonics simulation feature?</div>
+                <div class="faq-answer">Tests 7 parameter sets (ZigZag 0.005/0.01/0.02, tolerance 0.1/0.15/0.2). Recommends best win rate / avg profit and auto‑applies.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>20</span> Export data?</div>
+                <div class="faq-answer">Logs: “Copy Log” / export; Market data: Copy/Export in Setup; Pattern results: CSV; AI: copy display; Database Manager export functions.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>21</span> System requirements?</div>
+                <div class="faq-answer">Min: Python 3.8, 8GB RAM, 2GB disk. Recommended for AI: 16GB+ RAM, CUDA GPU, SSD.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>22</span> How to update?</div>
+                <div class="faq-answer">Settings tab or download from repo. Backup config, re‑enter API keys, test new version in simulation first.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>23</span> Security measures?</div>
+                <div class="faq-answer">AES encryption for API keys, local AI (no cloud), optional app password, read‑only key option, secure deletion.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>24</span> Poor AI recommendations?</div>
+                <div class="faq-answer">Check model compatibility, import all relevant data, adjust confidence threshold, try different model.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>25</span> Paper trading / simulation?</div>
+                <div class="faq-answer">Market Analyzer: simulation mode; Combined Trading: Scan Mode; Harmonics: backtesting; AI: no auto‑execution.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>26</span> Optimize performance for many bots?</div>
+                <div class="faq-answer">Increase check intervals, use longer timeframes, disable unnecessary indicators, consider VPS.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>27</span> API rate limits?</div>
+                <div class="faq-answer">Increase fetch intervals, reduce bots/symbols, enable “Enable Rate Limit”, use multiple keys for different functions.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>28</span> Interpret harmonic signals?</div>
+                <div class="faq-answer">Bullish = potential BUY, Bearish = SELL. Entry, Target, Stop Loss shown. Confirm with other indicators.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>29</span> Support channels?</div>
+                <div class="faq-answer">Manual, FAQ, System Logs, GitHub issues, email: <a href="mailto:tradesoldev@proton.me">tradesoldev@proton.me</a>. Bugs/ideas welcome.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>30</span> Mobile support?</div>
+                <div class="faq-answer">Desktop only. Workaround: run on VPS with remote desktop; Binance app for monitoring.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>31</span> Is this software copyrighted?</div>
+                <div class="faq-answer">© 2025 TradeSolutionsDevelopment. All rights reserved. Non‑commercial redistribution allowed unmodified with notices.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question"><span>32</span> Can I use it for free?</div>
+                <div class="faq-answer">Yes, personal non‑commercial use only. No warranty. You may modify for yourself, but not redistribute modified versions. Commercial use prohibited. Risk warning: educational project.</div>
+            </div>
+            
+            <div class="rec-box" style="margin-top: 2rem; background: #fff3e0; border-left-color: #e67e22;">
+                <strong>📬 Bug report / suggestion?</strong> GitHub or email – we actively maintain the system.
+            </div>
+        </section>
+
+        <!-- === AD CONTAINER 2 === -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="autorelaxed"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="DOC_MIDDLE_SLOT"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+
+        <!-- ========== MANUAL SECTION ========== -->
+        <section id="manual" class="manual-section">
+            <div class="section-header">
+                <div class="section-icon" style="background: #2c3e50; color: white;">📖</div>
+                <div>
+                    <h2 class="section-title">Advanced Crypto Trading System · Manual</h2>
+                    <p class="section-sub">Complete reference – parameters, recommendations, integrated AIBot & harmonics subprograms</p>
+                </div>
+            </div>
+            
+            <!-- quick TOC anchors -->
+            <div class="toc-grid">
+                <div class="toc-item"><a href="#intro">🚀 Introduction</a></div>
+                <div class="toc-item"><a href="#tabs-overview">📊 Tabs overview</a></div>
+                <div class="toc-item"><a href="#new-features">✨ AIBot / harmonics.py</a></div>
+                <div class="toc-item"><a href="#workflows">⚙️ Example workflows</a></div>
+                <div class="toc-item"><a href="#troubleshooting">🔧 Troubleshooting</a></div>
+                <div class="toc-item"><a href="#conclusion">🎯 Conclusion</a></div>
+            </div>
+            
+            <!-- 1. INTRODUCTION -->
+            <div id="intro" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #3498db; padding-left: 1rem;">Introduction</h3>
+                <p style="margin-top: 1rem;">Powerful desktop application integrating harmonic pattern detection, AI‑driven market analysis, automated trading bots, real-time data, and arbitrage. <strong>MarketAnalyzer</strong> is the most tested module – recommended starting point. Simulation possible before going live.</p>
+            </div>
+            
+            <!-- 2. TABS OVERVIEW (detailed, with param cards) -->
+            <div id="tabs-overview" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #3498db; padding-left: 1rem;">📌 Tabs overview & recommended settings</h3>
+                
+                <!-- Crypto Trading -->
+                <div style="background: #f1f9fe; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                    <h4 style="display: flex; align-items: center; gap: 10px;"><span style="background: #2ecc71; color: white; padding: 0.2rem 1rem; border-radius: 20px;">1</span> Crypto Trading Tab</h4>
+                    <p><strong>API Key/Secret, Symbol, Order type, Trade amount.</strong> Live trading & manual orders.</p>
+                    <div class="param-grid">
+                        <div class="param-card"><h5>Impact</h5>Credentials = live trading. Market orders fast, slippage; limit price control. Trade amount = risk.</div>
+                        <div class="param-card"><h5>Recommended</h5> BTC/USDT, Limit, 0.01 BTC. High liquidity, precise entry, small test size.</div>
+                    </div>
+                </div>
+                
+                <!-- Market Data -->
+                <div style="background: #f1f9fe; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                    <h4 style="display: flex; align-items: center;"><span style="background: #2ecc71; color: white; padding: 0.2rem 1rem; border-radius: 20px; margin-right: 10px;">2</span> Market Data Tab</h4>
+                    <p><strong>Symbols, Interval, Time Window.</strong> Real-time prices, indicators.</p>
+                    <div class="param-grid">
+                        <div class="param-card"><h5>Impact</h5>Shorter interval = frequent updates, more API usage. Helps trend identification.</div>
+                        <div class="param-card"><h5>Recommended</h5>BTC/USDT, ETH/USDT; interval 5m; window 24h. Balanced, major pairs.</div>
+                    </div>
+                </div>
+                
+                <!-- Harmonics Pattern (merged with AIBot/harmonics features) -->
+                <div style="background: #f1f9fe; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                    <h4 style="display: flex; align-items: center;"><span style="background: #2ecc71; color: white; padding: 0.2rem 1rem; border-radius: 20px; margin-right: 10px;">3</span> Harmonics Pattern Tab</h4>
+                    <p><strong>Symbol, Bar interval, Lookback, Pattern, Ratio Tolerance, ZigZag, Adaptive ZigZag.</strong> Shark, Gartley, Bat, Crab, Butterfly.</p>
+                    <div class="param-grid">
+                        <div class="param-card"><h5>New AIBot integration</h5>Multi-pattern detection, geometric validation, Cycle Mode, Top 10 navigation.</div>
+                        <div class="param-card"><h5>harmonics.py standalone</h5>Tkinter GUI, backtesting, parameter simulation, direct trading.</div>
+                    </div>
+                    <div class="rec-box"><strong>⚡ Recommended:</strong> ETH/USDT, 1h interval, 1d lookback, Shark pattern, Ratio Tolerance 0.1, ZigZag 0.01, Adaptive ON. Balances volatility and precision.</div>
+                </div>
+                
+                <!-- Market Analyzer Tab (multi-bot) -->
+                <div style="background: #f1f9fe; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                    <h4 style="display: flex; align-items: center;"><span style="background: #2ecc71; color: white; padding: 0.2rem 1rem; border-radius: 20px; margin-right: 10px;">4</span> Market Analyzer Tab</h4>
+                    <p><strong>Time Window, Data/Check interval, CCI, Bollinger, Allocated USDC, Strategy, Stop loss, Profit threshold, Reinvest, Max cycles, Indicators.</strong></p>
+                    <div class="param-grid">
+                        <div class="param-card"><h5>Multi‑bot</h5>Run 3‑4 bots simultaneously, independent logs, real‑time signal export.</div>
+                        <div class="param-card"><h5>Recommended beginner</h5>LTC/USDC, window 10h, 15m data, check 30s, CCI -200, Bollinger 20/2, allocated 100 USDC, INCREMENTAL-REINVEST, stop 30%, profit 3%, reinvest 100%.</div>
+                    </div>
+                </div>
+                
+                <!-- Combined Trading, System Logs, Arbitrage, DB, AI, Settings – concise but complete -->
+                <div style="background: #f1f9fe; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;">
+                    <h4 style="display: flex; align-items: center;"><span style="background: #2ecc71; color: white; padding: 0.2rem 1rem; border-radius: 20px; margin-right: 10px;">5–12</span> Other Tabs (quick reference)</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 1.2rem;">
+                        <div class="param-card"><h5>Combined Trading</h5>Weighted signals (e.g. harmonics 40%, AI 30%, market 30%). Confirmation threshold 2, delay 30s. Weighted avg recommended.</div>
+                        <div class="param-card"><h5>System Logs</h5>Level INFO, auto‑scroll, export TXT. Real‑time structured logging.</div>
+                        <div class="param-card"><h5>Arbitrage Pattern</h5>Fee BNB discount, chain length 3, limit orders, simultaneous, recurring 2min.</div>
+                        <div class="param-card"><h5>Database Manager</h5>Organize categories, export CSV/JSON, weekly backup.</div>
+                        <div class="param-card"><h5>AI Analysis</h5>GPT4All local, risk 3% per trade, SL 1%, TP 1%, daytrade style. Import all data sources.</div>
+                        <div class="param-card"><h5>Settings</h5>Encryption ON, fee collection enabled (dev support), dark theme, data retention 90d.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. NEW FEATURES: AIBot.py & harmonics.py -->
+            <div id="new-features" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #9b59b6; padding-left: 1rem;">✨ New subprograms – AIBot.py & harmonics.py</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 1.5rem;">
+                    <div style="flex: 1; min-width: 280px; background: #f3e5f5; padding: 1.5rem; border-radius: 10px;">
+                        <h4 style="color: #8e44ad;">🧠 AIBot.py</h4>
+                        <ul style="margin-left: 1.2rem;">
+                            <li>Local GPT4All – private, low latency</li>
+                            <li>Multi‑source data (LSTM, harmonics, market, logs)</li>
+                            <li>Real‑time BUY/SELL/HOLD with reasoning</li>
+                            <li>Adaptive ZigZag, geometric validation, Cycle Mode</li>
+                            <li>Unified trader class, multi‑exchange ready</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1; min-width: 280px; background: #e8f5e9; padding: 1.5rem; border-radius: 10px;">
+                        <h4 style="color: #27ae60;">📈 harmonics.py (standalone)</h4>
+                        <ul style="margin-left: 1.2rem;">
+                            <li>Independent Tkinter GUI, real‑time scanning</li>
+                            <li>Full backtesting & parameter simulation (7 sets)</li>
+                            <li>Pattern scoring, top 10 markets ranking</li>
+                            <li>Zoom/pan charts, order placement</li>
+                            <li>Trend strength analysis</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="tech-stack" style="margin-top: 1.5rem;"><span class="tech-tag">#redundant_validation</span><span class="tech-tag">#multi_bot</span><span class="tech-tag">#ai_locally</span><span class="tech-tag">#harmonic_backtest</span></p>
+            </div>
+            
+            <!-- 4. EXAMPLE WORKFLOWS -->
+            <div id="workflows" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #e67e22; padding-left: 1rem;">⚡ Example workflows</h3>
+                <div class="param-grid">
+                    <div class="param-card" style="border-left-color: #2ecc71;">
+                        <h5>🐣 Beginner setup</h5>
+                        <ol style="margin-left: 1rem;">
+                            <li>Settings: add API keys, test</li>
+                            <li>Market Data: BTC/ETH 5m</li>
+                            <li>Market Analyzer: LTC/USDC bot, 100 USDC, simulate</li>
+                            <li>Harmonics: ETH Shark, 1h, adaptive</li>
+                            <li>Arbitrage: recurring scan, small limit orders</li>
+                        </ol>
+                    </div>
+                    <div class="param-card" style="border-left-color: #e67e22;">
+                        <h5>🤖 AI‑enhanced + harmonics</h5>
+                        <ol>
+                            <li>AI tab: load GPT4All, 3% risk, 1% SL/TP</li>
+                            <li>Import harmonics & market data</li>
+                            <li>Harmonics: enable multiple patterns, cycle 15min</li>
+                            <li>Combined: AI 60% / harmonics 40%, scan mode</li>
+                        </ol>
+                    </div>
+                    <div class="param-card" style="border-left-color: #9b59b6;">
+                        <h5>🔄 Standalone harmonic trading</h5>
+                        <ol>
+                            <li>Run harmonics.py, set pattern (bullish Gartley)</li>
+                            <li>Cycle mode, top10 navigation</li>
+                            <li>Enter limit order at PRZ, stop at O</li>
+                            <li>Target 0.618–1.0 extension</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="rec-box">
+                    <strong>📋 Risk management protocol:</strong> start small (100 USDC), always use stop loss (20-30%), diversify pairs, daily log review, test updates in simulation.
+                </div>
+            </div>
+            
+            <!-- 5. TROUBLESHOOTING -->
+            <div id="troubleshooting" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #e74c3c; padding-left: 1rem;">🔧 Troubleshooting common issues</h3>
+                <div style="display: grid; gap: 1rem; margin-top: 1.2rem;">
+                    <div style="background: #fdeded; padding: 1rem; border-radius: 8px;"><strong>🔌 Connection:</strong> verify API keys, IP whitelist, Binance status.</div>
+                    <div style="background: #fdeded; padding: 1rem; border-radius: 8px;"><strong>🐢 Performance:</strong> reduce active bots, increase check intervals, clear logs, lower retention.</div>
+                    <div style="background: #fdeded; padding: 1rem; border-radius: 8px;"><strong>📉 No patterns:</strong> lower ZigZag threshold, enable adaptive, use different symbol.</div>
+                    <div style="background: #fdeded; padding: 1rem; border-radius: 8px;"><strong>🧠 AI fails:</strong> verify model file (.bin/.gguf), re‑import data, use smaller model if RAM low.</div>
+                </div>
+            </div>
+            
+            <!-- 6. CONCLUSION & SUCCESS FACTORS -->
+            <div id="conclusion" style="margin-top: 2.5rem;">
+                <h3 style="color: #2c3e50; border-left: 6px solid #2c3e50; padding-left: 1rem;">🎯 Conclusion & key success factors</h3>
+                <p style="margin: 1rem 0;">AIBot.py + harmonics.py provide <strong>redundant validation, flexible deployment, professional execution.</strong> Start conservative, monitor actively, adapt to market, security first, simulate before live.</p>
+                <div style="background: #d4edc9; padding: 1.5rem; border-radius: 10px; border-left: 6px solid #2ecc71;">
+                    <p style="font-weight: 600;">✅ Regularly consult this manual & FAQ. New features added continuously – check GitHub for updates.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- === AD CONTAINER 3 (bottom) === -->
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-2958343227558642"
+                 data-ad-slot="DOC_BOTTOM_SLOT"
+                 data-ad-format="auto"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+
+        <!-- === CONTACT / SUPPORT SECTION (same style, dedicated) === -->
+        <section id="contact" class="doc-section" style="background: linear-gradient(145deg, #f0f9ff, #e6f3ff);">
+            <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                <div style="font-size: 3rem;">📬</div>
+                <div>
+                    <h2 style="color: #2c3e50; margin-bottom: 0.5rem;">Get support – we respond fast</h2>
+                    <p style="margin-bottom: 1rem;">Bug reports, feature requests, or licensing questions.</p>
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                        <span style="background: #24292e; color: white; padding: 0.5rem 1.5rem; border-radius: 30px;">🐙 GitHub Issues</span>
+                        <span style="background: #3498db; color: white; padding: 0.5rem 1.5rem; border-radius: 30px;">📧 tradesoldev@proton.me</span>
+                    </div>
+                    <p style="margin-top: 1.2rem; font-size: 0.95rem;"><em>© 2025 TradeSolutionsDevelopment – all rights reserved. Personal non‑commercial use only.</em></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER (identical branding) -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <h3 style="color: white;">TradeSolDevs</h3>
+                <p>Professional Software Development & Royalty-Free AI Music</p>
+                <div class="social-links">
+                    <a href="https://github.com/TradeSolutionsDevelopment" target="_blank"><span>⭐</span> GitHub</a>
+                    <a href="mailto:tradesoldev@proton.me"><span>📧</span> Email</a>
+                    <a href="https://x.com/TSolD_projects" target="_blank"><span>🐦</span> X (Twitter)</a>
+                    <a href="https://rumble.com/user/TSolD/live" target="_blank"><span>🎬</span> Rumble</a>
+                </div>
+                <div><strong>Manual & FAQ</strong> – version 2.5 · updated 2025</div>
+                <p class="copyright">© 2025 TradeSolDevs. All rights reserved.<br><small>Advanced Crypto Trading System documentation – always free for personal use.</small></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Back to top visibility & smooth scroll
+        const backBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) backBtn.classList.add('visible');
+            else backBtn.classList.remove('visible');
+        });
+        backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        
+        // Smooth nav links
+        document.querySelectorAll('nav a, .toc-item a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        
+        // Reinitialize AdSense (simulate)
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        setTimeout(() => { try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {} }, 800);
+    </script>
+</body>
+</html>
