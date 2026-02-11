@@ -307,7 +307,7 @@
         ctx.imageSmoothingEnabled = false;
 
         // ----------  WORLD ----------
-        const WORLD_SIZE = 2400; // larger, more detailed
+        const WORLD_SIZE = 2400;
         const VIEWPORT_W = 800, VIEWPORT_H = 500;
         let cameraX = 0, cameraY = 0;
 
@@ -332,10 +332,10 @@
         let shieldActive = false, shieldTimer = 0;
         let spreadShot = false, spreadTimer = 0;
         let invincibleStar = false, starTimer = 0;
-        let homingMissiles = false, homingTimer = 0;     // NEW
-        let piercingShots = false, piercingTimer = 0;   // NEW
-        let speedBoost = false, speedTimer = 0;         // NEW
-        let timeSlow = false, slowTimer = 0;            // NEW
+        let homingMissiles = false, homingTimer = 0;
+        let piercingShots = false, piercingTimer = 0;
+        let speedBoost = false, speedTimer = 0;
+        let timeSlow = false, slowTimer = 0;
 
         // ----------  PLAYER ----------
         const PLAYER_WIDTH = 44;
@@ -348,13 +348,13 @@
             shootTimer: 0,
             invincible: 0,
             bombCooldown: 0,
-            weaponOffset: 0, // for muzzle flash
+            weaponOffset: 0,
             walkFrame: 0,
         };
 
-        // ----------  LEVEL DESIGN – HAND-CRAFTED BEAUTY ----------
+        // ----------  LEVEL DESIGN ----------
         let walls = [];
-        let decorations = []; // visual only
+        let decorations = [];
         let enemySpawners = [];
         let exitDoor = null;
         let levelName = "";
@@ -371,7 +371,7 @@
         // ----------  KEYBOARD STATE ----------
         const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false };
 
-        // ----------  LEVEL GENERATORS – MASTERPIECES ----------
+        // ----------  LEVEL GENERATORS – MASTERPIECES (FIXED) ----------
         function buildLevel(level) {
             walls = []; decorations = []; enemySpawners = []; exitDoor = null;
             // world boundary
@@ -380,24 +380,20 @@
             walls.push({ x: 0, y: 0, w: 10, h: WORLD_SIZE });
             walls.push({ x: WORLD_SIZE-10, y: 0, w: 10, h: WORLD_SIZE });
 
-            if (level === 1) { // JUNGLE – lush, winding paths
+            if (level === 1) { // JUNGLE
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
-                // central ruins
                 addRoom(400,400, 300,200, 20);
                 addRoom(800,600, 200,300, 20);
                 addCorridor(600,500, 800,600, 20);
                 addPillars(1000,300, 3,2, 50,50);
-                // decorative trees
                 for (let i=0;i<20;i++) decorations.push({ x: 200+Math.random()*2000, y: 200+Math.random()*2000, type: 'tree' });
-                // enemies
                 spawnWave(300,300, 'infantry', 6);
                 spawnWave(900,200, 'drone', 4);
                 spawnWave(1200,700, 'sniper', 3);
-                // lieutenant boss
                 enemySpawners.push({ x: 1900, y: 1900, type: 'boss_lieutenant', behavior: 'boss' });
                 exitDoor = { x: 2100, y: 2100 };
-            } else if (level === 2) { // FACTORY – industrial, conveyor lines
+            } else if (level === 2) { // FACTORY
                 levelName = "MACHINE COMPLEX";
                 levelTheme = "factory";
                 addGrid(200,200, 4,3, 80,80, 20);
@@ -411,7 +407,7 @@
                 spawnWave(1400,200, 'sniper', 3);
                 enemySpawners.push({ x: 2000, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
                 exitDoor = { x: 2200, y: 2200 };
-            } else if (level === 3) { // ALIEN – bioluminescent, organic
+            } else if (level === 3) { // ALIEN
                 levelName = "ALIEN NEXUS";
                 levelTheme = "alien";
                 addOrganic(400,400, 300,250);
@@ -423,7 +419,7 @@
                 spawnWave(1500,400, 'infantry', 5);
                 enemySpawners.push({ x: 2100, y: 1900, type: 'boss_lieutenant', behavior: 'boss' });
                 exitDoor = { x: 2300, y: 2100 };
-            } else if (level === 4) { // ICE – frozen fortress
+            } else if (level === 4) { // ICE
                 levelName = "GLACIAL PEAK";
                 levelTheme = "ice";
                 addRoom(300,300, 400,200, 25);
@@ -436,7 +432,7 @@
                 spawnWave(1500,700, 'heavy', 3);
                 enemySpawners.push({ x: 2000, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
                 exitDoor = { x: 2200, y: 2200 };
-            } else if (level === 5) { // VOLCANO – lava, danger
+            } else if (level === 5) { // VOLCANO
                 levelName = "MOLTEN CORE";
                 levelTheme = "volcano";
                 addLavaPit(400,400, 200,200);
@@ -449,7 +445,7 @@
                 spawnWave(1700,400, 'drone', 5);
                 enemySpawners.push({ x: 2100, y: 2000, type: 'boss_lieutenant', behavior: 'boss' });
                 exitDoor = { x: 2300, y: 2200 };
-            } else if (level === 6) { // FORTRESS – final, epic
+            } else if (level === 6) { // FORTRESS
                 levelName = "FINAL FORTRESS";
                 levelTheme = "fortress";
                 addRoom(300,300, 500,400, 30);
@@ -466,7 +462,7 @@
             }
         }
 
-        // ----------  LEVEL BUILDING HELPERS ----------
+        // ----------  LEVEL BUILDING HELPERS (ALL HOISTED) ----------
         function addRoom(x,y,w,h, thickness) {
             walls.push({ x, y, w, h: thickness }); // top
             walls.push({ x, y+h-thickness, w, h: thickness }); // bottom
@@ -489,14 +485,13 @@
             for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) addRoom(x+i*(w+20), y+j*(h+20), w, h, thickness);
         }
         function addOrganic(x,y,w,h) {
-            // curved organic walls – approximated with blocks
             for (let i=0;i<10;i++) walls.push({ x: x + Math.sin(i)*30, y: y + Math.cos(i)*30, w: 30, h: 30 });
         }
         function addIceWall(x,y,w,h) {
             walls.push({ x, y, w, h });
         }
+        // FIXED: removed undefined 'd' variable
         function addLavaPit(x,y,w,h) {
-            // actually walls around pit
             walls.push({ x, y, w, h: 20 }); // top
             walls.push({ x, y+h-20, w, h:20 }); // bottom
             walls.push({ x, y, w:20, h }); // left
@@ -510,7 +505,6 @@
         function addTurrets(x,y, count) {
             for (let i=0;i<count;i++) {
                 walls.push({ x: x + i*100, y, w: 30, h: 30 });
-                // spawners as stationary snipers
                 enemySpawners.push({ x: x + i*100, y: y-50, type: 'sniper', behavior: 'snipe' });
             }
         }
@@ -609,7 +603,7 @@
             }
         }
 
-        // ----------  PLAYER UPDATE – SMOOTH AS SILK ----------
+        // ----------  PLAYER UPDATE ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -648,7 +642,7 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // shooting – hold to auto-fire
+            // shooting
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
                 if (player.shootTimer <= 0) {
@@ -855,7 +849,7 @@
 
                 // homing
                 if (b.homing) {
-                    if (b.homing.health > 0) {
+                    if (b.homing && b.homing.health > 0) {
                         let dx = b.homing.x + b.homing.w/2 - b.x;
                         let dy = b.homing.y + b.homing.h/2 - b.y;
                         let len = Math.sqrt(dx*dx + dy*dy);
@@ -971,7 +965,7 @@
             }
         }
 
-        // ----------  EFFECTS ----------
+        // ----------  EXPLOSIONS ----------
         function updateExplosions() {
             for (let i = explosions.length - 1; i >= 0; i--) {
                 let ex = explosions[i];
@@ -990,7 +984,6 @@
                         currentLevel++;
                         buildLevel(currentLevel);
                         player.x = 300; player.y = 300;
-                        // reset power-ups but keep health and score
                         rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
                         spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
                         homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
@@ -1015,7 +1008,6 @@
             if (levelTheme === 'jungle') {
                 ctx.fillStyle = '#1f4a3a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // vines
                 ctx.strokeStyle = '#3a6a4a';
                 ctx.lineWidth = 2;
                 for (let i=0;i<50;i++) {
@@ -1027,7 +1019,6 @@
             } else if (levelTheme === 'factory') {
                 ctx.fillStyle = '#3a4a4a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // grid lines
                 ctx.strokeStyle = '#5a6a6a';
                 ctx.lineWidth = 1;
                 for (let i=0;i<WORLD_SIZE;i+=50) {
@@ -1037,7 +1028,6 @@
             } else if (levelTheme === 'alien') {
                 ctx.fillStyle = '#2a2a5a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // glowing dots
                 ctx.fillStyle = '#8a8aff';
                 for (let i=0;i<200;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
@@ -1045,7 +1035,6 @@
             } else if (levelTheme === 'ice') {
                 ctx.fillStyle = '#a0d0e0';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // sparkles
                 ctx.fillStyle = '#ffffff';
                 for (let i=0;i<150;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
@@ -1053,7 +1042,6 @@
             } else if (levelTheme === 'volcano') {
                 ctx.fillStyle = '#4a2a2a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // lava glow
                 ctx.fillStyle = '#ff6a2a';
                 for (let i=0;i<100;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 4, 4);
@@ -1061,7 +1049,6 @@
             } else if (levelTheme === 'fortress') {
                 ctx.fillStyle = '#2a2a3a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
-                // stone texture
                 ctx.fillStyle = '#4a4a6a';
                 for (let i=0;i<100;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 8, 4);
@@ -1107,10 +1094,8 @@
                 else baseColor = '#6a6a7a';
                 ctx.fillStyle = baseColor;
                 ctx.fillRect(w.x, w.y, w.w, w.h);
-                // highlight
                 ctx.fillStyle = '#ffffaa20';
                 ctx.fillRect(w.x, w.y-2, w.w, 4);
-                // shadow
                 ctx.fillStyle = '#00000030';
                 ctx.fillRect(w.x+2, w.y+2, w.w, w.h);
             });
@@ -1135,11 +1120,9 @@
                 else if (e.type.includes('boss')) color = '#b34b4b';
                 ctx.fillStyle = color;
                 ctx.fillRect(e.x, e.y, e.w, e.h);
-                // eyes
                 ctx.fillStyle = '#000';
                 ctx.fillRect(e.x+4, e.y+4, 5,5);
                 ctx.fillRect(e.x+e.w-9, e.y+4, 5,5);
-                // boss glow
                 if (e.type.includes('boss')) {
                     ctx.shadowBlur = 15; ctx.shadowColor = '#ff6a6a';
                     ctx.fillRect(e.x, e.y, e.w, e.h);
@@ -1195,29 +1178,23 @@
             // ----- PLAYER – DETAILED SPRITE -----
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
                 let px = player.x, py = player.y;
-                // shield effect
                 if (shieldActive) {
                     ctx.shadowBlur = 20; ctx.shadowColor = '#7fb3d5';
                 }
-                // body
                 ctx.fillStyle = invincibleStar ? '#ffd966' : '#3a7251';
                 ctx.fillRect(px, py, PLAYER_WIDTH, PLAYER_HEIGHT);
-                // helmet
                 ctx.fillStyle = '#5a8f4c';
                 ctx.fillRect(px+10, py-2, 24, 8);
-                // gun – dynamic aiming
                 ctx.strokeStyle = '#414141';
                 ctx.lineWidth = 8;
                 ctx.beginPath();
                 ctx.moveTo(px+PLAYER_WIDTH/2, py+PLAYER_HEIGHT/2);
                 ctx.lineTo(px+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*30, py+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*30);
                 ctx.stroke();
-                // legs animation
                 ctx.fillStyle = '#2b543a';
                 let walkOffset = Math.sin(player.walkFrame) * 3;
                 ctx.fillRect(px+8, py+PLAYER_HEIGHT-6, 6, 8);
                 ctx.fillRect(px+PLAYER_WIDTH-14, py+PLAYER_HEIGHT-6, 6, 8);
-                // shadow
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = '#00000040';
                 ctx.fillRect(px-2, py+PLAYER_HEIGHT-2, PLAYER_WIDTH+4, 8);
@@ -1252,17 +1229,18 @@
             }
             drawWorld();
 
-            // ----- HUD OVERLAY (cooldown, etc) -----
+            // ----- HUD OVERLAY (cooldown, power‑ups) -----
             ctx.save();
             ctx.font = '20px "Courier New", monospace';
             ctx.fillStyle = '#fff';
             ctx.fillText('💣 ' + Math.floor(player.bombCooldown/60), 20, 50);
-            if (rapidFire) ctx.fillText('⚡', 120, 50);
-            if (spreadShot) ctx.fillText('🌟', 160, 50);
-            if (homingMissiles) ctx.fillText('🎯', 200, 50);
-            if (piercingShots) ctx.fillText('🔥', 240, 50);
-            if (speedBoost) ctx.fillText('💨', 280, 50);
-            if (timeSlow) ctx.fillText('⏱️', 320, 50);
+            let x = 120;
+            if (rapidFire) { ctx.fillText('⚡', x, 50); x+=40; }
+            if (spreadShot) { ctx.fillText('🌟', x, 50); x+=40; }
+            if (homingMissiles) { ctx.fillText('🎯', x, 50); x+=40; }
+            if (piercingShots) { ctx.fillText('🔥', x, 50); x+=40; }
+            if (speedBoost) { ctx.fillText('💨', x, 50); x+=40; }
+            if (timeSlow) { ctx.fillText('⏱️', x, 50); x+=40; }
             ctx.restore();
 
             if (!gameActive) {
@@ -1281,7 +1259,7 @@
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ----------  ANALOG STICK – SILKY ----------
+        // ----------  ANALOG STICK ----------
         function initAnalogStick() {
             const stick = document.getElementById('joystickHandle');
             const base = document.getElementById('joystickBase');
