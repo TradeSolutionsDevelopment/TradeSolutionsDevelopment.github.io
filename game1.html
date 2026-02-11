@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>8-bit COMMANDO · 6 EPIC LEVELS · FIRE FIXED · FAIR</title>
-    <meta name="description" content="6 unique worlds, auto double‑jump, analog stick, huge sprites. Balanced difficulty.">
+    <title>8-bit COMMANDO · 6 EPIC LEVELS · PLAYABLE · IRREGULAR SHOTS</title>
+    <meta name="description" content="Balanced difficulty, low enemy fire rate, generous health, analog stick, huge sprites.">
     <style>
         * {
             margin: 0;
@@ -126,7 +126,6 @@
             justify-content: center;
             margin-top: 10px;
         }
-        /* Touch controls – analog stick + AB */
         .touch-controls {
             display: none;
             margin-top: 15px;
@@ -211,7 +210,6 @@
             transform: translateY(5px);
             background: #c05e72;
         }
-        /* Mobile info bar – replicates desktop info */
         .mobile-info {
             display: none;
             color: #b3ecff;
@@ -266,11 +264,10 @@
     <div class="panel">
         <div class="scores">🎯 <span id="scoreDisplay">00000</span></div>
         <div class="scores">🏆 <span id="highScoreDisplay">00000</span></div>
-        <div class="health">❤️ <span id="healthDisplay">██████</span></div>
+        <div class="health">❤️ <span id="healthDisplay">████████</span></div>
         <button class="btn" id="restartButton">↻ RESTART</button>
     </div>
     
-    <!-- Desktop legend (hidden on mobile) -->
     <div class="legend">
         <span><i>← →</i> MOVE</span>
         <span><i>↑ / SPACE</i> HOLD = DOUBLE JUMP</span>
@@ -278,7 +275,6 @@
         <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
     </div>
 
-    <!-- TOUCH CONTROLS – analog stick + AB + mobile info bar -->
     <div class="touch-controls" id="touchControls">
         <div class="touch-row">
             <div class="joystick" id="joystickContainer">
@@ -291,7 +287,6 @@
                 <div class="ab" id="touchBomb">BOMB</div>
             </div>
         </div>
-        <!-- Mobile info bar – shows level and controls -->
         <div class="mobile-info">
             <span id="mobileLevelDisplay">LVL 1 · JUNGLE</span>
             <span>⬆️ HOLD = DOUBLE</span>
@@ -328,8 +323,8 @@
         // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
-        try { highScore = localStorage.getItem('commandoFair6') ? parseInt(localStorage.getItem('commandoFair6')) : 0; } catch(e) { highScore = 0; }
-        let playerHealth = 8;        // increased for fairness
+        try { highScore = localStorage.getItem('commandoPlayable') ? parseInt(localStorage.getItem('commandoPlayable')) : 0; } catch(e) { highScore = 0; }
+        let playerHealth = 8;
         const MAX_HEALTH = 8;
 
         // ----------  POWER-UPS ----------
@@ -338,11 +333,11 @@
         let spreadShot = false, spreadTimer = 0;
         let invincibleStar = false, starTimer = 0;
 
-        // ----------  PLAYER PHYSICS – DOUBLE SIZE ----------
+        // ----------  PLAYER PHYSICS ----------
         const PLAYER_WIDTH = 44;
         const PLAYER_HEIGHT = 56;
-        const GRAVITY = 0.65;        // slightly lighter
-        const JUMP_FORCE = -13.2;
+        const GRAVITY = 0.63;
+        const JUMP_FORCE = -13.0;
         const MOVE_SPEED = 4.8;
 
         let player = {
@@ -361,7 +356,7 @@
             bombCooldown: 0,
         };
 
-        // ----------  LEVEL DESIGN – same 6 themes, but reduced enemy counts ----------
+        // ----------  LEVEL DESIGN ----------
         let platforms = [];
         let enemySpawners = [];
         let exitDoor = null;
@@ -378,18 +373,10 @@
         let sparks = [];
         let screenShake = 0;
 
-        // ----------  KEYBOARD STATE – FIRE IS ISOLATED ----------
-        const keys = { 
-            left: false, 
-            right: false, 
-            jump: false, 
-            fire: false, 
-            bomb: false, 
-            down: false, 
-            up: false 
-        };
+        // ----------  KEYBOARD STATE ----------
+        const keys = { left: false, right: false, jump: false, fire: false, bomb: false, down: false, up: false };
 
-        // ----------  LEVEL GENERATORS – reduced enemy density, lower health ----------
+        // ----------  LEVEL GENERATORS – generous platforms, fewer enemies ----------
         function buildLevel(level) {
             platforms = []; enemySpawners = []; exitDoor = null;
             WORLD_WIDTH = BASE_WIDTH;
@@ -397,89 +384,89 @@
             if (level === 1) { // JUNGLE
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
-                for (let i=0; i<18; i++) {
-                    let x = 300 + i * 240;
+                for (let i=0; i<20; i++) {
+                    let x = 300 + i * 220;
                     let y = 390 + (i%3===0 ? -30 : (i%2===0 ? 20 : -20));
-                    platforms.push({ x, y: Math.min(420, Math.max(300, y)), w: 120, h: 14 });
+                    platforms.push({ x, y: Math.min(420, Math.max(300, y)), w: 130, h: 14 });
                 }
-                for (let i=0; i<20; i++) {  // fewer enemies
-                    let x = 600 + i * 200;
-                    let type = ['infantry','drone','sniper'][Math.floor(Math.random()*3)];
+                for (let i=0; i<16; i++) { // even fewer
+                    let x = 600 + i * 240;
+                    let type = ['infantry','drone'][Math.floor(Math.random()*2)];
                     let side = Math.random()<0.5 ? 'left' : 'right';
-                    enemySpawners.push({ x, type, side, behavior: type==='infantry'?'flank':(type==='drone'?'swoop':'aim') });
+                    enemySpawners.push({ x, type, side, behavior: type==='infantry'?'flank':'swoop' });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             } else if (level === 2) { // FACTORY
                 levelName = "MACHINE COMPLEX";
                 levelTheme = "factory";
-                for (let i=0; i<20; i++) {
-                    let x = 300 + i * 220;
-                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : 0));
-                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
-                }
                 for (let i=0; i<22; i++) {
-                    let x = 500 + i * 190;
-                    let type = ['heavy','infantry','sniper'][Math.floor(Math.random()*3)];
+                    let x = 300 + i * 210;
+                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : 0));
+                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 140, h: 16 });
+                }
+                for (let i=0; i<18; i++) {
+                    let x = 500 + i * 220;
+                    let type = ['heavy','infantry'][Math.floor(Math.random()*2)];
                     let side = Math.random()<0.6 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':'aim') });
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':'flank' });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             } else if (level === 3) { // ALIEN
                 levelName = "ALIEN NEXUS";
                 levelTheme = "alien";
-                for (let i=0; i<22; i++) {
-                    let x = 350 + i * 200;
-                    let y = 350 + Math.sin(i*0.5)*40;
-                    platforms.push({ x, y, w: 110, h: 12 });
-                }
                 for (let i=0; i<24; i++) {
-                    let x = 400 + i * 180;
-                    let type = ['drone','jumper','infantry'][Math.floor(Math.random()*3)];
+                    let x = 350 + i * 190;
+                    let y = 350 + Math.sin(i*0.5)*40;
+                    platforms.push({ x, y, w: 120, h: 12 });
+                }
+                for (let i=0; i<20; i++) {
+                    let x = 400 + i * 200;
+                    let type = ['drone','jumper'][Math.floor(Math.random()*2)];
                     let side = Math.random()<0.5 ? 'left' : 'right';
-                    enemySpawners.push({ x, type, side, behavior: type==='drone'?'swoop':(type==='jumper'?'leap':'flank') });
+                    enemySpawners.push({ x, type, side, behavior: type==='drone'?'swoop':'leap' });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             } else if (level === 4) { // ICE
                 levelName = "GLACIAL PEAK";
                 levelTheme = "ice";
-                for (let i=0; i<24; i++) {
-                    let x = 300 + i * 200;
-                    let y = 380 + (i%5===0 ? -50 : 20);
-                    platforms.push({ x, y: Math.min(400, Math.max(290, y)), w: 100, h: 12 });
-                }
                 for (let i=0; i<26; i++) {
-                    let x = 450 + i * 170;
-                    let type = ['sniper','infantry','jumper'][Math.floor(Math.random()*3)];
+                    let x = 300 + i * 190;
+                    let y = 380 + (i%5===0 ? -50 : 20);
+                    platforms.push({ x, y: Math.min(400, Math.max(290, y)), w: 110, h: 12 });
+                }
+                for (let i=0; i<22; i++) {
+                    let x = 450 + i * 180;
+                    let type = ['sniper','infantry'][Math.floor(Math.random()*2)];
                     let side = Math.random()<0.5 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='sniper'?'aim':(type==='jumper'?'leap':'flank') });
+                    enemySpawners.push({ x, type, side, behavior: type==='sniper'?'aim':'flank' });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             } else if (level === 5) { // VOLCANO
                 levelName = "MOLTEN CORE";
                 levelTheme = "volcano";
-                for (let i=0; i<26; i++) {
-                    let x = 280 + i * 190;
-                    let y = 370 + (i%3===0 ? -60 : (i%2===0 ? 40 : -20));
-                    platforms.push({ x, y: Math.min(410, Math.max(260, y)), w: 120, h: 14 });
-                }
                 for (let i=0; i<28; i++) {
-                    let x = 500 + i * 160;
-                    let type = ['heavy','infantry','drone','jumper'][Math.floor(Math.random()*4)];
+                    let x = 280 + i * 180;
+                    let y = 370 + (i%3===0 ? -60 : (i%2===0 ? 40 : -20));
+                    platforms.push({ x, y: Math.min(410, Math.max(260, y)), w: 130, h: 14 });
+                }
+                for (let i=0; i<24; i++) {
+                    let x = 500 + i * 170;
+                    let type = ['heavy','drone','jumper'][Math.floor(Math.random()*3)];
                     let side = Math.random()<0.6 ? 'right' : 'left';
-                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='infantry'?'flank':(type==='drone'?'swoop':'leap')) });
+                    enemySpawners.push({ x, type, side, behavior: type==='heavy'?'block':(type==='drone'?'swoop':'leap') });
                 }
                 exitDoor = { x: WORLD_WIDTH - 200, y: GROUND_Y - 60 };
             } else if (level === 6) { // FORTRESS
                 levelName = "FINAL FORTRESS";
                 levelTheme = "fortress";
-                for (let i=0; i<28; i++) {
-                    let x = 320 + i * 170;
-                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : -20));
-                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 130, h: 16 });
-                }
                 for (let i=0; i<30; i++) {
-                    let x = 400 + i * 150;
-                    let type = i % 6 === 0 ? 'boss_lieutenant' : (['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
+                    let x = 320 + i * 160;
+                    let y = 360 + (i%4===0 ? -40 : (i%3===0 ? 30 : -20));
+                    platforms.push({ x, y: Math.min(400, Math.max(280, y)), w: 140, h: 16 });
+                }
+                for (let i=0; i<26; i++) {
+                    let x = 400 + i * 160;
+                    let type = i % 8 === 0 ? 'boss_lieutenant' : (['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
                     let side = Math.random()<0.5 ? 'right' : 'left';
                     enemySpawners.push({ x, type, side, behavior: type==='boss_lieutenant'?'command':(type==='heavy'?'block':(type==='sniper'?'aim':(type==='jumper'?'leap':(type==='infantry'?'flank':'swoop')))) });
                 }
@@ -488,7 +475,7 @@
             }
         }
 
-        // ----------  RESET GAME – more health, lower enemy damage ----------
+        // ----------  RESET GAME ----------
         function resetGame() {
             gameActive = true; gameOver = false; victoryFlag = false; currentLevel = 1;
             score = 0; playerHealth = MAX_HEALTH;
@@ -507,7 +494,7 @@
             updateUI();
         }
 
-        // ----------  UI – update both desktop and mobile level displays ----------
+        // ----------  UI ----------
         function updateUI() {
             try {
                 let scr = String(Math.floor(score)).padStart(5, '0');
@@ -539,18 +526,17 @@
         function addDust(x, y) { dustEffects.push({ x, y, life: 12 }); }
         function addSparks(x, y) { sparks.push({ x, y, life: 10 }); }
 
-        // ----------  PLAYER UPDATE – AUTO DOUBLE JUMP, FIRE ISOLATED ----------
+        // ----------  PLAYER UPDATE ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
 
-            // power-up timers
             if (rapidTimer > 0) rapidTimer--; else rapidFire = false;
             if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
             if (starTimer > 0) starTimer--; else invincibleStar = false;
 
-            // --- MOVEMENT: only left/right keys affect horizontal velocity ---
+            // movement
             let accelX = 0;
             if (keys.left) accelX -= 1;
             if (keys.right) accelX += 1;
@@ -561,7 +547,7 @@
 
             // coyote time
             if (player.onGround) {
-                player.coyoteTime = 8;
+                player.coyoteTime = 10;
                 player.doubleJumpUsed = false;
                 player.autoDoubleTriggered = false;
                 player.jumpHoldTime = 0;
@@ -569,13 +555,12 @@
                 player.coyoteTime--;
             }
 
-            // jump buffer
             if (player.jumpBuffer > 0) player.jumpBuffer--;
 
-            // --- AUTO DOUBLE JUMP ON HOLD ---
+            // auto double jump on hold
             if (keys.jump && !player.onGround && !player.doubleJumpUsed && !player.autoDoubleTriggered) {
                 player.jumpHoldTime++;
-                if (player.jumpHoldTime > 12) { // slightly longer for fairness
+                if (player.jumpHoldTime > 15) {
                     player.vy = JUMP_FORCE * 0.9;
                     player.doubleJumpUsed = true;
                     player.autoDoubleTriggered = true;
@@ -586,7 +571,7 @@
                 player.jumpHoldTime = 0;
             }
 
-            // normal jump (tap)
+            // tap jump
             let canJump = (player.onGround || player.coyoteTime > 0) && !player.doubleJumpUsed;
             if (player.jumpBuffer > 0 && canJump) {
                 player.vy = JUMP_FORCE;
@@ -596,7 +581,6 @@
                 addDust(player.x + PLAYER_WIDTH/2, player.y + PLAYER_HEIGHT);
             }
 
-            // gravity
             player.vy += GRAVITY;
             player.y += player.vy;
 
@@ -629,7 +613,7 @@
             }
             if (player.y < 30) player.y = 30;
 
-            // facing direction
+            // facing
             if (player.vx > 0.2) player.facing = 1;
             else if (player.vx < -0.2) player.facing = -1;
 
@@ -638,42 +622,42 @@
                 player.walkCycle = (player.walkCycle + 0.2) % 4;
             } else player.walkCycle = 0;
 
-            // --- SHOOTING: ONLY keys.fire affects this ---
+            // shooting
             if (keys.fire && gameActive) {
-                let fireRate = rapidFire ? 5 : 14;
+                let fireRate = rapidFire ? 6 : 16;
                 if (player.shootTimer <= 0) {
                     if (spreadShot) {
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 8, w: 20, h: 8, vx: player.facing * 11, vy: -3 });
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 20, h: 8, vx: player.facing * 12, vy: 0 });
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: player.facing * 11, vy: 3 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 8, w: 20, h: 8, vx: player.facing * 10, vy: -2.5 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 20, h: 8, vx: player.facing * 11, vy: 0 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2, w: 20, h: 8, vx: player.facing * 10, vy: 2.5 });
                     } else {
-                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 22, h: 8, vx: player.facing * 12, vy: 0 });
+                        bullets.push({ x: player.facing === 1 ? player.x + PLAYER_WIDTH - 4 : player.x - 20, y: player.y + PLAYER_HEIGHT/2 - 4, w: 22, h: 8, vx: player.facing * 11, vy: 0 });
                     }
                     player.shootTimer = fireRate;
                 }
             }
             if (player.shootTimer > 0) player.shootTimer--;
 
-            // bomb
+            // BOMB – bigger radius, faster recharge
             if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
-                addShake(8);
+                addShake(10);
                 for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i];
-                    if (Math.abs(e.x - player.x) < 500) {
-                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 24, radius: 20 });
+                    if (Math.abs(e.x - player.x) < 700) {
+                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 30 });
                         score += e.points;
                         addSparks(e.x + e.w/2, e.y + e.h/2);
                         enemies.splice(i, 1);
                     }
                 }
-                player.bombCooldown = 300;
+                player.bombCooldown = 240; // 4 seconds
             }
             if (player.bombCooldown > 0) player.bombCooldown--;
             if (player.invincible > 0) player.invincible--;
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN – reduced health, less damage ----------
+        // ----------  ENEMY SPAWN – low health, low aggression ----------
         function checkSpawners() {
             for (let i = enemySpawners.length - 1; i >= 0; i--) {
                 let s = enemySpawners[i];
@@ -686,46 +670,52 @@
                         case 'infantry':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 40, w: 30, h: 36,
-                                vx: side === 'right' ? -1.8 : 1.8, health: 1, points: 30,
+                                vx: side === 'right' ? -1.5 : 1.5, health: 1, points: 30,
                                 type: 'infantry', behavior: s.behavior, frame: 0,
-                                shootTimer: 50 + Math.random() * 30
+                                shootTimer: 80 + Math.floor(Math.random() * 80) // very irregular, slow
                             }; break;
                         case 'heavy':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 44, w: 38, h: 42,
-                                vx: side === 'right' ? -1.0 : 1.0, health: 4, points: 100,
-                                type: 'heavy', behavior: s.behavior, frame: 0, shootTimer: 45
+                                vx: side === 'right' ? -0.9 : 0.9, health: 3, points: 100,
+                                type: 'heavy', behavior: s.behavior, frame: 0,
+                                shootTimer: 100 + Math.floor(Math.random() * 100)
                             }; break;
                         case 'drone':
                             yPos = 220 + Math.random() * 180;
                             enemy = {
                                 x: xPos, y: yPos, w: 28, h: 24,
-                                vx: side === 'right' ? -2.5 : 2.5, health: 1, points: 40,
-                                type: 'drone', behavior: s.behavior, frame: 0, shootTimer: 60
+                                vx: side === 'right' ? -2.0 : 2.0, health: 1, points: 40,
+                                type: 'drone', behavior: s.behavior, frame: 0,
+                                shootTimer: 90 + Math.floor(Math.random() * 90)
                             }; break;
                         case 'sniper':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 44, w: 28, h: 36,
-                                vx: side === 'right' ? -0.7 : 0.7, health: 2, points: 70,
-                                type: 'sniper', behavior: s.behavior, frame: 0, shootTimer: 90
+                                vx: side === 'right' ? -0.6 : 0.6, health: 2, points: 70,
+                                type: 'sniper', behavior: s.behavior, frame: 0,
+                                shootTimer: 120 + Math.floor(Math.random() * 120)
                             }; break;
                         case 'jumper':
                             enemy = {
                                 x: xPos, y: GROUND_Y - 40, w: 28, h: 34,
-                                vx: side === 'right' ? -2.0 : 2.0, health: 1, points: 60,
-                                type: 'jumper', behavior: s.behavior, frame: 0, shootTimer: 70, jumpTimer: 30
+                                vx: side === 'right' ? -1.8 : 1.8, health: 1, points: 60,
+                                type: 'jumper', behavior: s.behavior, frame: 0,
+                                shootTimer: 110 + Math.floor(Math.random() * 110), jumpTimer: 40
                             }; break;
                         case 'boss_lieutenant':
                             enemy = {
                                 x: WORLD_WIDTH - 120, y: GROUND_Y - 60, w: 56, h: 56,
-                                vx: -0.7, health: 15, points: 300, type: 'boss_lieutenant',
-                                behavior: s.behavior, frame: 0, shootTimer: 30, phase: 1
+                                vx: -0.6, health: 12, points: 300, type: 'boss_lieutenant',
+                                behavior: s.behavior, frame: 0,
+                                shootTimer: 70 + Math.floor(Math.random() * 70), phase: 1
                             }; break;
                         case 'boss':
                             enemy = {
                                 x: WORLD_WIDTH - 140, y: GROUND_Y - 70, w: 70, h: 70,
-                                vx: -0.6, health: 35, points: 800, type: 'boss',
-                                behavior: s.behavior, frame: 0, shootTimer: 25, phase: 1
+                                vx: -0.5, health: 30, points: 800, type: 'boss',
+                                behavior: s.behavior, frame: 0,
+                                shootTimer: 60 + Math.floor(Math.random() * 60), phase: 1
                             }; break;
                     }
                     if (enemy) enemies.push(enemy);
@@ -734,7 +724,7 @@
             }
         }
 
-        // ----------  ENEMY UPDATE – lower damage, longer cooldown ----------
+        // ----------  ENEMY UPDATE – very irregular shooting, low speed ----------
         function updateEnemies() {
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i];
@@ -742,41 +732,49 @@
                 e.frame = (e.frame + 0.15) % 4;
                 if (e.x + e.w < -150 || e.x > WORLD_WIDTH + 150) { enemies.splice(i, 1); continue; }
 
-                if (e.type === 'drone' && e.behavior === 'swoop') e.y += Math.sin(frame * 0.1) * 0.5;
+                if (e.type === 'drone' && e.behavior === 'swoop') e.y += Math.sin(frame * 0.1) * 0.4;
                 if (e.type === 'jumper' && e.behavior === 'leap') {
                     e.jumpTimer--;
                     if (e.jumpTimer <= 0 && Math.abs(e.x - player.x) < 200 && e.y + e.h >= GROUND_Y - 5) {
-                        e.vy = JUMP_FORCE * 0.7;
-                        e.jumpTimer = 60 + Math.random() * 40;
+                        e.vy = JUMP_FORCE * 0.6;
+                        e.jumpTimer = 80 + Math.floor(Math.random() * 60);
                     }
                     e.y += e.vy || 0;
                     e.vy = (e.vy || 0) + GRAVITY * 0.5;
                     if (e.y + e.h > GROUND_Y) { e.y = GROUND_Y - e.h; e.vy = 0; }
                 }
-                if (e.type === 'sniper' && e.behavior === 'aim') { e.vx = 0; e.shootTimer = 50; }
+                if (e.type === 'sniper' && e.behavior === 'aim') { e.vx = 0; e.shootTimer = 100 + Math.floor(Math.random() * 80); }
                 if (e.type === 'infantry' && e.behavior === 'flank') {
-                    if (player.x > e.x) e.vx = 1.2; else e.vx = -1.2;
+                    if (player.x > e.x) e.vx = 1.0; else e.vx = -1.0;
                 }
 
+                // shooting – very slow, irregular, and only if player is within range
                 e.shootTimer--;
-                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 600) {
-                    let bulletVX = e.x > player.x ? -5 : 5;
-                    if (e.type === 'drone') bulletVX *= 1.2;
-                    if (e.type === 'sniper') bulletVX *= 1.4;
+                if (e.shootTimer <= 0 && gameActive && playerHealth > 0 && Math.abs(e.x - player.x) < 500 && Math.random() < 0.6) { // only 60% chance to actually shoot
+                    let bulletVX = e.x > player.x ? -4 : 4;
+                    if (e.type === 'drone') bulletVX *= 1.1;
+                    if (e.type === 'sniper') bulletVX *= 1.3;
                     enemyBullets.push({
                         x: e.x + (bulletVX > 0 ? e.w : -10), y: e.y + e.h/2 - 4,
                         w: 12, h: 6, vx: bulletVX, vy: 0
                     });
-                    e.shootTimer = e.type === 'heavy' ? 65 : (e.type === 'sniper' ? 85 : (e.type === 'boss' || e.type === 'boss_lieutenant' ? 28 : 55));
+                    // next shot – long, random cooldown
+                    e.shootTimer = e.type === 'heavy' ? 150 + Math.floor(Math.random() * 150) :
+                                   (e.type === 'sniper' ? 200 + Math.floor(Math.random() * 150) :
+                                   (e.type === 'boss' || e.type === 'boss_lieutenant' ? 120 + Math.floor(Math.random() * 100) :
+                                    100 + Math.floor(Math.random() * 120)));
+                } else if (e.shootTimer <= 0) {
+                    // reset timer even if didn't shoot
+                    e.shootTimer = 80 + Math.floor(Math.random() * 100);
                 }
 
+                // collision with player – less damage, longer iframes
                 let inv = player.invincible > 0 || invincibleStar;
                 if (!inv && gameActive && playerHealth > 0 && !shieldActive) {
                     if (collides({ x: player.x, y: player.y, w: PLAYER_WIDTH, h: PLAYER_HEIGHT },
                                  { x: e.x, y: e.y, w: e.w, h: e.h })) {
-                        let dmg = (e.type === 'heavy' || e.type === 'boss' || e.type === 'boss_lieutenant') ? 1 : 1; // all do 1 damage
-                        playerHealth -= dmg;
-                        player.invincible = 90; // longer invincibility
+                        playerHealth -= 1; // all enemies do 1 damage
+                        player.invincible = 110; // very long grace period
                         addShake(4);
                         if (playerHealth < 0) playerHealth = 0;
                         updateUI();
@@ -785,7 +783,7 @@
             }
         }
 
-        // ----------  BULLETS (same, but reduced enemy bullet speed) ----------
+        // ----------  BULLETS – player ----------
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -801,10 +799,11 @@
                         addSparks(e.x + e.w/2, e.y + e.h/2);
                         if (e.health <= 0) {
                             score += e.points;
-                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoFair6', highScore); } catch(e) {} }
+                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoPlayable', highScore); } catch(e) {} }
                             explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
                             addShake(3);
-                            if (Math.random() < 0.4) { // more power-ups
+                            // MORE HEALTH DROPS – 50% chance
+                            if (Math.random() < 0.5) {
                                 let types = ['health', 'rapid', 'shield', 'spread', 'star'];
                                 let type = types[Math.floor(Math.random() * types.length)];
                                 pickups.push({ x: e.x, y: e.y, w: 20, h: 20, type: type, vx: -1, life: 500 });
@@ -817,6 +816,7 @@
             }
         }
 
+        // ----------  ENEMY BULLETS – slower ----------
         function updateEnemyBullets() {
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 let eb = enemyBullets[i];
@@ -827,7 +827,7 @@
                     if (collides({ x: player.x, y: player.y, w: PLAYER_WIDTH, h: PLAYER_HEIGHT },
                                  { x: eb.x, y: eb.y, w: eb.w, h: eb.h })) {
                         playerHealth -= 1;
-                        player.invincible = 70;
+                        player.invincible = 100;
                         addShake(3);
                         enemyBullets.splice(i, 1);
                         if (playerHealth < 0) playerHealth = 0;
@@ -837,7 +837,7 @@
             }
         }
 
-        // ----------  PICKUPS – same ----------
+        // ----------  PICKUPS – health gives +2, others boost ----------
         function updatePickups() {
             for (let i = pickups.length - 1; i >= 0; i--) {
                 let p = pickups[i];
@@ -879,7 +879,7 @@
             }
         }
 
-        // ----------  EXIT – safe ----------
+        // ----------  EXIT ----------
         function checkExit() {
             if (exitDoor && player.x > exitDoor.x - 40 && enemies.length === 0) {
                 if (currentLevel < MAX_LEVEL) {
@@ -896,7 +896,7 @@
             }
         }
 
-        // ----------  RENDERING – FIXED PARALLAX (seamless, no modulo glitches) ----------
+        // ----------  RENDERING – seamless parallax ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
@@ -905,22 +905,19 @@
             }
             ctx.clearRect(0, 0, VIEWPORT_W, VIEWPORT_H);
             
-            // Fixed parallax: use fractional camera offset to avoid seams
             let bgOffset = (cameraX * 0.2) % 800;
             let bgOffset2 = (cameraX * 0.4) % 800;
 
-            // ----- THEMED BACKGROUND – seamless tiling -----
+            // THEMED BACKGROUND
             if (levelTheme === 'jungle') {
                 ctx.fillStyle = '#0f2a33'; ctx.fillRect(0,0,VIEWPORT_W,130);
                 ctx.fillStyle = '#1a4a3a'; ctx.fillRect(0,130,VIEWPORT_W,70);
                 ctx.fillStyle = '#2a6b4a'; ctx.fillRect(0,200,VIEWPORT_W,60);
-                // waterfalls – seamless wrap
                 ctx.fillStyle = '#48a5b0';
                 for (let i=-2; i<12; i++) {
                     let x = i * 150 - bgOffset;
                     if (x < 800 && x > -150) ctx.fillRect(x, 200, 4, 70);
                 }
-                // leaves
                 ctx.fillStyle = '#3e8a5e';
                 for (let i=-2; i<12; i++) {
                     let x = i * 90 + bgOffset2;
@@ -979,7 +976,7 @@
                 }
             }
 
-            // ground (common)
+            // ground
             ctx.fillStyle = '#4b6a3b'; ctx.fillRect(0, GROUND_Y-6, VIEWPORT_W, 20);
             ctx.fillStyle = '#6d8f4d'; ctx.fillRect(0, GROUND_Y-2, VIEWPORT_W, 8);
             for (let i=0;i<30;i++) {
@@ -987,7 +984,7 @@
                 ctx.fillRect(i*30 + (cameraX*0.1)%30, GROUND_Y-10, 8, 6);
             }
             
-            // platforms – wooden with grain
+            // platforms
             platforms.forEach(p => {
                 let sx = p.x - cameraX;
                 if (sx + p.w > 0 && sx < VIEWPORT_W) {
@@ -1010,7 +1007,7 @@
                 ctx.shadowBlur = 0;
             }
 
-            // enemies – detailed
+            // enemies
             enemies.forEach(e => {
                 let sx = e.x - cameraX;
                 if (sx + e.w > 0 && sx < VIEWPORT_W) {
@@ -1134,58 +1131,30 @@
             animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ----------  ANALOG STICK – 8‑WAY MOVEMENT, CLEAN ----------
+        // ----------  ANALOG STICK ----------
         function initAnalogStick() {
             const stick = document.getElementById('joystickHandle');
             const base = document.getElementById('joystickBase');
             const container = document.getElementById('joystickContainer');
             if (!stick || !base || !container) return;
-
             let active = false;
             const maxDist = 40;
-
-            function handleStart(e) {
-                e.preventDefault();
-                active = true;
-            }
-
+            function handleStart(e) { e.preventDefault(); active = true; }
             function handleMove(e) {
-                if (!active) return;
-                e.preventDefault();
+                if (!active) return; e.preventDefault();
                 let touch = e.touches ? e.touches[0] : e;
                 let rect = base.getBoundingClientRect();
-                let centerX = rect.left + rect.width/2;
-                let centerY = rect.top + rect.height/2;
-                let dx = touch.clientX - centerX;
-                let dy = touch.clientY - centerY;
+                let centerX = rect.left + rect.width/2, centerY = rect.top + rect.height/2;
+                let dx = touch.clientX - centerX, dy = touch.clientY - centerY;
                 let distance = Math.sqrt(dx*dx + dy*dy);
-                if (distance > maxDist) {
-                    dx = (dx / distance) * maxDist;
-                    dy = (dy / distance) * maxDist;
-                }
-                stick.style.left = dx + 'px';
-                stick.style.top = dy + 'px';
-
-                // Movement keys – completely separate from fire
-                keys.left = dx < -10;
-                keys.right = dx > 10;
-                if (dy < -10) {
-                    keys.jump = true;
-                    player.jumpBuffer = 10;
-                } else {
-                    keys.jump = false;
-                }
+                if (distance > maxDist) { dx = (dx/distance)*maxDist; dy = (dy/distance)*maxDist; }
+                stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
+                keys.left = dx < -10; keys.right = dx > 10;
+                if (dy < -10) { keys.jump = true; player.jumpBuffer = 10; } else { keys.jump = false; }
                 keys.down = dy > 10;
             }
-
-            function handleEnd(e) {
-                e.preventDefault();
-                active = false;
-                stick.style.left = '0px';
-                stick.style.top = '0px';
-                keys.left = false; keys.right = false; keys.jump = false; keys.down = false;
-            }
-
+            function handleEnd(e) { e.preventDefault(); active = false; stick.style.left = '0px'; stick.style.top = '0px'; 
+                keys.left = false; keys.right = false; keys.jump = false; keys.down = false; }
             container.addEventListener('touchstart', handleStart, { passive: false });
             container.addEventListener('touchmove', handleMove, { passive: false });
             container.addEventListener('touchend', handleEnd, { passive: false });
@@ -1195,15 +1164,11 @@
             window.addEventListener('mouseup', handleEnd);
         }
 
-        // ----------  TOUCH BUTTONS – FIRE & BOMB (NEVER AFFECT MOVEMENT) ----------
+        // ----------  TOUCH BUTTONS ----------
         function initTouchButtons() {
             const touchFire = document.getElementById('touchFire');
             const touchBomb = document.getElementById('touchBomb');
-            function setKey(key, state, e) {
-                if (e) { e.preventDefault(); e.stopPropagation(); }
-                keys[key] = state;
-                // No interference with movement keys
-            }
+            function setKey(key, state, e) { if (e) { e.preventDefault(); e.stopPropagation(); } keys[key] = state; }
             if (touchFire) {
                 touchFire.addEventListener('touchstart', (e) => setKey('fire', true, e), { passive: false });
                 touchFire.addEventListener('touchend', (e) => setKey('fire', false, e), { passive: false });
@@ -1218,19 +1183,15 @@
             }
         }
 
-        // ----------  KEYBOARD – FIRE IS FIRE, NOT MOVEMENT ----------
+        // ----------  KEYBOARD ----------
         function initKeyboard() {
             window.addEventListener('keydown', (e) => {
                 if (!gameActive) return;
                 switch(e.key) {
                     case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
                     case 'ArrowRight': keys.right = true; e.preventDefault(); break;
-                    case 'ArrowUp': case ' ': 
-                        keys.jump = true; 
-                        player.jumpBuffer = 10; 
-                        e.preventDefault(); 
-                        break;
-                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break; // ONLY fire
+                    case 'ArrowUp': case ' ': keys.jump = true; player.jumpBuffer = 10; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
                     case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
                 }
             });
