@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>COMMANDO·BULLETSTORM · 11 POWERUPS · 6 WORLDS</title>
+    <title>COMMANDO·DA VINCI · 11 POWERUPS · BULLET PARRY</title>
     <style>
-        /* === STYLES – unchanged structure, only minor responsive polish === */
+        /* === STYLES – identical to previous, keeping it clean === */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         html, body { width: 100%; height: 100%; background: #0a1a1f; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; touch-action: pan-y; }
         .arcade-cabinet { background: linear-gradient(145deg, #1c3840, #152a30); padding: 15px 15px 20px; border-radius: 30px 30px 15px 15px; box-shadow: 0 15px 0 #0c1c22, 0 20px 30px rgba(0,0,0,0.8); border-bottom: 8px solid #2d5662; max-width: 1000px; width: 100%; margin: auto; display: flex; flex-direction: column; }
@@ -95,8 +95,7 @@
         try { highScore = localStorage.getItem('commandoDeluxe') ? parseInt(localStorage.getItem('commandoDeluxe')) : 0; } catch(e) { highScore = 0; }
         let playerHealth = 8, MAX_HEALTH = 8;
 
-        // ----------  11 POWER‑UPS!  (3 new + classic 8) ----------
-        // classic 8
+        // ----------  11 POWER‑UPS! ----------
         let rapidFire = false, rapidTimer = 0;
         let shieldActive = false, shieldTimer = 0;
         let spreadShot = false, spreadTimer = 0;
@@ -105,19 +104,18 @@
         let piercingShots = false, piercingTimer = 0;
         let speedBoost = false, speedTimer = 0;
         let timeSlow = false, slowTimer = 0;
-        // NEW POWER-UPS!
-        let damageBoost = false, damageTimer = 0;          // double bullet damage
-        let bombCharge = false, bombChargeTimer = 0;       // reduces bomb cooldown by 70% while active
+        let damageBoost = false, damageTimer = 0;          // double damage
+        let bombCharge = false, bombChargeTimer = 0;       // -70% bomb cooldown
         let ricochet = false, ricochetTimer = 0;           // bullets bounce once
         let regen = false, regenTimer = 0, regenCounter = 0; // heal 1 every 40 frames
-        let maxHealthUp = false, maxHealthTimer = 0;       // permanently +2 max health (capped at 12)
+        let maxHealthUp = false, maxHealthTimer = 0;       // permanent +2 max health
 
-        // ----------  PLAYER – FASTER, RESPONSIVE ----------
+        // ----------  PLAYER – faster, responsive ----------
         const PLAYER_WIDTH = 44, PLAYER_HEIGHT = 44;
-        const BASE_SPEED = 4.2; // slightly faster
+        const BASE_SPEED = 4.2;
         let player = { x: 400, y: 400, vx: 0, vy: 0, aimAngle: 0, shootTimer: 0, invincible: 0, bombCooldown: 0, walkFrame: 0 };
 
-        // ----------  LEVEL DESIGN – COMPLETELY OVERHAULED, FLOW-FRIENDLY ----------
+        // ----------  LEVEL DESIGN – DA VINCI STYLE: SYMMETRY, RADIAL BEAUTY, TACTICAL COVER ----------
         let walls = [], enemySpawners = [], exitDoor = null, levelName = "", levelTheme = "";
         let bullets = [], enemies = [], enemyBullets = [], explosions = [], pickups = [], particles = [];
 
@@ -129,40 +127,68 @@
             for (let i=0; i<cols; i++) for (let j=0; j<rows; j++) walls.push({ x: sx + i*(w+20), y: sy + j*(h+20), w, h });
         }
 
-        // ----------  🔫 BULLET – 50% WIDER!  (30x12) ----------
+        // ----------  🔫 BULLET – WIDE (30x12) WITH RICOCHET SUPPORT ----------
         function createBullet(x, y, vx, vy) {
             return { x: x - 15, y: y - 6, w: 30, h: 12, vx, vy, life: 70, piercing: 0, damage: damageBoost ? 2 : 1, ricochetLeft: ricochet ? 1 : 0 };
         }
 
-        // ----------  🌍 6 HAND‑CRAFTED LEVELS – OPEN FIELDS + TACTICAL COVER ----------
+        // ----------  🌍 6 ARTISTIC LEVELS – GRIZZLE EFFECTS RESTORED, DA VINCI LAYOUTS ----------
         function buildLevel(level) {
             walls = []; enemySpawners = []; exitDoor = null;
             // world border
             walls.push({ x:0, y:0, w:WORLD_SIZE, h:10 }, { x:0, y:WORLD_SIZE-10, w:WORLD_SIZE, h:10 }, { x:0, y:0, w:10, h:WORLD_SIZE }, { x:WORLD_SIZE-10, y:0, w:10, h:WORLD_SIZE });
 
-            if (level === 1) { // SUNKEN JUNGLE – open arena with ruin columns
+            if (level === 1) { // SUNKEN JUNGLE – da Vinci’s "Tree of Life" radial columns
                 levelName = "SUNKEN JUNGLE"; levelTheme = "jungle";
-                // columns for cover, not maze
-                for (let i=0;i<12;i++) walls.push({ x: 300 + i*140, y: 300 + (i%4)*130, w: 40, h: 40 });
+                // central Vitruvian‑esque circle of pillars
+                for (let i=0;i<16;i++) {
+                    let angle = (i/16)*Math.PI*2;
+                    let cx = 500 + Math.cos(angle)*240;
+                    let cy = 400 + Math.sin(angle)*240;
+                    walls.push({ x: cx-25, y: cy-25, w: 50, h: 50 });
+                }
+                // additional scattered ruins
+                addWallCluster(900,500, 2,2, 40,40);
+                addWallCluster(1300,300, 3,1, 60,60);
+                addWallCluster(1600,600, 2,2, 50,50);
                 enemySpawners = [
-                    { x: 380, y: 380, type: 'sniper', behavior: 'snipe' }, { x: 520, y: 230, type: 'infantry', behavior: 'chase' },
-                    { x: 700, y: 400, type: 'drone', behavior: 'flee' }, { x: 900, y: 500, type: 'heavy', behavior: 'chase' },
-                    { x: 1100, y: 300, type: 'jumper', behavior: 'jump' }, { x: 1300, y: 600, type: 'sniper', behavior: 'snipe' },
-                    { x: 1500, y: 400, type: 'infantry', behavior: 'chase' }, { x: 1700, y: 700, type: 'boss_lieutenant', behavior: 'boss' }
+                    { x: 380, y: 380, type: 'sniper', behavior: 'snipe' }, { x: 620, y: 250, type: 'infantry', behavior: 'chase' },
+                    { x: 750, y: 500, type: 'drone', behavior: 'flee' }, { x: 900, y: 600, type: 'heavy', behavior: 'chase' },
+                    { x: 1100, y: 350, type: 'jumper', behavior: 'jump' }, { x: 1350, y: 550, type: 'sniper', behavior: 'snipe' },
+                    { x: 1550, y: 400, type: 'infantry', behavior: 'chase' }, { x: 1750, y: 700, type: 'boss_lieutenant', behavior: 'boss' }
                 ]; exitDoor = { x: 1850, y: 750 };
-            } else if (level === 2) { // MACHINE COMPLEX – conveyor lanes, open sightlines
+            } else if (level === 2) { // MACHINE COMPLEX – da Vinci’s gearworks
                 levelName = "MACHINE COMPLEX"; levelTheme = "factory";
-                for (let i=0;i<6;i++) { let y = 200 + i*130; walls.push({ x:150, y, w:400, h:20 }); walls.push({ x:900, y:y+40, w:500, h:20 }); }
-                walls.push({ x:600, y:150, w:25, h:400 }, { x:1200, y:400, w:25, h:400 }, { x:1600, y:250, w:25, h:350 });
+                // central rotating cog pattern
+                for (let i=0;i<12;i++) {
+                    let angle = (i/12)*Math.PI*2;
+                    let cx = 600 + Math.cos(angle)*200;
+                    let cy = 400 + Math.sin(angle)*200;
+                    walls.push({ x: cx-15, y: cy-15, w: 30, h: 30 });
+                }
+                // conveyor belts
+                walls.push({ x:200, y:200, w:500, h:20 });
+                walls.push({ x:200, y:600, w:500, h:20 });
+                walls.push({ x:1100, y:300, w:500, h:20 });
+                walls.push({ x:1100, y:700, w:500, h:20 });
                 enemySpawners = [
-                    { x:250, y:250, type:'heavy', behavior:'chase' }, { x:400, y:450, type:'infantry', behavior:'chase' },
-                    { x:600, y:330, type:'drone', behavior:'flee' }, { x:850, y:500, type:'sniper', behavior:'snipe' },
-                    { x:1050, y:180, type:'jumper', behavior:'jump' }, { x:1300, y:600, type:'infantry', behavior:'patrol' },
-                    { x:1550, y:350, type:'heavy', behavior:'chase' }, { x:1750, y:550, type:'boss_lieutenant', behavior:'boss' }
+                    { x:250, y:250, type:'heavy', behavior:'chase' }, { x:450, y:450, type:'infantry', behavior:'chase' },
+                    { x:650, y:350, type:'drone', behavior:'flee' }, { x:850, y:550, type:'sniper', behavior:'snipe' },
+                    { x:1050, y:200, type:'jumper', behavior:'jump' }, { x:1300, y:650, type:'infantry', behavior:'patrol' },
+                    { x:1550, y:400, type:'heavy', behavior:'chase' }, { x:1750, y:600, type:'boss_lieutenant', behavior:'boss' }
                 ]; exitDoor = { x:1850, y:800 };
-            } else if (level === 3) { // ALIEN NEXUS – concentric rings, open core
+            } else if (level === 3) { // ALIEN NEXUS – Fibonacci spiral
                 levelName = "ALIEN NEXUS"; levelTheme = "alien";
-                for (let r=1;r<=3;r++) for (let i=0;i<10;i++) { let a=(i/10)*Math.PI*2; walls.push({ x:500+Math.cos(a)*r*130-15, y:400+Math.sin(a)*r*130-15, w:30, h:30 }); }
+                // golden spiral of glowing pillars
+                for (let r=1;r<=5;r++) {
+                    for (let i=0;i<8;i++) {
+                        let angle = (i/8)*Math.PI*2 + r*0.5;
+                        let cx = 500 + Math.cos(angle)*r*70;
+                        let cy = 400 + Math.sin(angle)*r*70;
+                        walls.push({ x: cx-10, y: cy-10, w: 20, h: 20 });
+                    }
+                }
+                // central crystal
                 walls.push({ x:480, y:380, w:80, h:80 });
                 enemySpawners = [
                     { x:550, y:250, type:'drone', behavior:'flee' }, { x:650, y:500, type:'jumper', behavior:'jump' },
@@ -171,29 +197,65 @@
                     { x:1100, y:500, type:'infantry', behavior:'patrol' }, { x:1400, y:300, type:'jumper', behavior:'jump' },
                     { x:1700, y:600, type:'boss_lieutenant', behavior:'boss' }
                 ]; exitDoor = { x:1850, y:700 };
-            } else if (level === 4) { // GLACIAL PEAK – ice ridges, long corridors
+            } else if (level === 4) { // GLACIAL PEAK – frozen labyrinth of mirrors
                 levelName = "GLACIAL PEAK"; levelTheme = "ice";
-                walls.push({ x:200, y:200, w:40, h:500 }, { x:450, y:300, w:40, h:400 }, { x:700, y:150, w:40, h:600 }, { x:950, y:400, w:40, h:350 }, { x:1200, y:200, w:40, h:450 }, { x:1450, y:500, w:40, h:300 }, { x:1700, y:300, w:40, h:400 });
+                // elegant ice crystal formations
+                walls.push({ x:200, y:200, w:30, h:400 });
+                walls.push({ x:400, y:250, w:30, h:400 });
+                walls.push({ x:600, y:150, w:30, h:500 });
+                walls.push({ x:800, y:300, w:30, h:450 });
+                walls.push({ x:1000, y:200, w:30, h:500 });
+                walls.push({ x:1200, y:350, w:30, h:400 });
+                walls.push({ x:1400, y:250, w:30, h:450 });
+                walls.push({ x:1600, y:300, w:30, h:400 });
+                // symmetric ice blocks
+                addWallCluster(300,550, 2,2, 50,50);
+                addWallCluster(700,600, 2,2, 50,50);
+                addWallCluster(1100,600, 2,2, 50,50);
+                addWallCluster(1500,550, 2,2, 50,50);
                 enemySpawners = [
                     { x:250, y:350, type:'sniper', behavior:'snipe' }, { x:500, y:550, type:'infantry', behavior:'chase' },
                     { x:750, y:250, type:'heavy', behavior:'chase' }, { x:1000, y:600, type:'drone', behavior:'flee' },
                     { x:1250, y:400, type:'jumper', behavior:'jump' }, { x:1500, y:700, type:'sniper', behavior:'snipe' },
                     { x:1650, y:450, type:'infantry', behavior:'patrol' }, { x:1800, y:350, type:'boss_lieutenant', behavior:'boss' }
                 ]; exitDoor = { x:1850, y:850 };
-            } else if (level === 5) { // MOLTEN CORE – rivers, open combat
+            } else if (level === 5) { // MOLTEN CORE – da Vinci’s ideal city
                 levelName = "MOLTEN CORE"; levelTheme = "volcano";
-                walls.push({ x:100, y:150, w:600, h:30 }, { x:800, y:400, w:500, h:30 }, { x:200, y:700, w:400, h:30 }, { x:1200, y:100, w:30, h:500 }, { x:1500, y:300, w:30, h:500 });
-                addWallCluster(400,200, 2,2, 60,60); addWallCluster(900,550, 2,1, 70,70); addWallCluster(1300,600, 2,2, 50,50);
+                // radial "ideal city" walls
+                for (let i=0;i<8;i++) {
+                    let angle = (i/8)*Math.PI*2;
+                    let cx = 500 + Math.cos(angle)*300;
+                    let cy = 400 + Math.sin(angle)*300;
+                    walls.push({ x: cx-50, y: cy-20, w: 100, h: 20 }); // tangential
+                }
+                // central fire pit
+                walls.push({ x: 470, y: 370, w: 80, h: 80 });
+                // lava rivers
+                walls.push({ x:100, y:150, w:600, h:20 });
+                walls.push({ x:800, y:500, w:500, h:20 });
+                walls.push({ x:200, y:750, w:400, h:20 });
                 enemySpawners = [
                     { x:300, y:200, type:'heavy', behavior:'chase' }, { x:500, y:500, type:'jumper', behavior:'jump' },
                     { x:700, y:300, type:'drone', behavior:'flee' }, { x:950, y:450, type:'infantry', behavior:'chase' },
                     { x:1150, y:200, type:'sniper', behavior:'snipe' }, { x:1400, y:550, type:'heavy', behavior:'chase' },
                     { x:1600, y:400, type:'infantry', behavior:'patrol' }, { x:1750, y:600, type:'boss_lieutenant', behavior:'boss' }
                 ]; exitDoor = { x:1850, y:700 };
-            } else if (level === 6) { // FINAL FORTRESS – last stand, elite squad
+            } else if (level === 6) { // FINAL FORTRESS – Vitruvian bastion
                 levelName = "FINAL FORTRESS"; levelTheme = "fortress";
-                walls.push({ x:200, y:200, w:300, h:40 }, { x:200, y:200, w:40, h:300 }, { x:600, y:500, w:40, h:400 }, { x:900, y:150, w:300, h:40 }, { x:1200, y:400, w:40, h:350 }, { x:1400, y:600, w:300, h:40 }, { x:1600, y:200, w:40, h:400 });
-                addWallCluster(300,500, 2,2, 80,80); addWallCluster(1000,600, 2,2, 70,70); addWallCluster(1500,300, 2,2, 60,60);
+                // perfect circle of thick walls
+                for (let i=0;i<12;i++) {
+                    let angle = (i/12)*Math.PI*2;
+                    let cx = 600 + Math.cos(angle)*300;
+                    let cy = 400 + Math.sin(angle)*300;
+                    walls.push({ x: cx-30, y: cy-30, w: 60, h: 60 });
+                }
+                // inner keep
+                walls.push({ x: 550, y: 350, w: 100, h: 100 });
+                // outer towers
+                walls.push({ x: 200, y: 200, w: 50, h: 50 });
+                walls.push({ x: 200, y: 600, w: 50, h: 50 });
+                walls.push({ x: 1700, y: 200, w: 50, h: 50 });
+                walls.push({ x: 1700, y: 600, w: 50, h: 50 });
                 enemySpawners = [
                     { x:250, y:300, type:'heavy', behavior:'chase' }, { x:400, y:450, type:'sniper', behavior:'snipe' },
                     { x:550, y:250, type:'jumper', behavior:'jump' }, { x:700, y:550, type:'infantry', behavior:'chase' },
@@ -204,12 +266,11 @@
             }
         }
 
-        // ----------  RESET GAME (with new power‑ups) ----------
+        // ----------  RESET GAME ----------
         function resetGame() {
             gameActive = true; gameOver = false; victoryFlag = false; 
             if (currentLevel > MAX_LEVEL) currentLevel = 1;
             score = 0; playerHealth = MAX_HEALTH = 8;
-            // reset all power‑ups
             rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
             spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
             homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
@@ -241,7 +302,7 @@
             } catch(e) {}
         }
 
-        // ----------  COLLISION (pixel‑perfect) ----------
+        // ----------  COLLISION ----------
         function collides(r1, r2) { return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y; }
         function handleWallCollision(entity, w, h) {
             for (let wall of walls) {
@@ -253,7 +314,7 @@
             }
         }
 
-        // ----------  CAMERA (smooth) ----------
+        // ----------  CAMERA ----------
         function updateCamera() {
             let targetX = player.x + PLAYER_WIDTH/2 - VIEWPORT_W/2, targetY = player.y + PLAYER_HEIGHT/2 - VIEWPORT_H/2;
             targetX = Math.max(0, Math.min(targetX, WORLD_SIZE - VIEWPORT_W));
@@ -266,12 +327,11 @@
             for (let i=0; i<count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2+Math.floor(Math.random()*4) });
         }
 
-        // ----------  PLAYER – POWER‑UP TIMERS, REGEN, BOMB CHARGE ----------
+        // ----------  PLAYER UPDATE (unchanged except bombCharge) ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
 
-            // ---- TIMERS ----
             if (rapidTimer > 0) rapidTimer--; else rapidFire = false;
             if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
             if (spreadTimer > 0) spreadTimer--; else spreadShot = false;
@@ -286,7 +346,6 @@
             if (regenTimer > 0) { regenTimer--; regenCounter++; if (regenCounter > 40) { if (playerHealth < MAX_HEALTH) playerHealth++; regenCounter = 0; } } else regen = false;
             if (maxHealthTimer > 0) maxHealthTimer--; else maxHealthUp = false;
 
-            // ---- MOVEMENT ----
             let currentSpeed = BASE_SPEED * (speedBoost ? 1.7 : 1.0);
             let accelX = 0, accelY = 0;
             if (keys.left) accelX -= 1; if (keys.right) accelX += 1; if (keys.up) accelY -= 1; if (keys.down) accelY += 1;
@@ -300,12 +359,11 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // ---- SHOOTING (wider bullets!) ----
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
                 if (player.shootTimer <= 0) {
                     let cos = Math.cos(player.aimAngle), sin = Math.sin(player.aimAngle);
-                    let bulletSpeed = timeSlow ? 9 : 14; // faster
+                    let bulletSpeed = timeSlow ? 9 : 14;
                     addParticles(player.x+PLAYER_WIDTH/2 + cos*25, player.y+PLAYER_HEIGHT/2 + sin*25, '#ffd966', 5);
                     if (spreadShot) {
                         bullets.push(createBullet(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, cos*bulletSpeed + sin*2, sin*bulletSpeed - cos*2));
@@ -325,7 +383,6 @@
             }
             if (player.shootTimer > 0) player.shootTimer--;
 
-            // ---- BOMB – now with bombCharge power‑up (cooldown reduced) ----
             if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
                 addParticles(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2, '#ffaa00', 30);
                 for (let i = enemies.length-1; i>=0; i--) {
@@ -337,7 +394,7 @@
                         enemies.splice(i,1);
                     }
                 }
-                player.bombCooldown = bombCharge ? 90 : 300; // huge reduction
+                player.bombCooldown = bombCharge ? 90 : 300;
             }
             if (player.bombCooldown > 0) player.bombCooldown--;
 
@@ -345,7 +402,7 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN (unchanged logic) ----------
+        // ----------  ENEMY SPAWN (unchanged) ----------
         function checkSpawners() {
             for (let i = enemySpawners.length-1; i>=0; i--) {
                 let s = enemySpawners[i];
@@ -398,24 +455,39 @@
             }
         }
 
-        // ----------  BULLETS – NOW ENEMIES DIE!  (wider + ricochet) ----------
+        // ----------  BULLETS – NOW CAN SHOOT DOWN ENEMY BULLETS! ----------
         function updateBullets() {
+            // 1. Player bullets vs enemy bullets (parry)
+            for (let i = bullets.length-1; i>=0; i--) {
+                let b = bullets[i];
+                for (let j = enemyBullets.length-1; j>=0; j--) {
+                    let eb = enemyBullets[j];
+                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
+                        // both disappear, add particles
+                        addParticles(b.x, b.y, '#ffff88', 10);
+                        bullets.splice(i,1);
+                        enemyBullets.splice(j,1);
+                        break;
+                    }
+                }
+            }
+
+            // 2. Regular bullet movement & collision (enemies, walls, ricochet)
             for (let i = bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 b.x += b.vx; b.y += b.vy;
                 b.life--;
                 if (b.x < -100 || b.x > WORLD_SIZE+100 || b.y < -100 || b.y > WORLD_SIZE+100 || b.life <= 0) { bullets.splice(i,1); continue; }
 
-                // ---- WALL COLLISION + RICOCHET ----
                 let wallHit = false;
                 for (let wall of walls) {
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, wall)) {
                         if (b.ricochetLeft > 0) {
-                            // simple bounce: invert velocity
+                            // simple bounce
                             let leftDist = b.x - wall.x, rightDist = (wall.x+wall.w) - (b.x+b.w);
                             let topDist = b.y - wall.y, bottomDist = (wall.y+wall.h) - (b.y+b.h);
-                            if (Math.abs(leftDist) < Math.abs(rightDist)) b.vx = -b.vx; else b.vx = -b.vx; // horizontal
-                            if (Math.abs(topDist) < Math.abs(bottomDist)) b.vy = -b.vy; else b.vy = -b.vy; // vertical
+                            if (Math.abs(leftDist) < Math.abs(rightDist)) b.vx = -b.vx; else b.vx = -b.vx;
+                            if (Math.abs(topDist) < Math.abs(bottomDist)) b.vy = -b.vy; else b.vy = -b.vy;
                             b.ricochetLeft--;
                             wallHit = true;
                             break;
@@ -425,13 +497,11 @@
                 if (wallHit) continue;
                 if (i >= bullets.length) continue;
 
-                // ---- HOMING ----
                 if (b.homing && b.homing.health > 0) {
                     let dx = b.homing.x + b.homing.w/2 - b.x, dy = b.homing.y + b.homing.h/2 - b.y;
                     let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>12) { b.vx=(b.vx/sp)*12; b.vy=(b.vy/sp)*12; } }
                 }
 
-                // ---- ENEMY COLLISION – DEADLY! ----
                 for (let j = enemies.length-1; j>=0; j--) {
                     let e = enemies[j];
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h})) {
@@ -442,7 +512,6 @@
                             score += e.points; if (score > highScore) { highScore = score; localStorage.setItem('commandoDeluxe', highScore); }
                             explosions.push({ x:e.x+e.w/2, y:e.y+e.h/2, life:22, radius:18 });
                             addParticles(e.x+e.w/2, e.y+e.h/2, '#ffaa00', 20);
-                            // DROP RATE INCREASED -> MORE POWER-UPS!
                             if (Math.random() < 0.8) {
                                 let types = ['health','rapid','shield','spread','star','homing','piercing','speed','slow','damage','bomb','ricochet','regen','maxhealth'];
                                 let type = types[Math.floor(Math.random() * types.length)];
@@ -456,7 +525,7 @@
             }
         }
 
-        // ----------  ENEMY BULLETS (unchanged) ----------
+        // ----------  ENEMY BULLETS UPDATE (unchanged) ----------
         function updateEnemyBullets() {
             for (let i = enemyBullets.length-1; i>=0; i--) {
                 let eb = enemyBullets[i]; eb.x += eb.vx; eb.y += eb.vy; eb.life--;
@@ -473,14 +542,13 @@
             }
         }
 
-        // ----------  PICKUPS – now with 5 new types! ----------
+        // ----------  PICKUPS (unchanged) ----------
         function updatePickups() {
             for (let i = pickups.length-1; i>=0; i--) {
                 let p = pickups[i]; p.x += p.vx; p.y += p.vy; p.life--;
                 if (p.life<=0 || p.x<-100||p.x>WORLD_SIZE+100||p.y<-100||p.y>WORLD_SIZE+100) { pickups.splice(i,1); continue; }
                 if (collides({x:player.x,y:player.y,w:PLAYER_WIDTH,h:PLAYER_HEIGHT}, {x:p.x,y:p.y,w:p.w,h:p.h})) {
                     addParticles(p.x, p.y, '#ffff66', 20);
-                    // classic
                     if (p.type === 'health') playerHealth = Math.min(MAX_HEALTH, playerHealth + 2);
                     else if (p.type === 'rapid') { rapidFire = true; rapidTimer = 600; }
                     else if (p.type === 'shield') { shieldActive = true; shieldTimer = 600; }
@@ -490,7 +558,6 @@
                     else if (p.type === 'piercing') { piercingShots = true; piercingTimer = 600; }
                     else if (p.type === 'speed') { speedBoost = true; speedTimer = 500; }
                     else if (p.type === 'slow') { timeSlow = true; slowTimer = 400; }
-                    // NEW POWERS
                     else if (p.type === 'damage') { damageBoost = true; damageTimer = 700; }
                     else if (p.type === 'bomb') { bombCharge = true; bombChargeTimer = 600; player.bombCooldown = Math.max(0, player.bombCooldown - 150); }
                     else if (p.type === 'ricochet') { ricochet = true; ricochetTimer = 600; }
@@ -512,7 +579,6 @@
                     buildLevel(currentLevel);
                     player.x=300; player.y=300; cameraX=player.x-VIEWPORT_W/2; cameraY=player.y-VIEWPORT_H/2;
                     cameraX=Math.max(0,Math.min(cameraX,WORLD_SIZE-VIEWPORT_W)); cameraY=Math.max(0,Math.min(cameraY,WORLD_SIZE-VIEWPORT_H));
-                    // reset power‑ups but keep health/score/maxhealth
                     rapidFire=false; rapidTimer=0; shieldActive=false; shieldTimer=0; spreadShot=false; spreadTimer=0; invincibleStar=false; starTimer=0;
                     homingMissiles=false; homingTimer=0; piercingShots=false; piercingTimer=0; speedBoost=false; speedTimer=0; timeSlow=false; slowTimer=0;
                     damageBoost=false; damageTimer=0; bombCharge=false; bombChargeTimer=0; ricochet=false; ricochetTimer=0; regen=false; regenTimer=0; regenCounter=0;
@@ -524,35 +590,96 @@
             }
         }
 
-        // ----------  RENDERING – UPDATED FOR NEW POWER‑UPS ----------
+        // ----------  RENDERING – GRIZZLE EFFECTS RESTORED! ----------
         function drawWorld() {
             if (!ctx) return; ctx.save(); ctx.translate(-cameraX, -cameraY);
-            // background (same)
-            if (levelTheme==='jungle') { ctx.fillStyle='#1a4a3a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            else if (levelTheme==='factory') { ctx.fillStyle='#3a4a4a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            else if (levelTheme==='alien') { ctx.fillStyle='#2a2a5a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            else if (levelTheme==='ice') { ctx.fillStyle='#a0d0e0'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            else if (levelTheme==='volcano') { ctx.fillStyle='#4a2a2a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            else if (levelTheme==='fortress') { ctx.fillStyle='#2a2a3a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE); }
-            walls.forEach(w => { ctx.fillStyle='#5c4a34'; ctx.fillRect(w.x,w.y,w.w,w.h); ctx.fillStyle='#ffffaa20'; ctx.fillRect(w.x,w.y-2,w.w,4); ctx.fillStyle='#00000030'; ctx.fillRect(w.x+2,w.y+2,w.w,w.h); });
-            if (exitDoor) { ctx.fillStyle = enemies.length===0?'#ffd966':'#ac8c5a'; ctx.shadowBlur=enemies.length===0?20:0; ctx.shadowColor='#ffd966'; ctx.fillRect(exitDoor.x,exitDoor.y,40,40); ctx.shadowBlur=0; }
-            enemies.forEach(e => { ctx.fillStyle = e.type.includes('boss')?'#b34b4b':'#b35a4a'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.fillStyle='#000'; ctx.fillRect(e.x+4,e.y+4,5,5); ctx.fillRect(e.x+e.w-9,e.y+4,5,5); if(e.type.includes('boss')){ ctx.shadowBlur=15; ctx.shadowColor='#ff6a6a'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.shadowBlur=0; } });
+            // ----- THEMED BACKGROUND (grizzle) -----
+            if (levelTheme === 'jungle') {
+                ctx.fillStyle = '#1a4a3a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.strokeStyle = '#3a6a4a'; ctx.lineWidth = 2;
+                for (let i=0;i<60;i++) { ctx.beginPath(); ctx.moveTo(Math.random()*WORLD_SIZE, 0); ctx.lineTo(Math.random()*WORLD_SIZE, WORLD_SIZE); ctx.stroke(); }
+                for (let i=0;i<40;i++) { ctx.fillStyle = '#2a6a2a'; ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 12, 24); }
+            } else if (levelTheme === 'factory') {
+                ctx.fillStyle = '#3a4a4a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.strokeStyle = '#5a6a6a'; ctx.lineWidth = 1;
+                for (let i=0;i<WORLD_SIZE;i+=50) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,WORLD_SIZE); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(WORLD_SIZE,i); ctx.stroke(); }
+                for (let i=0;i<80;i++) { ctx.fillStyle = '#6a7a7a'; ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 6, 2); }
+            } else if (levelTheme === 'alien') {
+                ctx.fillStyle = '#2a2a5a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.fillStyle = '#8a8aff'; for (let i=0;i<300;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 3, 3);
+                ctx.fillStyle = '#b0b0ff'; for (let i=0;i<150;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
+            } else if (levelTheme === 'ice') {
+                ctx.fillStyle = '#a0d0e0'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.fillStyle = '#ffffff'; for (let i=0;i<200;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 4, 4);
+                ctx.fillStyle = '#c0e0f0'; for (let i=0;i<150;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 10);
+            } else if (levelTheme === 'volcano') {
+                ctx.fillStyle = '#4a2a2a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.fillStyle = '#ff6a2a'; for (let i=0;i<150;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 6, 2);
+                ctx.fillStyle = '#ffaa4a'; for (let i=0;i<100;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 4, 1);
+            } else if (levelTheme === 'fortress') {
+                ctx.fillStyle = '#2a2a3a'; ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
+                ctx.fillStyle = '#4a4a6a'; for (let i=0;i<150;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 12, 6);
+                ctx.fillStyle = '#6a6a8a'; for (let i=0;i<100;i++) ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 8, 4);
+            }
+
+            // ----- WALLS -----
+            walls.forEach(w => { 
+                ctx.fillStyle = '#5c4a34'; ctx.fillRect(w.x, w.y, w.w, w.h); 
+                ctx.fillStyle = '#ffffaa20'; ctx.fillRect(w.x, w.y-2, w.w, 4); 
+                ctx.fillStyle = '#00000030'; ctx.fillRect(w.x+2, w.y+2, w.w, w.h); 
+            });
+
+            // ----- EXIT DOOR -----
+            if (exitDoor) { 
+                ctx.fillStyle = enemies.length===0?'#ffd966':'#ac8c5a'; 
+                ctx.shadowBlur = enemies.length===0?20:0; ctx.shadowColor = '#ffd966'; 
+                ctx.fillRect(exitDoor.x, exitDoor.y, 40, 40); ctx.shadowBlur = 0; 
+            }
+
+            // ----- ENEMIES -----
+            enemies.forEach(e => { 
+                ctx.fillStyle = e.type.includes('boss')?'#b34b4b':'#b35a4a'; 
+                ctx.fillRect(e.x, e.y, e.w, e.h); 
+                ctx.fillStyle = '#000'; ctx.fillRect(e.x+4, e.y+4, 5,5); ctx.fillRect(e.x+e.w-9, e.y+4, 5,5); 
+                if(e.type.includes('boss')){ ctx.shadowBlur=15; ctx.shadowColor='#ff6a6a'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.shadowBlur=0; } 
+            });
+
+            // ----- BULLETS (player & enemy) -----
             bullets.forEach(b => { ctx.fillStyle = '#ffd966'; ctx.shadowBlur = 8; ctx.shadowColor = '#ffaa00'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.shadowBlur = 0; });
             enemyBullets.forEach(b => { ctx.fillStyle = '#ff8c8c'; ctx.shadowBlur = 6; ctx.shadowColor = '#ff0000'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.shadowBlur = 0; });
-            pickups.forEach(p => { ctx.shadowBlur = 12; ctx.shadowColor = '#ffffaa'; ctx.fillStyle = '#4caf7a'; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = 'white'; ctx.font = '20px monospace';
-                let icon = '?'; if (p.type==='health') icon='❤️'; else if (p.type==='rapid') icon='⚡'; else if (p.type==='shield') icon='🛡️'; else if (p.type==='spread') icon='🌟'; else if (p.type==='star') icon='✨'; else if (p.type==='homing') icon='🎯'; else if (p.type==='piercing') icon='🔥'; else if (p.type==='speed') icon='💨'; else if (p.type==='slow') icon='⏱️'; else if (p.type==='damage') icon='💥'; else if (p.type==='bomb') icon='💣'; else if (p.type==='ricochet') icon='↩️'; else if (p.type==='regen') icon='🩸'; else if (p.type==='maxhealth') icon='💪';
-                ctx.fillText(icon, p.x, p.y+16); ctx.shadowBlur = 0; });
+
+            // ----- PICKUPS -----
+            pickups.forEach(p => { 
+                ctx.shadowBlur = 12; ctx.shadowColor = '#ffffaa'; 
+                ctx.fillStyle = '#4caf7a'; ctx.fillRect(p.x, p.y, p.w, p.h); 
+                ctx.fillStyle = 'white'; ctx.font = '20px monospace';
+                let icon = '?'; 
+                if (p.type==='health') icon='❤️'; else if (p.type==='rapid') icon='⚡'; else if (p.type==='shield') icon='🛡️'; 
+                else if (p.type==='spread') icon='🌟'; else if (p.type==='star') icon='✨'; else if (p.type==='homing') icon='🎯'; 
+                else if (p.type==='piercing') icon='🔥'; else if (p.type==='speed') icon='💨'; else if (p.type==='slow') icon='⏱️'; 
+                else if (p.type==='damage') icon='💥'; else if (p.type==='bomb') icon='💣'; else if (p.type==='ricochet') icon='↩️'; 
+                else if (p.type==='regen') icon='🩸'; else if (p.type==='maxhealth') icon='💪';
+                ctx.fillText(icon, p.x, p.y+16); ctx.shadowBlur = 0; 
+            });
+
+            // ----- EXPLOSIONS & PARTICLES -----
             explosions.forEach(ex => { ctx.fillStyle = `rgba(255, 140, 30, ${ex.life/30})`; ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.radius, 0, 2*Math.PI); ctx.fill(); });
             particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
+
+            // ----- PLAYER -----
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
-                let px=player.x, py=player.y; if (shieldActive) { ctx.shadowBlur=20; ctx.shadowColor='#7fb3d5'; }
-                ctx.fillStyle = invincibleStar?'#ffd966':'#3a7251'; ctx.fillRect(px, py, PLAYER_WIDTH, PLAYER_HEIGHT);
+                let px=player.x, py=player.y; 
+                if (shieldActive) { ctx.shadowBlur=20; ctx.shadowColor='#7fb3d5'; }
+                ctx.fillStyle = invincibleStar?'#ffd966':'#3a7251'; 
+                ctx.fillRect(px, py, PLAYER_WIDTH, PLAYER_HEIGHT);
                 ctx.fillStyle = '#5a8f4c'; ctx.fillRect(px+10, py-2, 24, 8);
-                ctx.strokeStyle = '#414141'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(px+PLAYER_WIDTH/2, py+PLAYER_HEIGHT/2); ctx.lineTo(px+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*30, py+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*30); ctx.stroke();
+                ctx.strokeStyle = '#414141'; ctx.lineWidth = 8; 
+                ctx.beginPath(); ctx.moveTo(px+PLAYER_WIDTH/2, py+PLAYER_HEIGHT/2); ctx.lineTo(px+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*30, py+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*30); ctx.stroke();
                 ctx.fillStyle = '#2b543a'; ctx.fillRect(px+8, py+PLAYER_HEIGHT-6, 6, 8); ctx.fillRect(px+PLAYER_WIDTH-14, py+PLAYER_HEIGHT-6, 6, 8);
                 ctx.shadowBlur = 0; ctx.fillStyle = '#00000040'; ctx.fillRect(px-2, py+PLAYER_HEIGHT-2, PLAYER_WIDTH+4, 8);
             }
-            ctx.strokeStyle = '#ffffff80'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2); ctx.lineTo(player.x+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*60, player.y+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*60); ctx.stroke();
+            ctx.strokeStyle = '#ffffff80'; ctx.lineWidth = 2; 
+            ctx.beginPath(); ctx.moveTo(player.x+PLAYER_WIDTH/2, player.y+PLAYER_HEIGHT/2); ctx.lineTo(player.x+PLAYER_WIDTH/2 + Math.cos(player.aimAngle)*60, player.y+PLAYER_HEIGHT/2 + Math.sin(player.aimAngle)*60); ctx.stroke();
             ctx.restore();
         }
 
@@ -563,20 +690,25 @@
                 if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; } updateUI();
             }
             drawWorld();
-            // HUD
+            // HUD power‑up icons
             ctx.save(); ctx.font = '20px "Courier New", monospace'; ctx.fillStyle = '#fff'; ctx.fillText('💣 ' + Math.floor(player.bombCooldown/60), 20, 50);
             let x = 120;
-            if (rapidFire) { ctx.fillText('⚡', x, 50); x+=40; } if (spreadShot) { ctx.fillText('🌟', x, 50); x+=40; } if (homingMissiles) { ctx.fillText('🎯', x, 50); x+=40; } if (piercingShots) { ctx.fillText('🔥', x, 50); x+=40; } if (speedBoost) { ctx.fillText('💨', x, 50); x+=40; } if (timeSlow) { ctx.fillText('⏱️', x, 50); x+=40; } if (damageBoost) { ctx.fillText('💥', x, 50); x+=40; } if (bombCharge) { ctx.fillText('💣⚡', x, 50); x+=50; } if (ricochet) { ctx.fillText('↩️', x, 50); x+=40; } if (regen) { ctx.fillText('🩸', x, 50); x+=40; }
+            if (rapidFire) { ctx.fillText('⚡', x, 50); x+=40; } if (spreadShot) { ctx.fillText('🌟', x, 50); x+=40; } 
+            if (homingMissiles) { ctx.fillText('🎯', x, 50); x+=40; } if (piercingShots) { ctx.fillText('🔥', x, 50); x+=40; } 
+            if (speedBoost) { ctx.fillText('💨', x, 50); x+=40; } if (timeSlow) { ctx.fillText('⏱️', x, 50); x+=40; } 
+            if (damageBoost) { ctx.fillText('💥', x, 50); x+=40; } if (bombCharge) { ctx.fillText('💣⚡', x, 50); x+=50; } 
+            if (ricochet) { ctx.fillText('↩️', x, 50); x+=40; } if (regen) { ctx.fillText('🩸', x, 50); x+=40; }
             ctx.restore();
             if (!gameActive) {
-                ctx.save(); ctx.fillStyle = '#000000bb'; ctx.fillRect(220, 190, 360, 90); ctx.fillStyle = '#ffe98c'; ctx.font = '36px "Courier New", monospace'; ctx.textAlign = 'center';
+                ctx.save(); ctx.fillStyle = '#000000bb'; ctx.fillRect(220, 190, 360, 90); 
+                ctx.fillStyle = '#ffe98c'; ctx.font = '36px "Courier New", monospace'; ctx.textAlign = 'center';
                 if (victoryFlag) ctx.fillText('🏁 VICTORY!', 400, 245); else if (gameOver) ctx.fillText('❌ GAME OVER', 400, 245); else ctx.fillText('- PAUSE -', 400, 245);
                 ctx.restore();
             }
             frame++; animFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ----------  CONTROLS – IMPROVED RESPONSIVENESS ----------
+        // ----------  CONTROLS (unchanged, responsive) ----------
         function initAnalogStick() {
             const stick = document.getElementById('joystickHandle'), base = document.getElementById('joystickBase'), container = document.getElementById('joystickContainer');
             if (!stick || !base || !container) return;
@@ -589,7 +721,7 @@
                 let dx = touch.clientX - cx, dy = touch.clientY - cy, dist = Math.hypot(dx, dy);
                 if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
                 stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
-                keys.left = dx < -6; keys.right = dx > 6; keys.up = dy < -6; keys.down = dy > 6; // lower deadzone
+                keys.left = dx < -6; keys.right = dx > 6; keys.up = dy < -6; keys.down = dy > 6;
             }
             function handleEnd(e) { e.preventDefault(); active = false; stick.style.left = '0px'; stick.style.top = '0px'; keys.left = false; keys.right = false; keys.up = false; keys.down = false; }
             container.addEventListener('touchstart', handleStart, { passive: false }); container.addEventListener('touchmove', handleMove, { passive: false });
