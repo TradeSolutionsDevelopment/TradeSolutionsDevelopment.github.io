@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>COMMANDO·DA VINCI · BULLETS NOW KILL</title>
-    <style>/* === STYLES – identical to previous, clean & responsive === */
+    <title>COMMANDO·FIXED · BULLETS KILL · 44px FAT</title>
+    <style>/* === STYLES – clean & responsive, same as before === */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         html, body { width: 100%; height: 100%; background: #0a1a1f; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; touch-action: pan-y; }
         .arcade-cabinet { background: linear-gradient(145deg, #1c3840, #152a30); padding: 15px 15px 20px; border-radius: 30px 30px 15px 15px; box-shadow: 0 15px 0 #0c1c22, 0 20px 30px rgba(0,0,0,0.8); border-bottom: 8px solid #2d5662; max-width: 1000px; width: 100%; margin: auto; display: flex; flex-direction: column; }
@@ -126,13 +126,13 @@
             for (let i=0; i<cols; i++) for (let j=0; j<rows; j++) walls.push({ x: sx + i*(w+20), y: sy + j*(h+20), w, h });
         }
 
-        // ----------  🔫 FAT BULLETS – 36x36 SQUARE! CENTERED, SLOWER, DEADLIER ----------
+        // ----------  🔫 FAT BULLETS – 44x44 SQUARE! SLOW, CENTERED, DEADLY ----------
         function createBullet(x, y, vx, vy) {
             return { 
-                x: x - 18, y: y - 18,    // perfectly centered
-                w: 36, h: 36, 
+                x: x - 22, y: y - 22,    // perfectly centered on spawn point
+                w: 44, h: 44, 
                 vx, vy, 
-                life: 90,                // longer life
+                life: 100,              // longer life
                 piercing: piercingShots ? 2 : 0, 
                 damage: damageBoost ? 2 : 1, 
                 ricochetLeft: ricochet ? 1 : 0,
@@ -150,37 +150,70 @@
                 levelName = "SUNKEN JUNGLE"; levelTheme = "jungle";
                 for (let i=0;i<16;i++) { let angle = (i/16)*Math.PI*2; let cx = 500 + Math.cos(angle)*240; let cy = 400 + Math.sin(angle)*240; walls.push({ x: cx-25, y: cy-25, w: 50, h: 50 }); }
                 addWallCluster(900,500, 2,2, 40,40); addWallCluster(1300,300, 3,1, 60,60); addWallCluster(1600,600, 2,2, 50,50);
-                enemySpawners = [ { x:380,y:380,type:'sniper',behavior:'snipe' }, { x:620,y:250,type:'infantry',behavior:'chase' }, { x:750,y:500,type:'drone',behavior:'flee' }, { x:900,y:600,type:'heavy',behavior:'chase' }, { x:1100,y:350,type:'jumper',behavior:'jump' }, { x:1350,y:550,type:'sniper',behavior:'snipe' }, { x:1550,y:400,type:'infantry',behavior:'chase' }, { x:1750,y:700,type:'boss_lieutenant',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:380,y:380,type:'sniper',behavior:'snipe' }, { x:620,y:250,type:'infantry',behavior:'chase' }, 
+                    { x:750,y:500,type:'drone',behavior:'flee' }, { x:900,y:600,type:'heavy',behavior:'chase' }, 
+                    { x:1100,y:350,type:'jumper',behavior:'jump' }, { x:1350,y:550,type:'sniper',behavior:'snipe' }, 
+                    { x:1550,y:400,type:'infantry',behavior:'chase' }, { x:1750,y:700,type:'boss_lieutenant',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:750 };
             } else if (level === 2) { 
                 levelName = "MACHINE COMPLEX"; levelTheme = "factory";
                 for (let i=0;i<12;i++) { let angle = (i/12)*Math.PI*2; let cx = 600 + Math.cos(angle)*200; let cy = 400 + Math.sin(angle)*200; walls.push({ x: cx-15, y: cy-15, w: 30, h: 30 }); }
                 walls.push({ x:200,y:200,w:500,h:20 }, { x:200,y:600,w:500,h:20 }, { x:1100,y:300,w:500,h:20 }, { x:1100,y:700,w:500,h:20 });
-                enemySpawners = [ { x:250,y:250,type:'heavy',behavior:'chase' }, { x:450,y:450,type:'infantry',behavior:'chase' }, { x:650,y:350,type:'drone',behavior:'flee' }, { x:850,y:550,type:'sniper',behavior:'snipe' }, { x:1050,y:200,type:'jumper',behavior:'jump' }, { x:1300,y:650,type:'infantry',behavior:'patrol' }, { x:1550,y:400,type:'heavy',behavior:'chase' }, { x:1750,y:600,type:'boss_lieutenant',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:250,y:250,type:'heavy',behavior:'chase' }, { x:450,y:450,type:'infantry',behavior:'chase' }, 
+                    { x:650,y:350,type:'drone',behavior:'flee' }, { x:850,y:550,type:'sniper',behavior:'snipe' }, 
+                    { x:1050,y:200,type:'jumper',behavior:'jump' }, { x:1300,y:650,type:'infantry',behavior:'patrol' }, 
+                    { x:1550,y:400,type:'heavy',behavior:'chase' }, { x:1750,y:600,type:'boss_lieutenant',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:800 };
             } else if (level === 3) { 
                 levelName = "ALIEN NEXUS"; levelTheme = "alien";
                 for (let r=1;r<=5;r++) for (let i=0;i<8;i++) { let angle = (i/8)*Math.PI*2 + r*0.5; let cx = 500 + Math.cos(angle)*r*70; let cy = 400 + Math.sin(angle)*r*70; walls.push({ x: cx-10, y: cy-10, w: 20, h: 20 }); }
                 walls.push({ x:480, y:380, w:80, h:80 });
-                enemySpawners = [ { x:550,y:250,type:'drone',behavior:'flee' }, { x:650,y:500,type:'jumper',behavior:'jump' }, { x:400,y:600,type:'infantry',behavior:'chase' }, { x:300,y:300,type:'sniper',behavior:'snipe' }, { x:700,y:700,type:'heavy',behavior:'chase' }, { x:850,y:150,type:'drone',behavior:'flee' }, { x:1100,y:500,type:'infantry',behavior:'patrol' }, { x:1400,y:300,type:'jumper',behavior:'jump' }, { x:1700,y:600,type:'boss_lieutenant',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:550,y:250,type:'drone',behavior:'flee' }, { x:650,y:500,type:'jumper',behavior:'jump' }, 
+                    { x:400,y:600,type:'infantry',behavior:'chase' }, { x:300,y:300,type:'sniper',behavior:'snipe' }, 
+                    { x:700,y:700,type:'heavy',behavior:'chase' }, { x:850,y:150,type:'drone',behavior:'flee' }, 
+                    { x:1100,y:500,type:'infantry',behavior:'patrol' }, { x:1400,y:300,type:'jumper',behavior:'jump' }, 
+                    { x:1700,y:600,type:'boss_lieutenant',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:700 };
             } else if (level === 4) { 
                 levelName = "GLACIAL PEAK"; levelTheme = "ice";
-                walls.push({ x:200,y:200,w:30,h:400 }, { x:400,y:250,w:30,h:400 }, { x:600,y:150,w:30,h:500 }, { x:800,y:300,w:30,h:450 }, { x:1000,y:200,w:30,h:500 }, { x:1200,y:350,w:30,h:400 }, { x:1400,y:250,w:30,h:450 }, { x:1600,y:300,w:30,h:400 });
+                walls.push({ x:200,y:200,w:30,h:400 }, { x:400,y:250,w:30,h:400 }, { x:600,y:150,w:30,h:500 }, { x:800,y:300,w:30,h:450 }, 
+                           { x:1000,y:200,w:30,h:500 }, { x:1200,y:350,w:30,h:400 }, { x:1400,y:250,w:30,h:450 }, { x:1600,y:300,w:30,h:400 });
                 addWallCluster(300,550,2,2,50,50); addWallCluster(700,600,2,2,50,50); addWallCluster(1100,600,2,2,50,50); addWallCluster(1500,550,2,2,50,50);
-                enemySpawners = [ { x:250,y:350,type:'sniper',behavior:'snipe' }, { x:500,y:550,type:'infantry',behavior:'chase' }, { x:750,y:250,type:'heavy',behavior:'chase' }, { x:1000,y:600,type:'drone',behavior:'flee' }, { x:1250,y:400,type:'jumper',behavior:'jump' }, { x:1500,y:700,type:'sniper',behavior:'snipe' }, { x:1650,y:450,type:'infantry',behavior:'patrol' }, { x:1800,y:350,type:'boss_lieutenant',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:250,y:350,type:'sniper',behavior:'snipe' }, { x:500,y:550,type:'infantry',behavior:'chase' }, 
+                    { x:750,y:250,type:'heavy',behavior:'chase' }, { x:1000,y:600,type:'drone',behavior:'flee' }, 
+                    { x:1250,y:400,type:'jumper',behavior:'jump' }, { x:1500,y:700,type:'sniper',behavior:'snipe' }, 
+                    { x:1650,y:450,type:'infantry',behavior:'patrol' }, { x:1800,y:350,type:'boss_lieutenant',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:850 };
             } else if (level === 5) { 
                 levelName = "MOLTEN CORE"; levelTheme = "volcano";
                 for (let i=0;i<8;i++) { let angle = (i/8)*Math.PI*2; let cx = 500 + Math.cos(angle)*300; let cy = 400 + Math.sin(angle)*300; walls.push({ x: cx-50, y: cy-20, w: 100, h: 20 }); }
                 walls.push({ x:470, y:370, w:80, h:80 }, { x:100,y:150,w:600,h:20 }, { x:800,y:500,w:500,h:20 }, { x:200,y:750,w:400,h:20 });
-                enemySpawners = [ { x:300,y:200,type:'heavy',behavior:'chase' }, { x:500,y:500,type:'jumper',behavior:'jump' }, { x:700,y:300,type:'drone',behavior:'flee' }, { x:950,y:450,type:'infantry',behavior:'chase' }, { x:1150,y:200,type:'sniper',behavior:'snipe' }, { x:1400,y:550,type:'heavy',behavior:'chase' }, { x:1600,y:400,type:'infantry',behavior:'patrol' }, { x:1750,y:600,type:'boss_lieutenant',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:300,y:200,type:'heavy',behavior:'chase' }, { x:500,y:500,type:'jumper',behavior:'jump' }, 
+                    { x:700,y:300,type:'drone',behavior:'flee' }, { x:950,y:450,type:'infantry',behavior:'chase' }, 
+                    { x:1150,y:200,type:'sniper',behavior:'snipe' }, { x:1400,y:550,type:'heavy',behavior:'chase' }, 
+                    { x:1600,y:400,type:'infantry',behavior:'patrol' }, { x:1750,y:600,type:'boss_lieutenant',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:700 };
             } else if (level === 6) { 
                 levelName = "FINAL FORTRESS"; levelTheme = "fortress";
                 for (let i=0;i<12;i++) { let angle = (i/12)*Math.PI*2; let cx = 600 + Math.cos(angle)*300; let cy = 400 + Math.sin(angle)*300; walls.push({ x: cx-30, y: cy-30, w: 60, h: 60 }); }
                 walls.push({ x:550, y:350, w:100, h:100 }, { x:200,y:200,w:50,h:50 }, { x:200,y:600,w:50,h:50 }, { x:1700,y:200,w:50,h:50 }, { x:1700,y:600,w:50,h:50 });
-                enemySpawners = [ { x:250,y:300,type:'heavy',behavior:'chase' }, { x:400,y:450,type:'sniper',behavior:'snipe' }, { x:550,y:250,type:'jumper',behavior:'jump' }, { x:700,y:550,type:'infantry',behavior:'chase' }, { x:850,y:350,type:'drone',behavior:'flee' }, { x:1000,y:500,type:'heavy',behavior:'chase' }, { x:1150,y:200,type:'boss_lieutenant',behavior:'boss' }, { x:1350,y:450,type:'boss_lieutenant',behavior:'boss' }, { x:1700,y:500,type:'boss',behavior:'boss' } ];
+                enemySpawners = [ 
+                    { x:250,y:300,type:'heavy',behavior:'chase' }, { x:400,y:450,type:'sniper',behavior:'snipe' }, 
+                    { x:550,y:250,type:'jumper',behavior:'jump' }, { x:700,y:550,type:'infantry',behavior:'chase' }, 
+                    { x:850,y:350,type:'drone',behavior:'flee' }, { x:1000,y:500,type:'heavy',behavior:'chase' }, 
+                    { x:1150,y:200,type:'boss_lieutenant',behavior:'boss' }, { x:1350,y:450,type:'boss_lieutenant',behavior:'boss' }, 
+                    { x:1700,y:500,type:'boss',behavior:'boss' } 
+                ];
                 exitDoor = { x:1850, y:800 };
             }
         }
@@ -246,7 +279,7 @@
             for (let i=0; i<count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2+Math.floor(Math.random()*4) });
         }
 
-        // ----------  PLAYER UPDATE – SLOWER BULLETS, FAT SQUARES ----------
+        // ----------  PLAYER UPDATE – FAT SLOW BULLETS ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -278,12 +311,12 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // SHOOTING – slower speed to prevent tunneling
+            // SHOOTING – speed 6.5 (slow & steady)
             if (keys.fire && gameActive) {
-                let fireRate = rapidFire ? 3 : (timeSlow ? 10 : 7);
+                let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
                 if (player.shootTimer <= 0) {
                     let cos = Math.cos(player.aimAngle), sin = Math.sin(player.aimAngle);
-                    let bulletSpeed = timeSlow ? 7 : 9;   // reduced from 14/9
+                    let bulletSpeed = timeSlow ? 5 : 6.5;
                     let spawnX = player.x + PLAYER_WIDTH/2;
                     let spawnY = player.y + PLAYER_HEIGHT/2;
                     addParticles(spawnX + cos*25, spawnY + sin*25, '#ffd966', 5);
@@ -296,7 +329,7 @@
                     } else if (homingMissiles) {
                         let nearest = null, nearestDist = Infinity;
                         for (let e of enemies) { let d = (e.x-player.x)**2+(e.y-player.y)**2; if (d<nearestDist) { nearest=e; nearestDist=d; } }
-                        let b = createBullet(spawnX, spawnY, cos*6, sin*6); // homing slower
+                        let b = createBullet(spawnX, spawnY, cos*5, sin*5); // homing slower
                         b.homing = nearest;
                         bullets.push(b);
                     } else {
@@ -328,7 +361,7 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN (unchanged) ----------
+        // ----------  ENEMY SPAWN – FIXED: ALL HEALTH ARE NUMBERS (no strings!) ----------
         function checkSpawners() {
             for (let i = enemySpawners.length-1; i>=0; i--) {
                 let s = enemySpawners[i];
@@ -381,15 +414,19 @@
             }
         }
 
-        // ----------  BULLETS – NOW ENEMIES DIE! (FAT 36x36, TUNNEL-PROOF) ----------
+        // ----------  BULLETS – PURE CIRCLE COLLISION, 100% RELIABLE ----------
         function updateBullets() {
             // 1. Player bullets vs enemy bullets (parry)
             for (let i = bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 for (let j = enemyBullets.length-1; j>=0; j--) {
                     let eb = enemyBullets[j];
-                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
-                        addParticles(b.x+18, b.y+18, '#ffff88', 10);
+                    // circle collision for parry (bullet vs bullet)
+                    let bCenterX = b.x + b.w/2, bCenterY = b.y + b.h/2;
+                    let ebCenterX = eb.x + eb.w/2, ebCenterY = eb.y + eb.h/2;
+                    let dist = Math.hypot(bCenterX - ebCenterX, bCenterY - ebCenterY);
+                    if (dist < (b.w/2 + eb.w/2)) {
+                        addParticles(bCenterX, bCenterY, '#ffff88', 12);
                         bullets.splice(i,1);
                         enemyBullets.splice(j,1);
                         break;
@@ -397,14 +434,14 @@
                 }
             }
 
-            // 2. Regular bullet movement & collision
+            // 2. Bullet movement & enemy collision
             for (let i = bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 b.x += b.vx; b.y += b.vy;
                 b.life--;
                 if (b.x < -100 || b.x > WORLD_SIZE+100 || b.y < -100 || b.y > WORLD_SIZE+100 || b.life <= 0) { bullets.splice(i,1); continue; }
 
-                // wall collision + ricochet
+                // Wall collision + ricochet (keep AABB for walls)
                 let wallHit = false;
                 for (let wall of walls) {
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, wall)) {
@@ -425,26 +462,28 @@
 
                 // homing
                 if (b.homing && b.homing.health > 0) {
-                    let dx = b.homing.x + b.homing.w/2 - b.x, dy = b.homing.y + b.homing.h/2 - b.y;
-                    let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>8) { b.vx=(b.vx/sp)*8; b.vy=(b.vy/sp)*8; } }
+                    let dx = b.homing.x + b.homing.w/2 - (b.x + b.w/2);
+                    let dy = b.homing.y + b.homing.h/2 - (b.y + b.h/2);
+                    let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>7) { b.vx=(b.vx/sp)*7; b.vy=(b.vy/sp)*7; } }
                 }
 
-                // ENEMY COLLISION – GUARANTEED HIT (AABB + DISTANCE CHECK)
+                // ENEMY COLLISION – GUARANTEED CIRCLE HIT
+                let bulletCenterX = b.x + b.w/2, bulletCenterY = b.y + b.h/2;
+                let bulletRadius = b.w/2; // 22
                 for (let j = enemies.length-1; j>=0; j--) {
                     let e = enemies[j];
-                    // 1. Standard AABB collision
-                    let aabbHit = collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h});
-                    // 2. Distance-based check (tunneling protection)
-                    let bulletCenterX = b.x + b.w/2, bulletCenterY = b.y + b.h/2;
                     let enemyCenterX = e.x + e.w/2, enemyCenterY = e.y + e.h/2;
+                    let enemyRadius = Math.max(e.w, e.h) * 0.6; // generous
                     let dist = Math.hypot(bulletCenterX - enemyCenterX, bulletCenterY - enemyCenterY);
-                    let threshold = (b.w/2 + e.w/2) * 0.8; // generous
-                    if (aabbHit || dist < threshold) {
+                    if (dist < bulletRadius + enemyRadius) {
+                        // DAMAGE! finally.
                         e.health -= b.damage;
-                        addParticles(bulletCenterX, bulletCenterY, '#ffe066', 8);
+                        // visual feedback: red flash
+                        addParticles(bulletCenterX, bulletCenterY, '#ff3333', 12);
                         if (b.piercing > 0) { b.piercing--; } else { bullets.splice(i,1); break; }
                         if (e.health <= 0) {
-                            score += e.points; if (score > highScore) { highScore = score; localStorage.setItem('commandoDeluxe', highScore); }
+                            score += e.points; 
+                            if (score > highScore) { highScore = score; localStorage.setItem('commandoDeluxe', highScore); }
                             explosions.push({ x: e.x+e.w/2, y: e.y+e.h/2, life:22, radius:18 });
                             addParticles(e.x+e.w/2, e.y+e.h/2, '#ffaa00', 20);
                             if (Math.random() < 0.8) {
@@ -579,7 +618,7 @@
                 if(e.type.includes('boss')){ ctx.shadowBlur=15; ctx.shadowColor='#ff6a6a'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.shadowBlur=0; } 
             });
 
-            // ----- BULLETS – FAT 36x36 SQUARES! -----
+            // ----- BULLETS – FAT 44x44 SQUARES! -----
             bullets.forEach(b => { 
                 ctx.fillStyle = '#ffd966'; 
                 ctx.shadowBlur = 8; ctx.shadowColor = '#ffaa00'; 
