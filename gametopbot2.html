@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>COMMANDO·DA VINCI · FAT BULLETS · ENEMIES DIE</title>
-    <style>
-        /* === STYLES – unchanged, clean & responsive === */
+    <title>COMMANDO·DA VINCI · BULLETS NOW KILL</title>
+    <style>/* === STYLES – identical to previous, clean & responsive === */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         html, body { width: 100%; height: 100%; background: #0a1a1f; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; touch-action: pan-y; }
         .arcade-cabinet { background: linear-gradient(145deg, #1c3840, #152a30); padding: 15px 15px 20px; border-radius: 30px 30px 15px 15px; box-shadow: 0 15px 0 #0c1c22, 0 20px 30px rgba(0,0,0,0.8); border-bottom: 8px solid #2d5662; max-width: 1000px; width: 100%; margin: auto; display: flex; flex-direction: column; }
@@ -127,17 +126,17 @@
             for (let i=0; i<cols; i++) for (let j=0; j<rows; j++) walls.push({ x: sx + i*(w+20), y: sy + j*(h+20), w, h });
         }
 
-        // ----------  🔫 FAT BULLETS – 32x32 SQUARE! UNIFORM, DEADLY, EASY TO HIT ----------
+        // ----------  🔫 FAT BULLETS – 36x36 SQUARE! CENTERED, SLOWER, DEADLIER ----------
         function createBullet(x, y, vx, vy) {
             return { 
-                x: x - 16, y: y - 16,    // centered on spawn point
-                w: 32, h: 32, 
+                x: x - 18, y: y - 18,    // perfectly centered
+                w: 36, h: 36, 
                 vx, vy, 
-                life: 80, 
+                life: 90,                // longer life
                 piercing: piercingShots ? 2 : 0, 
                 damage: damageBoost ? 2 : 1, 
                 ricochetLeft: ricochet ? 1 : 0,
-                homing: null,            // will be set for homing missiles
+                homing: null,
                 homingStrength: 0.1
             };
         }
@@ -247,7 +246,7 @@
             for (let i=0; i<count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2+Math.floor(Math.random()*4) });
         }
 
-        // ----------  PLAYER UPDATE – UNIFIED BULLET CREATION ----------
+        // ----------  PLAYER UPDATE – SLOWER BULLETS, FAT SQUARES ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -279,27 +278,26 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // SHOOTING – ALL BULLETS ARE 32x32 SQUARES, CREATED VIA createBullet()
+            // SHOOTING – slower speed to prevent tunneling
             if (keys.fire && gameActive) {
-                let fireRate = rapidFire ? 3 : (timeSlow ? 10 : 7);  // faster!
+                let fireRate = rapidFire ? 3 : (timeSlow ? 10 : 7);
                 if (player.shootTimer <= 0) {
                     let cos = Math.cos(player.aimAngle), sin = Math.sin(player.aimAngle);
-                    let bulletSpeed = timeSlow ? 9 : 13;
+                    let bulletSpeed = timeSlow ? 7 : 9;   // reduced from 14/9
                     let spawnX = player.x + PLAYER_WIDTH/2;
                     let spawnY = player.y + PLAYER_HEIGHT/2;
                     addParticles(spawnX + cos*25, spawnY + sin*25, '#ffd966', 5);
 
                     if (spreadShot) {
-                        let b1 = createBullet(spawnX, spawnY, cos*bulletSpeed + sin*2, sin*bulletSpeed - cos*2);
-                        let b2 = createBullet(spawnX, spawnY, cos*bulletSpeed*1.2, sin*bulletSpeed*1.2);
-                        let b3 = createBullet(spawnX, spawnY, cos*bulletSpeed - sin*2, sin*bulletSpeed + cos*2);
+                        let b1 = createBullet(spawnX, spawnY, cos*bulletSpeed + sin*1.5, sin*bulletSpeed - cos*1.5);
+                        let b2 = createBullet(spawnX, spawnY, cos*bulletSpeed*1.1, sin*bulletSpeed*1.1);
+                        let b3 = createBullet(spawnX, spawnY, cos*bulletSpeed - sin*1.5, sin*bulletSpeed + cos*1.5);
                         bullets.push(b1, b2, b3);
                     } else if (homingMissiles) {
                         let nearest = null, nearestDist = Infinity;
                         for (let e of enemies) { let d = (e.x-player.x)**2+(e.y-player.y)**2; if (d<nearestDist) { nearest=e; nearestDist=d; } }
-                        let b = createBullet(spawnX, spawnY, cos*8, sin*8);
+                        let b = createBullet(spawnX, spawnY, cos*6, sin*6); // homing slower
                         b.homing = nearest;
-                        b.vx = cos * 8; b.vy = sin * 8;  // homing missiles a bit slower
                         bullets.push(b);
                     } else {
                         let b = createBullet(spawnX, spawnY, cos*bulletSpeed, sin*bulletSpeed);
@@ -383,7 +381,7 @@
             }
         }
 
-        // ----------  BULLETS – NOW ENEMIES DIE! (FAT SQUARE BULLETS, RELIABLE COLLISION) ----------
+        // ----------  BULLETS – NOW ENEMIES DIE! (FAT 36x36, TUNNEL-PROOF) ----------
         function updateBullets() {
             // 1. Player bullets vs enemy bullets (parry)
             for (let i = bullets.length-1; i>=0; i--) {
@@ -391,7 +389,7 @@
                 for (let j = enemyBullets.length-1; j>=0; j--) {
                     let eb = enemyBullets[j];
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
-                        addParticles(b.x+16, b.y+16, '#ffff88', 10);
+                        addParticles(b.x+18, b.y+18, '#ffff88', 10);
                         bullets.splice(i,1);
                         enemyBullets.splice(j,1);
                         break;
@@ -428,19 +426,26 @@
                 // homing
                 if (b.homing && b.homing.health > 0) {
                     let dx = b.homing.x + b.homing.w/2 - b.x, dy = b.homing.y + b.homing.h/2 - b.y;
-                    let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>12) { b.vx=(b.vx/sp)*12; b.vy=(b.vy/sp)*12; } }
+                    let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>8) { b.vx=(b.vx/sp)*8; b.vy=(b.vy/sp)*8; } }
                 }
 
-                // ENEMY COLLISION – FAT BULLETS GUARANTEE HITS
+                // ENEMY COLLISION – GUARANTEED HIT (AABB + DISTANCE CHECK)
                 for (let j = enemies.length-1; j>=0; j--) {
                     let e = enemies[j];
-                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h})) {
+                    // 1. Standard AABB collision
+                    let aabbHit = collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h});
+                    // 2. Distance-based check (tunneling protection)
+                    let bulletCenterX = b.x + b.w/2, bulletCenterY = b.y + b.h/2;
+                    let enemyCenterX = e.x + e.w/2, enemyCenterY = e.y + e.h/2;
+                    let dist = Math.hypot(bulletCenterX - enemyCenterX, bulletCenterY - enemyCenterY);
+                    let threshold = (b.w/2 + e.w/2) * 0.8; // generous
+                    if (aabbHit || dist < threshold) {
                         e.health -= b.damage;
-                        addParticles(b.x+16, b.y+16, '#ffe066', 8);
+                        addParticles(bulletCenterX, bulletCenterY, '#ffe066', 8);
                         if (b.piercing > 0) { b.piercing--; } else { bullets.splice(i,1); break; }
                         if (e.health <= 0) {
                             score += e.points; if (score > highScore) { highScore = score; localStorage.setItem('commandoDeluxe', highScore); }
-                            explosions.push({ x:e.x+e.w/2, y:e.y+e.h/2, life:22, radius:18 });
+                            explosions.push({ x: e.x+e.w/2, y: e.y+e.h/2, life:22, radius:18 });
                             addParticles(e.x+e.w/2, e.y+e.h/2, '#ffaa00', 20);
                             if (Math.random() < 0.8) {
                                 let types = ['health','rapid','shield','spread','star','homing','piercing','speed','slow','damage','bomb','ricochet','regen','maxhealth'];
@@ -574,7 +579,7 @@
                 if(e.type.includes('boss')){ ctx.shadowBlur=15; ctx.shadowColor='#ff6a6a'; ctx.fillRect(e.x,e.y,e.w,e.h); ctx.shadowBlur=0; } 
             });
 
-            // ----- BULLETS – FAT 32x32 SQUARES! -----
+            // ----- BULLETS – FAT 36x36 SQUARES! -----
             bullets.forEach(b => { 
                 ctx.fillStyle = '#ffd966'; 
                 ctx.shadowBlur = 8; ctx.shadowColor = '#ffaa00'; 
@@ -661,7 +666,7 @@
                 let dx = touch.clientX - cx, dy = touch.clientY - cy, dist = Math.hypot(dx, dy);
                 if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
                 stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
-                keys.left = dx < -5; keys.right = dx > 5; keys.up = dy < -5; keys.down = dy > 5; // even lower deadzone
+                keys.left = dx < -5; keys.right = dx > 5; keys.up = dy < -5; keys.down = dy > 5;
             }
             function handleEnd(e) { e.preventDefault(); active = false; stick.style.left = '0px'; stick.style.top = '0px'; keys.left = false; keys.right = false; keys.up = false; keys.down = false; }
             container.addEventListener('touchstart', handleStart, { passive: false }); container.addEventListener('touchmove', handleMove, { passive: false });
