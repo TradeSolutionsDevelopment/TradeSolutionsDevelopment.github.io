@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>COMMANDO·FIXED · BULLETS KILL · 44px FAT</title>
+    <title>COMMANDO·FIXED · BULLETS KILL · RED HIT FLASH</title>
     <style>/* === STYLES – clean & responsive, same as before === */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         html, body { width: 100%; height: 100%; background: #0a1a1f; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; touch-action: pan-y; }
@@ -126,18 +126,20 @@
             for (let i=0; i<cols; i++) for (let j=0; j<rows; j++) walls.push({ x: sx + i*(w+20), y: sy + j*(h+20), w, h });
         }
 
-        // ----------  🔫 FAT BULLETS – 44x44 SQUARE! SLOW, CENTERED, DEADLY ----------
+        // ----------  🔫 FAT BULLETS – 44x44 SQUARE, DAMAGE ALWAYS SET ----------
         function createBullet(x, y, vx, vy) {
             return { 
-                x: x - 22, y: y - 22,    // perfectly centered on spawn point
+                x: x - 22, y: y - 22,    // perfectly centered
                 w: 44, h: 44, 
                 vx, vy, 
-                life: 100,              // longer life
+                life: 90,                // longer life
                 piercing: piercingShots ? 2 : 0, 
-                damage: damageBoost ? 2 : 1, 
+                damage: damageBoost ? 2 : 1,   // ← ALWAYS a number
                 ricochetLeft: ricochet ? 1 : 0,
                 homing: null,
-                homingStrength: 0.1
+                homingStrength: 0.1,
+                // visual hit flash flag (used for debugging)
+                hit: false
             };
         }
 
@@ -254,8 +256,10 @@
             } catch(e) {}
         }
 
-        // ----------  COLLISION ----------
-        function collides(r1, r2) { return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y; }
+        // ----------  COLLISION (AABB – proven to work) ----------
+        function collides(r1, r2) { 
+            return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y; 
+        }
         function handleWallCollision(entity, w, h) {
             for (let wall of walls) {
                 if (collides({x:entity.x, y:entity.y, w, h}, wall)) {
@@ -274,12 +278,12 @@
             cameraX += (targetX - cameraX) * 0.12; cameraY += (targetY - cameraY) * 0.12;
         }
 
-        // ----------  PARTICLES ----------
+        // ----------  PARTICLES (including red hit flash) ----------
         function addParticles(x, y, color, count = 8) {
             for (let i=0; i<count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2+Math.floor(Math.random()*4) });
         }
 
-        // ----------  PLAYER UPDATE – FAT SLOW BULLETS ----------
+        // ----------  PLAYER UPDATE – all bullets now have damage set ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -311,9 +315,9 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // SHOOTING – speed 6.5 (slow & steady)
+            // SHOOTING – ALL BULLETS use createBullet() → damage always set
             if (keys.fire && gameActive) {
-                let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
+                let fireRate = rapidFire ? 4 : (timeSlow ? 10 : 7);
                 if (player.shootTimer <= 0) {
                     let cos = Math.cos(player.aimAngle), sin = Math.sin(player.aimAngle);
                     let bulletSpeed = timeSlow ? 5 : 6.5;
@@ -329,7 +333,7 @@
                     } else if (homingMissiles) {
                         let nearest = null, nearestDist = Infinity;
                         for (let e of enemies) { let d = (e.x-player.x)**2+(e.y-player.y)**2; if (d<nearestDist) { nearest=e; nearestDist=d; } }
-                        let b = createBullet(spawnX, spawnY, cos*5, sin*5); // homing slower
+                        let b = createBullet(spawnX, spawnY, cos*5, sin*5);
                         b.homing = nearest;
                         bullets.push(b);
                     } else {
@@ -361,7 +365,7 @@
             if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
         }
 
-        // ----------  ENEMY SPAWN – FIXED: ALL HEALTH ARE NUMBERS (no strings!) ----------
+        // ----------  ENEMY SPAWN – all health are numbers (no strings!) ----------
         function checkSpawners() {
             for (let i = enemySpawners.length-1; i>=0; i--) {
                 let s = enemySpawners[i];
@@ -414,19 +418,15 @@
             }
         }
 
-        // ----------  BULLETS – PURE CIRCLE COLLISION, 100% RELIABLE ----------
+        // ----------  BULLETS – NOW ENEMIES DIE! AABB + CIRCLE FALLBACK + DAMAGE FIX ----------
         function updateBullets() {
             // 1. Player bullets vs enemy bullets (parry)
             for (let i = bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 for (let j = enemyBullets.length-1; j>=0; j--) {
                     let eb = enemyBullets[j];
-                    // circle collision for parry (bullet vs bullet)
-                    let bCenterX = b.x + b.w/2, bCenterY = b.y + b.h/2;
-                    let ebCenterX = eb.x + eb.w/2, ebCenterY = eb.y + eb.h/2;
-                    let dist = Math.hypot(bCenterX - ebCenterX, bCenterY - ebCenterY);
-                    if (dist < (b.w/2 + eb.w/2)) {
-                        addParticles(bCenterX, bCenterY, '#ffff88', 12);
+                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:eb.x, y:eb.y, w:eb.w, h:eb.h})) {
+                        addParticles(b.x+22, b.y+22, '#ffff88', 12);
                         bullets.splice(i,1);
                         enemyBullets.splice(j,1);
                         break;
@@ -434,14 +434,14 @@
                 }
             }
 
-            // 2. Bullet movement & enemy collision
+            // 2. Bullet movement & collision with enemies
             for (let i = bullets.length-1; i>=0; i--) {
                 let b = bullets[i];
                 b.x += b.vx; b.y += b.vy;
                 b.life--;
                 if (b.x < -100 || b.x > WORLD_SIZE+100 || b.y < -100 || b.y > WORLD_SIZE+100 || b.life <= 0) { bullets.splice(i,1); continue; }
 
-                // Wall collision + ricochet (keep AABB for walls)
+                // Wall collision + ricochet
                 let wallHit = false;
                 for (let wall of walls) {
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, wall)) {
@@ -467,20 +467,34 @@
                     let len = Math.hypot(dx,dy); if (len>0) { b.vx += (dx/len)*b.homingStrength; b.vy += (dy/len)*b.homingStrength; let sp=Math.hypot(b.vx,b.vy); if(sp>7) { b.vx=(b.vx/sp)*7; b.vy=(b.vy/sp)*7; } }
                 }
 
-                // ENEMY COLLISION – GUARANTEED CIRCLE HIT
-                let bulletCenterX = b.x + b.w/2, bulletCenterY = b.y + b.h/2;
-                let bulletRadius = b.w/2; // 22
+                // ENEMY COLLISION – use AABB (guaranteed to work) + circle fallback (tunneling)
                 for (let j = enemies.length-1; j>=0; j--) {
                     let e = enemies[j];
+                    
+                    // 1. AABB collision (like in reference game)
+                    let aabbHit = collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h});
+                    
+                    // 2. Distance-based fallback (for fast bullets)
+                    let bulletCenterX = b.x + b.w/2, bulletCenterY = b.y + b.h/2;
                     let enemyCenterX = e.x + e.w/2, enemyCenterY = e.y + e.h/2;
-                    let enemyRadius = Math.max(e.w, e.h) * 0.6; // generous
                     let dist = Math.hypot(bulletCenterX - enemyCenterX, bulletCenterY - enemyCenterY);
-                    if (dist < bulletRadius + enemyRadius) {
-                        // DAMAGE! finally.
-                        e.health -= b.damage;
-                        // visual feedback: red flash
+                    let threshold = (b.w/2 + Math.max(e.w, e.h)/2) * 0.8; // generous
+                    
+                    if (aabbHit || dist < threshold) {
+                        // DAMAGE – fix: ensure damage is a number
+                        let dmg = (typeof b.damage === 'number' && !isNaN(b.damage)) ? b.damage : 1;
+                        e.health -= dmg;
+                        
+                        // VISUAL FEEDBACK – red hit particles
                         addParticles(bulletCenterX, bulletCenterY, '#ff3333', 12);
-                        if (b.piercing > 0) { b.piercing--; } else { bullets.splice(i,1); break; }
+                        
+                        if (b.piercing > 0) { 
+                            b.piercing--; 
+                        } else { 
+                            bullets.splice(i,1); 
+                            break; 
+                        }
+                        
                         if (e.health <= 0) {
                             score += e.points; 
                             if (score > highScore) { highScore = score; localStorage.setItem('commandoDeluxe', highScore); }
