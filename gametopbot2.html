@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
-    <title>TOP-DOWN COMMANDO · DELUXE · 6 WORLDS · 8 POWERUPS</title>
+    <title>TOP-DOWN COMMANDO · 6 MASTER LEVELS · 8 POWERUPS</title>
     <meta name="description" content="Top‑down shooter. 6 hand‑crafted worlds, 8 power‑ups, epic bosses, twin‑stick controls.">
     <style>
         * {
@@ -323,7 +323,7 @@
         // ----------  SCORE & HIGHSCORE ----------
         let score = 0;
         let highScore = 0;
-        try { highScore = localStorage.getItem('commandoDeluxe') ? parseInt(localStorage.getItem('commandoDeluxe')) : 0; } catch(e) { highScore = 0; }
+        try { highScore = localStorage.getItem('commandoMaster') ? parseInt(localStorage.getItem('commandoMaster')) : 0; } catch(e) { highScore = 0; }
         let playerHealth = 8;
         const MAX_HEALTH = 8;
 
@@ -337,13 +337,13 @@
         let speedBoost = false, speedTimer = 0;
         let timeSlow = false, slowTimer = 0;
 
-        // ----------  PLAYER – NO GRAVITY, 8-WAY MOVEMENT ----------
+        // ----------  PLAYER ----------
         const PLAYER_WIDTH = 44;
         const PLAYER_HEIGHT = 44;
         const BASE_SPEED = 3.8;
 
         let player = {
-            x: 400, y: 400,
+            x: 300, y: 300,
             vx: 0, vy: 0,
             aimAngle: 0,
             shootTimer: 0,
@@ -370,118 +370,397 @@
         // ----------  KEYBOARD STATE ----------
         const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false };
 
-        // ----------  LEVEL GENERATORS – 6 THEMES, WALLS, BOSSES ----------
+        // ----------  ENHANCED LEVEL GENERATORS – MASTERFUL ARCHITECTURE ----------
         function buildLevel(level) {
             walls = []; enemySpawners = []; exitDoor = null;
-            walls.push({ x: 0, y: 0, w: WORLD_SIZE, h: 10 });
-            walls.push({ x: 0, y: WORLD_SIZE-10, w: WORLD_SIZE, h: 10 });
-            walls.push({ x: 0, y: 0, w: 10, h: WORLD_SIZE });
-            walls.push({ x: WORLD_SIZE-10, y: 0, w: 10, h: WORLD_SIZE });
+            
+            // World boundary walls
+            walls.push({ x: 0, y: 0, w: WORLD_SIZE, h: 20 });
+            walls.push({ x: 0, y: WORLD_SIZE-20, w: WORLD_SIZE, h: 20 });
+            walls.push({ x: 0, y: 0, w: 20, h: WORLD_SIZE });
+            walls.push({ x: WORLD_SIZE-20, y: 0, w: 20, h: WORLD_SIZE });
 
-            if (level === 1) { // JUNGLE
+            // ------------------------------------------------------------------
+            //  LEVEL 1 – JUNGLE: Dense forest, winding paths, hidden clearings
+            // ------------------------------------------------------------------
+            if (level === 1) {
                 levelName = "FORGOTTEN JUNGLE";
                 levelTheme = "jungle";
-                addWallCluster(300,300, 3,1, 100,20);
-                addWallCluster(600,500, 1,4, 20,80);
-                addWallCluster(900,200, 2,2, 80,80);
-                addWallCluster(1200,700, 4,1, 60,20);
-                addWallCluster(1500,400, 2,3, 80,60);
-                for (let i=0;i<12;i++) {
-                    let x = 300 + i*150;
-                    let y = 200 + (i%3)*150;
-                    let type = ['infantry','drone','sniper'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Entrance – narrow corridor
+                addRoom(200, 200, 120, 120, 15);
+                // Central clearing with pillars
+                addRoom(450, 300, 300, 200, 20);
+                addPillars(550, 350, 2, 2, 40, 40);
+                // Eastern ruins
+                addRoom(900, 250, 200, 250, 20);
+                addPillars(950, 300, 2, 3, 30, 30);
+                // Northern temple
+                addRoom(700, 100, 150, 120, 20);
+                // Southern swamp – maze-like
+                addLabyrinth(300, 600, 5, 5, 60, 60);
+                // Bridge to exit
+                addCorridor(1300, 400, 1700, 400, 30);
+                
+                // Decorative trees
+                for (let i=0;i<80;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'tree' 
+                    });
                 }
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
-            } else if (level === 2) { // FACTORY
+                
+                // Enemy placement – tactical groups
+                spawnWave(250, 250, 'infantry', 4);
+                spawnWave(500, 350, 'sniper', 2);
+                spawnWave(650, 150, 'drone', 3);
+                spawnWave(950, 300, 'jumper', 3);
+                spawnWave(350, 650, 'heavy', 2);
+                spawnWave(1400, 380, 'infantry', 5);
+                
+                // Lieutenant boss
+                enemySpawners.push({ x: 1750, y: 380, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 1850, y: 380 };
+            }
+            
+            // ------------------------------------------------------------------
+            //  LEVEL 2 – FACTORY: Conveyor lines, machinery, industrial hazards
+            // ------------------------------------------------------------------
+            else if (level === 2) {
                 levelName = "MACHINE COMPLEX";
                 levelTheme = "factory";
-                addWallCluster(250,250, 3,2, 80,80);
-                addWallCluster(550,600, 1,5, 30,100);
-                addWallCluster(850,350, 4,1, 120,30);
-                addWallCluster(1150,750, 2,2, 100,100);
-                addWallCluster(1450,200, 3,1, 90,30);
-                for (let i=0;i<14;i++) {
-                    let x = 300 + i*130;
-                    let y = 300 + (i%4)*120;
-                    let type = ['heavy','infantry','sniper'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Assembly line – long corridor with side rooms
+                addConveyorLine(200, 300, 10, 30);
+                addConveyorLine(200, 400, 10, 30);
+                // Control room
+                addRoom(500, 200, 150, 150, 20);
+                addPillars(550, 250, 2, 2, 30, 30);
+                // Storage area – crates
+                addCrateMaze(700, 350, 8, 6, 40, 40);
+                // Maintenance tunnels
+                addCorridor(1100, 200, 1100, 600, 25);
+                addRoom(1300, 450, 200, 120, 20);
+                // Generator room
+                addRoom(1600, 300, 150, 200, 25);
+                addPillars(1650, 350, 2, 3, 40, 40);
+                
+                // Industrial decorations
+                for (let i=0;i<40;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'machine' 
+                    });
                 }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 3) { // ALIEN
+                
+                // Enemies
+                spawnWave(300, 350, 'heavy', 3);
+                spawnWave(550, 250, 'infantry', 4);
+                spawnWave(800, 400, 'sniper', 2);
+                spawnWave(1150, 250, 'drone', 3);
+                spawnWave(1350, 500, 'jumper', 2);
+                spawnWave(1700, 350, 'heavy', 3);
+                
+                enemySpawners.push({ x: 1800, y: 350, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 1900, y: 350 };
+            }
+            
+            // ------------------------------------------------------------------
+            //  LEVEL 3 – ALIEN NEXUS: Organic tunnels, pulsating chambers
+            // ------------------------------------------------------------------
+            else if (level === 3) {
                 levelName = "ALIEN NEXUS";
                 levelTheme = "alien";
-                addWallCluster(200,400, 2,3, 70,70);
-                addWallCluster(500,150, 3,2, 90,90);
-                addWallCluster(800,600, 2,2, 110,110);
-                addWallCluster(1100,300, 1,4, 40,120);
-                addWallCluster(1400,700, 3,1, 100,30);
-                for (let i=0;i<16;i++) {
-                    let x = 300 + i*120;
-                    let y = 400 + (i%5)*80;
-                    let type = ['drone','jumper','infantry'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Organic growth – blob walls
+                addBlobCluster(250, 250, 8, 40);
+                addBlobCluster(500, 400, 10, 40);
+                addBlobCluster(800, 200, 12, 40);
+                addBlobCluster(1100, 500, 8, 40);
+                addBlobCluster(1400, 300, 10, 40);
+                // Central hive
+                addHive(600, 600, 150, 150);
+                addHive(1200, 150, 100, 100);
+                // Tunnels
+                addOrganicTunnel(300, 500, 800, 500, 30);
+                addOrganicTunnel(900, 300, 1300, 300, 30);
+                
+                // Bioluminescent decor
+                for (let i=0;i<100;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'alien' 
+                    });
                 }
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
-            } else if (level === 4) { // ICE
+                
+                // Alien enemies
+                spawnWave(300, 300, 'drone', 5);
+                spawnWave(550, 450, 'jumper', 4);
+                spawnWave(850, 250, 'infantry', 4);
+                spawnWave(1150, 550, 'sniper', 3);
+                spawnWave(1450, 350, 'heavy', 2);
+                
+                enemySpawners.push({ x: 1650, y: 450, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 1850, y: 450 };
+            }
+            
+            // ------------------------------------------------------------------
+            //  LEVEL 4 – GLACIAL PEAK: Ice caves, frozen lakes, slippery paths
+            // ------------------------------------------------------------------
+            else if (level === 4) {
                 levelName = "GLACIAL PEAK";
                 levelTheme = "ice";
-                addWallCluster(300,250, 2,3, 80,80);
-                addWallCluster(600,550, 1,4, 30,100);
-                addWallCluster(900,400, 3,2, 90,90);
-                addWallCluster(1200,650, 2,2, 100,100);
-                addWallCluster(1500,200, 2,2, 70,70);
-                for (let i=0;i<15;i++) {
-                    let x = 350 + i*130;
-                    let y = 300 + (i%4)*110;
-                    let type = ['sniper','infantry','heavy'][Math.floor(Math.random()*3)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Ice walls – maze-like
+                addIceMaze(200, 200, 6, 6, 60, 60);
+                addIceMaze(700, 300, 5, 5, 70, 70);
+                addIceMaze(1200, 400, 5, 5, 70, 70);
+                // Frozen lake (open area with ice walls around)
+                addFrozenLake(900, 600, 200, 100);
+                // Ice caves
+                addIceCave(400, 600, 120, 120);
+                addIceCave(1500, 200, 120, 120);
+                
+                // Ice crystals
+                for (let i=0;i<60;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'ice' 
+                    });
                 }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 5) { // VOLCANO
+                
+                // Enemies
+                spawnWave(250, 250, 'sniper', 4);
+                spawnWave(550, 350, 'infantry', 3);
+                spawnWave(800, 500, 'heavy', 2);
+                spawnWave(1250, 450, 'drone', 3);
+                spawnWave(1550, 250, 'jumper', 3);
+                
+                enemySpawners.push({ x: 1750, y: 550, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 1900, y: 550 };
+            }
+            
+            // ------------------------------------------------------------------
+            //  LEVEL 5 – MOLTEN CORE: Lava rivers, stone bridges, heat vents
+            // ------------------------------------------------------------------
+            else if (level === 5) {
                 levelName = "MOLTEN CORE";
                 levelTheme = "volcano";
-                addWallCluster(250,350, 3,1, 100,30);
-                addWallCluster(550,500, 2,2, 80,80);
-                addWallCluster(850,250, 1,5, 30,120);
-                addWallCluster(1150,600, 3,2, 90,90);
-                addWallCluster(1450,400, 2,3, 70,100);
-                for (let i=0;i<18;i++) {
-                    let x = 300 + i*110;
-                    let y = 400 + (i%6)*70;
-                    let type = ['heavy','drone','jumper','infantry'][Math.floor(Math.random()*4)];
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Lava pits – dangerous but passable
+                addLavaPit(300, 250, 120, 80);
+                addLavaPit(600, 400, 150, 100);
+                addLavaPit(1000, 200, 100, 100);
+                addLavaPit(1300, 500, 140, 90);
+                addLavaPit(1600, 350, 120, 80);
+                // Stone bridges over lava
+                addStoneBridge(350, 290, 80, 15);
+                addStoneBridge(650, 440, 100, 15);
+                addStoneBridge(1050, 240, 70, 15);
+                addStoneBridge(1350, 540, 90, 15);
+                addStoneBridge(1650, 390, 80, 15);
+                // Rock formations
+                addPillars(450, 500, 2, 2, 50, 50);
+                addPillars(1150, 600, 3, 1, 50, 50);
+                
+                // Lava glow
+                for (let i=0;i=50;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'lava', 
+                        w: 30, h: 30 
+                    });
                 }
-                enemySpawners.push({ x: 1750, y: 1750, type: 'boss_lieutenant', behavior: 'boss' });
-                exitDoor = { x: 1900, y: 1900 };
-            } else if (level === 6) { // FORTRESS
+                
+                // Enemies
+                spawnWave(350, 300, 'heavy', 3);
+                spawnWave(650, 450, 'jumper', 3);
+                spawnWave(1050, 250, 'drone', 4);
+                spawnWave(1350, 550, 'infantry', 4);
+                spawnWave(1650, 400, 'sniper', 2);
+                
+                enemySpawners.push({ x: 1800, y: 400, type: 'boss_lieutenant', behavior: 'boss' });
+                exitDoor = { x: 1900, y: 400 };
+            }
+            
+            // ------------------------------------------------------------------
+            //  LEVEL 6 – FINAL FORTRESS: Bunkers, turrets, maze-like stronghold
+            // ------------------------------------------------------------------
+            else if (level === 6) {
                 levelName = "FINAL FORTRESS";
                 levelTheme = "fortress";
-                addWallCluster(200,200, 4,2, 80,80);
-                addWallCluster(500,500, 3,3, 70,70);
-                addWallCluster(800,300, 2,4, 60,100);
-                addWallCluster(1100,600, 3,2, 90,90);
-                addWallCluster(1400,400, 2,3, 80,120);
-                for (let i=0;i<20;i++) {
-                    let x = 300 + i*90;
-                    let y = 300 + (i%7)*80;
-                    let type = i%5===0?'boss_lieutenant':(['heavy','sniper','jumper','infantry','drone'][Math.floor(Math.random()*5)]);
-                    enemySpawners.push({ x, y, type, behavior: 'patrol' });
+                
+                // Outer walls – defensive perimeter
+                addFortressWall(100, 100, 300, 20);
+                addFortressWall(100, 100, 20, 300);
+                addFortressWall(100, 380, 300, 20);
+                addFortressWall(380, 100, 20, 300);
+                
+                addFortressWall(600, 300, 300, 20);
+                addFortressWall(600, 300, 20, 300);
+                addFortressWall(600, 580, 300, 20);
+                addFortressWall(880, 300, 20, 300);
+                
+                addFortressWall(1100, 200, 200, 20);
+                addFortressWall(1100, 200, 20, 200);
+                addFortressWall(1100, 380, 200, 20);
+                addFortressWall(1280, 200, 20, 200);
+                
+                addFortressWall(1500, 400, 200, 20);
+                addFortressWall(1500, 400, 20, 200);
+                addFortressWall(1500, 580, 200, 20);
+                addFortressWall(1680, 400, 20, 200);
+                
+                // Bunkers and turrets inside
+                addBunker(350, 200, 60, 60);
+                addBunker(700, 400, 60, 60);
+                addBunker(1200, 300, 60, 60);
+                addBunker(1600, 500, 60, 60);
+                
+                // Inner corridors
+                addCorridor(200, 200, 600, 200, 30);
+                addCorridor(400, 400, 800, 400, 30);
+                addCorridor(900, 300, 1100, 300, 30);
+                addCorridor(1300, 500, 1600, 500, 30);
+                
+                // Stone texture
+                for (let i=0;i<80;i++) {
+                    decorations.push({ 
+                        x: Math.random()*WORLD_SIZE, 
+                        y: Math.random()*WORLD_SIZE, 
+                        type: 'fortress' 
+                    });
                 }
-                enemySpawners.push({ x: 1700, y: 1700, type: 'boss', behavior: 'boss' });
-                exitDoor = { x: 1850, y: 1850 };
+                
+                // Elite enemies
+                spawnWave(200, 200, 'heavy', 3);
+                spawnWave(400, 400, 'sniper', 3);
+                spawnWave(700, 500, 'jumper', 3);
+                spawnWave(900, 300, 'drone', 4);
+                spawnWave(1200, 300, 'infantry', 4);
+                spawnWave(1500, 500, 'heavy', 3);
+                
+                // Final boss
+                enemySpawners.push({ x: 1800, y: 500, type: 'boss', behavior: 'boss' });
+                exitDoor = { x: 1900, y: 500 };
             }
         }
 
-        function addWallCluster(startX, startY, cols, rows, w, h) {
-            for (let i=0; i<cols; i++) {
-                for (let j=0; j<rows; j++) {
-                    walls.push({ x: startX + i * (w + 20), y: startY + j * (h + 20), w, h });
-                }
+        // ----------  ADVANCED LEVEL BUILDING HELPERS ----------
+        function addRoom(x, y, w, h, thickness) {
+            walls.push({ x, y, w, h: thickness });
+            walls.push({ x, y+h-thickness, w, h: thickness });
+            walls.push({ x, y, w: thickness, h });
+            walls.push({ x+w-thickness, y, w: thickness, h });
+        }
+        
+        function addCorridor(x1, y1, x2, y2, width) {
+            let midX = (x1+x2)/2;
+            walls.push({ x: Math.min(x1,midX)-width/2, y: y1-width/2, w: Math.abs(midX-x1)+width, h: width });
+            walls.push({ x: midX-width/2, y: Math.min(y1,y2)-width/2, w: width, h: Math.abs(y2-y1)+width });
+            walls.push({ x: Math.min(midX,x2)-width/2, y: y2-width/2, w: Math.abs(x2-midX)+width, h: width });
+        }
+        
+        function addPillars(x, y, cols, rows, w, h) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) 
+                walls.push({ x: x+i*(w+40), y: y+j*(h+40), w, h });
+        }
+        
+        function addConveyorLine(x, y, length, width) {
+            for (let i=0;i<length;i++) 
+                walls.push({ x: x + i*60, y, w: 40, h: width });
+        }
+        
+        function addCrateMaze(x, y, cols, rows, w, h) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) 
+                if (Math.random()>0.3) walls.push({ x: x+i*(w+10), y: y+j*(h+10), w, h });
+        }
+        
+        function addLabyrinth(x, y, cols, rows, w, h) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) 
+                if (i%2===0 || j%2===0) walls.push({ x: x+i*w, y: y+j*h, w: w-10, h: h-10 });
+        }
+        
+        function addBlobCluster(x, y, count, size) {
+            for (let i=0;i<count;i++) {
+                let angle = Math.PI*2*i/count;
+                let cx = x + Math.cos(angle)*size*1.5;
+                let cy = y + Math.sin(angle)*size*1.5;
+                walls.push({ x: cx, y: cy, w: size, h: size });
+            }
+        }
+        
+        function addHive(x, y, w, h) {
+            for (let i=0;i<8;i++) {
+                walls.push({ x: x + Math.sin(i)*30, y: y + Math.cos(i)*30, w: 40, h: 40 });
+            }
+        }
+        
+        function addOrganicTunnel(x1, y1, x2, y2, width) {
+            let steps = 10;
+            for (let s=0;s<steps;s++) {
+                let t = s/steps;
+                let x = x1*(1-t) + x2*t;
+                let y = y1*(1-t) + y2*t + Math.sin(s)*20;
+                walls.push({ x: x-width/2, y: y-width/2, w: width, h: width });
+            }
+        }
+        
+        function addIceMaze(x, y, cols, rows, w, h) {
+            for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) 
+                if (Math.random()>0.4) walls.push({ x: x+i*w, y: y+j*h, w: w-10, h: h-10 });
+        }
+        
+        function addFrozenLake(x, y, w, h) {
+            walls.push({ x, y, w, h: 10 });
+            walls.push({ x, y+h-10, w, h: 10 });
+            walls.push({ x, y, w: 10, h });
+            walls.push({ x+w-10, y, w: 10, h });
+        }
+        
+        function addIceCave(x, y, w, h) {
+            for (let i=0;i<10;i++) {
+                walls.push({ x: x+Math.random()*w, y: y+Math.random()*h, w: 30, h: 30 });
+            }
+        }
+        
+        function addLavaPit(x, y, w, h) {
+            walls.push({ x, y, w, h: 15 });
+            walls.push({ x, y+h-15, w, h: 15 });
+            walls.push({ x, y, w: 15, h });
+            walls.push({ x+w-15, y, w: 15, h });
+            decorations.push({ x: x+15, y: y+15, w: w-30, h: h-30, type: 'lava' });
+        }
+        
+        function addStoneBridge(x, y, w, h) {
+            walls.push({ x, y, w, h });
+        }
+        
+        function addFortressWall(x, y, w, h) {
+            walls.push({ x, y, w, h });
+        }
+        
+        function addBunker(x, y, w, h) {
+            addRoom(x, y, w, h, 15);
+            // turret inside
+            enemySpawners.push({ x: x+w/2, y: y+h/2, type: 'sniper', behavior: 'snipe' });
+        }
+
+        let decorations = [];
+
+        function spawnWave(x, y, type, count) {
+            for (let i=0;i<count;i++) {
+                enemySpawners.push({ 
+                    x: x + (Math.random()-0.5)*150, 
+                    y: y + (Math.random()-0.5)*150, 
+                    type, 
+                    behavior: 'patrol' 
+                });
             }
         }
 
@@ -494,6 +773,7 @@
             spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
             homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
             speedBoost = false; speedTimer = 0; timeSlow = false; slowTimer = 0;
+            decorations = [];
             player = {
                 x: 300, y: 300,
                 vx: 0, vy: 0,
@@ -572,7 +852,7 @@
             }
         }
 
-        // ----------  PLAYER UPDATE – TOP-DOWN 8-WAY WITH POWER-UPS ----------
+        // ----------  PLAYER UPDATE – FIXED BULLET DAMAGE ----------
         function updatePlayer() {
             if (!gameActive) return;
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
@@ -611,7 +891,7 @@
             player.x = Math.max(20, Math.min(player.x, WORLD_SIZE - PLAYER_WIDTH - 20));
             player.y = Math.max(20, Math.min(player.y, WORLD_SIZE - PLAYER_HEIGHT - 20));
 
-            // shooting
+            // SHOOTING – FIXED: Bullets now properly damage enemies
             if (keys.fire && gameActive) {
                 let fireRate = rapidFire ? 4 : (timeSlow ? 12 : 8);
                 if (player.shootTimer <= 0) {
@@ -659,7 +939,7 @@
                     let e = enemies[i];
                     let dx = e.x - player.x, dy = e.y - player.y;
                     if (Math.hypot(dx, dy) < 600) {
-                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 30, maxRadius: 40 });
+                        explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 30, radius: 30 });
                         score += e.points;
                         addParticles(e.x+e.w/2, e.y+e.h/2, '#ff8c00', 20);
                         enemies.splice(i, 1);
@@ -786,7 +1066,7 @@
             }
         }
 
-        // ----------  BULLETS (player) ----------
+        // ----------  BULLETS (player) – FIXED DAMAGE ----------
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
@@ -795,8 +1075,12 @@
                 if (b.x < -100 || b.x > WORLD_SIZE+100 || b.y < -100 || b.y > WORLD_SIZE+100 || b.life <= 0) {
                     bullets.splice(i, 1); continue;
                 }
+                // wall collision
                 for (let wall of walls) {
-                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, wall)) { bullets.splice(i,1); break; }
+                    if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, wall)) { 
+                        bullets.splice(i,1); 
+                        break; 
+                    }
                 }
                 if (i >= bullets.length) continue;
 
@@ -813,19 +1097,16 @@
                     }
                 }
 
+                // ENEMY COLLISION – DAMAGE APPLIED
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     let e = enemies[j];
                     if (collides({x:b.x, y:b.y, w:b.w, h:b.h}, {x:e.x, y:e.y, w:e.w, h:e.h})) {
                         e.health -= b.damage || 1;
                         addParticles(b.x, b.y, '#ffe066', 6);
-                        if (b.piercing > 0) {
-                            b.piercing--;
-                        } else {
-                            bullets.splice(i,1); break;
-                        }
+                        
                         if (e.health <= 0) {
                             score += e.points;
-                            if (score > highScore) { highScore = score; try { localStorage.setItem('commandoDeluxe', highScore); } catch(e) {} }
+                            if (score > highScore) { highScore = score; localStorage.setItem('commandoMaster', highScore); }
                             explosions.push({ x: e.x + e.w/2, y: e.y + e.h/2, life: 22, radius: 18 });
                             addParticles(e.x+e.w/2, e.y+e.h/2, '#ffaa00', 20);
                             if (Math.random() < 0.6) {
@@ -835,7 +1116,13 @@
                             }
                             enemies.splice(j, 1);
                         }
-                        if (b.piercing === 0) break;
+                        
+                        if (b.piercing > 0) {
+                            b.piercing--;
+                        } else {
+                            bullets.splice(i,1);
+                            break;
+                        }
                     }
                 }
             }
@@ -851,7 +1138,10 @@
                     enemyBullets.splice(i, 1); continue;
                 }
                 for (let wall of walls) {
-                    if (collides({x:eb.x, y:eb.y, w:eb.w, h:eb.h}, wall)) { enemyBullets.splice(i,1); break; }
+                    if (collides({x:eb.x, y:eb.y, w:eb.w, h:eb.h}, wall)) { 
+                        enemyBullets.splice(i,1); 
+                        break; 
+                    }
                 }
                 if (i >= enemyBullets.length) continue;
                 let inv = player.invincible > 0 || invincibleStar;
@@ -923,7 +1213,6 @@
                 if (Math.hypot(dx, dy) < 50) {
                     if (currentLevel < MAX_LEVEL) {
                         currentLevel++;
-                        // preserve score, health, highscore across levels
                         let oldScore = score;
                         let oldHealth = playerHealth;
                         let oldHigh = highScore;
@@ -933,7 +1222,7 @@
                         cameraY = player.y - VIEWPORT_H/2;
                         cameraX = Math.max(0, Math.min(cameraX, WORLD_SIZE - VIEWPORT_W));
                         cameraY = Math.max(0, Math.min(cameraY, WORLD_SIZE - VIEWPORT_H));
-                        // reset power-ups but keep health/score
+                        // reset power-ups
                         rapidFire = false; rapidTimer = 0; shieldActive = false; shieldTimer = 0;
                         spreadShot = false; spreadTimer = 0; invincibleStar = false; starTimer = 0;
                         homingMissiles = false; homingTimer = 0; piercingShots = false; piercingTimer = 0;
@@ -951,7 +1240,7 @@
             }
         }
 
-        // ----------  RENDERING – GORGEOUS, DETAILED ----------
+        // ----------  RENDERING – ENHANCED THEMED VISUALS ----------
         function drawWorld() {
             if (!ctx) return;
             ctx.save();
@@ -963,16 +1252,11 @@
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
                 ctx.strokeStyle = '#3a6a4a';
                 ctx.lineWidth = 2;
-                for (let i=0;i<50;i++) {
+                for (let i=0;i<80;i++) {
                     ctx.beginPath();
                     ctx.moveTo(Math.random()*WORLD_SIZE, 0);
                     ctx.lineTo(Math.random()*WORLD_SIZE, WORLD_SIZE);
                     ctx.stroke();
-                }
-                // trees
-                for (let i=0;i<30;i++) {
-                    ctx.fillStyle = '#2a6a2a';
-                    ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 10, 20);
                 }
             } else if (levelTheme === 'factory') {
                 ctx.fillStyle = '#3a4a4a';
@@ -987,31 +1271,62 @@
                 ctx.fillStyle = '#2a2a5a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
                 ctx.fillStyle = '#8a8aff';
-                for (let i=0;i<200;i++) {
+                for (let i=0;i<300;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
                 }
             } else if (levelTheme === 'ice') {
                 ctx.fillStyle = '#a0d0e0';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
                 ctx.fillStyle = '#ffffff';
-                for (let i=0;i<150;i++) {
+                for (let i=0;i<200;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 2, 2);
                 }
             } else if (levelTheme === 'volcano') {
                 ctx.fillStyle = '#4a2a2a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
                 ctx.fillStyle = '#ff6a2a';
-                for (let i=0;i<100;i++) {
+                for (let i=0;i<150;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 4, 4);
                 }
             } else if (levelTheme === 'fortress') {
                 ctx.fillStyle = '#2a2a3a';
                 ctx.fillRect(0,0,WORLD_SIZE,WORLD_SIZE);
                 ctx.fillStyle = '#4a4a6a';
-                for (let i=0;i<100;i++) {
+                for (let i=0;i<120;i++) {
                     ctx.fillRect(Math.random()*WORLD_SIZE, Math.random()*WORLD_SIZE, 8, 4);
                 }
             }
+
+            // ----- DECORATIONS -----
+            decorations.forEach(d => {
+                if (d.type === 'tree') {
+                    ctx.fillStyle = '#3a8a3a';
+                    ctx.fillRect(d.x, d.y, 15, 30);
+                    ctx.fillStyle = '#2a6a2a';
+                    ctx.beginPath();
+                    ctx.arc(d.x+7, d.y, 15, 0, 2*Math.PI);
+                    ctx.fill();
+                } else if (d.type === 'machine') {
+                    ctx.fillStyle = '#6a6a6a';
+                    ctx.fillRect(d.x, d.y, 20, 20);
+                    ctx.fillStyle = '#8a8a8a';
+                    ctx.fillRect(d.x+5, d.y+5, 10, 10);
+                } else if (d.type === 'alien') {
+                    ctx.fillStyle = '#8a6ad0';
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, 8, 0, 2*Math.PI);
+                    ctx.fill();
+                } else if (d.type === 'ice') {
+                    ctx.fillStyle = '#c0e0ff';
+                    ctx.fillRect(d.x, d.y, 10, 20);
+                } else if (d.type === 'lava') {
+                    ctx.fillStyle = '#ff8a4a';
+                    ctx.fillRect(d.x, d.y, d.w, d.h);
+                } else if (d.type === 'fortress') {
+                    ctx.fillStyle = '#6a6a7a';
+                    ctx.fillRect(d.x, d.y, 15, 15);
+                }
+            });
 
             // ----- WALLS -----
             walls.forEach(w => {
@@ -1105,7 +1420,7 @@
                 ctx.fillRect(p.x, p.y, p.size, p.size);
             });
 
-            // ----- PLAYER – DETAILED SPRITE -----
+            // ----- PLAYER -----
             if (player.invincible % 8 < 4 || player.invincible === 0 || invincibleStar) {
                 let px = player.x, py = player.y;
                 if (shieldActive) { ctx.shadowBlur = 20; ctx.shadowColor = '#7fb3d5'; }
