@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <title>DOOM·COMMANDO·FPS·6LVL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; background: #0a1a1f; display: flex; justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; touch-action: pan-y; }
+        .arcade-cabinet { background: linear-gradient(145deg, #1c3840, #152a30); padding: 15px 15px 20px; border-radius: 30px 30px 15px 15px; box-shadow: 0 15px 0 #0c1c22, 0 20px 30px rgba(0,0,0,0.8); border-bottom: 8px solid #2d5662; max-width: 1000px; width: 100%; margin: auto; display: flex; flex-direction: column; }
+        canvas { display: block; margin: 0 auto; border: 6px solid #2e5665; border-radius: 16px; box-shadow: inset 0 0 0 4px #6d9eb0, 0 8px 0 #142f39; width: 100%; height: auto; aspect-ratio: 800 / 500; image-rendering: crisp-edges; image-rendering: pixelated; background: #10262e; }
+        .panel { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: #b9f3ff; text-shadow: 2px 2px 0 #0f2a30; background: linear-gradient(145deg, #1f424b, #17323a); padding: 8px 16px; border-radius: 40px; border-bottom: 6px solid #0e262c; font-size: clamp(14px,4vw,20px); font-weight: 900; letter-spacing: 2px; flex-wrap: wrap; }
+        .scores, .health { display: flex; align-items: center; gap: 5px; background: #10262e; padding: 4px 12px; border-radius: 30px; border-bottom: 4px solid #308595; color: #fdffb8; }
+        .btn { background: #cf4e5c; color: white; border: none; border-radius: 40px; padding: 8px 18px; font-size: clamp(16px,4vw,22px); font-weight: bold; border-bottom: 6px solid #822c36; cursor: pointer; transition: 0.06s; font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 #4e1e24; letter-spacing: 2px; }
+        .btn:active { background: #ec6a7a; border-bottom-width: 3px; transform: translateY(3px); }
+        .legend { color: #b3ecff; font-size: 15px; display: flex; gap: 20px; background: #16353f; padding: 8px 16px; border-radius: 40px; border-bottom: 5px solid #0b1f24; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+        .touch-controls { display: none; margin-top: 15px; flex-direction: column; gap: 10px; background: #2b4b55; border-radius: 40px; border-bottom: 8px solid #16333a; padding: 15px 10px; touch-action: none; }
+        .touch-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .joystick { width: 140px; height: 140px; background: #1f3a40; border-radius: 50%; border-bottom: 8px solid #0f262c; display: flex; justify-content: center; align-items: center; position: relative; touch-action: none; box-shadow: inset 0 0 10px #0a1a1f; }
+        .joystick-base { width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, #3f5f68, #1f3a40); border-radius: 50%; border-bottom: 6px solid #1a2f35; display: flex; justify-content: center; align-items: center; position: relative; }
+        .joystick-handle { width: 60px; height: 60px; background: radial-gradient(circle at 30% 30%, #7fa3ac, #4f6f78); border-radius: 50%; border-bottom: 6px solid #3a555e; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 -2px 0 #3a555e, 0 0 10px #a0d0d0; transition: 0.02s; position: relative; left: 0; top: 0; touch-action: none; }
+        .ab-buttons { display: flex; gap: 15px; margin-right: 10px; }
+        .ab { background: radial-gradient(circle at 30% 30%, #b35a6a, #9e4a5c); width: 80px; height: 80px; border-radius: 50%; border-bottom: 8px solid #632c38; display: flex; justify-content: center; align-items: center; font-size: 28px; color: white; text-shadow: 3px 3px 0 #3a1e24; box-shadow: inset 0 -4px 0 #753a46, 0 0 15px #ff8c8c; cursor: pointer; touch-action: none; }
+        .ab:active { border-bottom-width: 3px; transform: translateY(5px); background: radial-gradient(circle at 30% 30%, #d06a7a, #b35a6a); }
+        .mobile-info { display: none; color: #b3ecff; background: #16353f; padding: 8px 16px; border-radius: 40px; border-bottom: 5px solid #0b1f24; font-size: 15px; justify-content: space-around; align-items: center; width: 100%; }
+        .mobile-info span { background: #0c2a30; padding: 4px 12px; border-radius: 20px; }
+        @media (max-width:900px) { 
+            .touch-controls { display: flex !important; } 
+            .legend { display: none; } 
+            .mobile-info { display: flex !important; } 
+            .joystick { width: 120px; height: 120px; } 
+            .joystick-base { width: 90px; height: 90px; } 
+            .joystick-handle { width: 55px; height: 55px; } 
+            .ab { width: 70px; height: 70px; font-size: 26px; } 
+        }
+    </style>
+</head>
+<body>
+<div class="arcade-cabinet" id="gameCabinet">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    
+    <div class="panel">
+        <div class="scores">🎯 <span id="scoreDisplay">00000</span></div>
+        <div class="scores">🏆 <span id="highScoreDisplay">00000</span></div>
+        <div class="health">❤️ <span id="healthDisplay">████████</span></div>
+        <button class="btn" id="restartButton">↻ RESTART</button>
+    </div>
+    
+    <div class="legend">
+        <span><i>←→↑↓</i> MOVE / STRAFE</span>
+        <span><i>DRAG RIGHT</i> LOOK</span>
+        <span><i>FIRE</i> HOLD TO SHOOT</span>
+        <span><i>BOMB</i> CLEAR</span>
+        <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
+    </div>
+    <div class="touch-controls" id="touchControls">
+        <div class="touch-row">
+            <div class="joystick" id="joystickContainer">
+                <div class="joystick-base" id="joystickBase">
+                    <div class="joystick-handle" id="joystickHandle"></div>
+                </div>
+            </div>
+            <div class="ab-buttons">
+                <div class="ab" id="touchFire">🔥</div>
+                <div class="ab" id="touchBomb">💣</div>
+            </div>
+        </div>
+        <div class="mobile-info">
+            <span id="mobileLevelDisplay">LVL 1 · JUNGLE</span>
+            <span>🎮 MOVE / LOOK (RIGHT)</span>
+            <span>💣 BOMB</span>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        'use strict';
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        // ----------  FPS RAYCASTER ENGINE ----------
+        const CELL_SIZE = 64;          // world unit
+        const PLAYER_RADIUS = 16;
+        const FOV = Math.PI / 3;      // 60 degrees
+        const HALF_FOV = FOV / 2;
+        const NUM_RAYS = 120;
+        const PROJECTION_PLANE = (canvas.width / 2) / Math.tan(HALF_FOV);
+        const MAX_RENDER_DIST = 800;
+        const TURN_SPEED = 0.035;
+        const MOVE_SPEED = 3.2;
+
+        // ----------  GLOBALS ----------
+        let worldMap = [];            // 2D grid 0=empty, 1=wall, 2=door
+        let mapWidth = 32, mapHeight = 32;
+        let enemies = [];
+        let pickups = [];
+        let bullets = [];            // hitscan effects only
+        let explosions = [];
+        let particles = [];
+        let level = 1, MAX_LEVEL = 6;
+        let gameActive = true, gameOver = false, victoryFlag = false;
+        let score = 0, highScore = 0;
+        try { highScore = localStorage.getItem('commandoFPS') ? parseInt(localStorage.getItem('commandoFPS')) : 0; } catch(e) {}
+        let playerHealth = 8, MAX_HEALTH = 8;
+        let player = {
+            x: 300, y: 300,          // world pos
+            dir: 0,                  // angle in radians
+            vx: 0, vy: 0,
+            invincible: 0,
+            bombCooldown: 0,
+            shootTimer: 0
+        };
+        let exitDoor = { x: 0, y: 0, active: false };
+
+        // ----------  POWER-UPS ----------
+        let rapidFire = false, rapidTimer = 0;
+        let shieldActive = false, shieldTimer = 0;
+        let invincibleStar = false, starTimer = 0;
+        let damageBoost = false, damageTimer = 0;
+        let bombCharge = false, bombChargeTimer = 0;
+        let regen = false, regenTimer = 0, regenCounter = 0;
+
+        // ----------  LEVEL THEMES ----------
+        let levelTheme = "jungle";
+        let levelName = "SUNKEN JUNGLE";
+
+        // ----------  CONTROLS ----------
+        const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false, turnLeft: false, turnRight: false };
+        let mouseLook = 0;
+        let touchLook = 0;
+
+        // ----------  BUILD 6 UNIQUE LEVELS (grid based) ----------
+        function buildLevel(lvl) {
+            worldMap = Array(mapHeight).fill().map(() => Array(mapWidth).fill(0));
+            enemies = [];
+            pickups = [];
+            exitDoor = { x: 0, y: 0, active: true };
+
+            // border walls
+            for (let x = 0; x < mapWidth; x++) {
+                worldMap[0][x] = 1;
+                worldMap[mapHeight-1][x] = 1;
+            }
+            for (let y = 0; y < mapHeight; y++) {
+                worldMap[y][0] = 1;
+                worldMap[y][mapWidth-1] = 1;
+            }
+
+            if (lvl === 1) { // JUNGLE
+                levelTheme = "jungle"; levelName = "SUNKEN JUNGLE";
+                addRoom(10,10,12,12);
+                addRoom(20,5,8,8);
+                worldMap[15][15] = 1; worldMap[16][15] = 1; worldMap[15][16] = 1; worldMap[16][16] = 1;
+                placeEnemies(15,15, 8);
+                placeExit(28,28);
+                player.x = 200; player.y = 200; player.dir = 0.5;
+            } else if (lvl === 2) { // FACTORY
+                levelTheme = "factory"; levelName = "MACHINE COMPLEX";
+                addRoom(8,8,16,16);
+                for (let i=12; i<20; i+=2) worldMap[12][i]=1;
+                placeEnemies(14,14, 10);
+                placeExit(26,26);
+                player.x = 150; player.y = 150; player.dir = 1.2;
+            } else if (lvl === 3) { // ALIEN
+                levelTheme = "alien"; levelName = "ALIEN NEXUS";
+                addRoom(5,5,20,20);
+                addRoom(18,18,8,8);
+                worldMap[10][10]=1; worldMap[11][10]=1; worldMap[10][11]=1; worldMap[11][11]=1;
+                placeEnemies(12,12, 12);
+                placeExit(27,27);
+                player.x = 180; player.y = 180; player.dir = 2.0;
+            } else if (lvl === 4) { // ICE
+                levelTheme = "ice"; levelName = "GLACIAL PEAK";
+                addMaze(6,6,20,20);
+                placeEnemies(14,14, 12);
+                placeExit(28,28);
+                player.x = 200; player.y = 200; player.dir = 3.0;
+            } else if (lvl === 5) { // VOLCANO
+                levelTheme = "volcano"; levelName = "MOLTEN CORE";
+                addRoom(10,10,14,14);
+                worldMap[16][16]=1; worldMap[17][16]=1; worldMap[16][17]=1; worldMap[17][17]=1;
+                placeEnemies(15,15, 14);
+                placeExit(27,27);
+                player.x = 220; player.y = 220; player.dir = 4.1;
+            } else if (lvl === 6) { // FORTRESS
+                levelTheme = "fortress"; levelName = "FINAL FORTRESS";
+                addRoom(8,8,20,20);
+                for (let i=0;i<8;i++) worldMap[14+i][14]=1;
+                placeEnemies(16,16, 16);
+                placeExit(26,26);
+                player.x = 200; player.y = 200; player.dir = 2.8;
+            }
+        }
+
+        function addRoom(x,y,w,h) {
+            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = 1;
+            for (let i = 1; i < w-1; i++) for (let j = 1; j < h-1; j++) worldMap[y+j][x+i] = 0;
+        }
+        function addMaze(x,y,w,h) {
+            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = Math.random()>0.7?1:0;
+            for (let i = 1; i < w-1; i++) for (let j = 1; j < h-1; j++) worldMap[y+j][x+i] = 0;
+        }
+        function placeEnemies(cx, cy, count) {
+            for (let i=0; i<count; i++) {
+                let angle = (i/count)*Math.PI*2;
+                let x = cx + Math.cos(angle)*6;
+                let y = cy + Math.sin(angle)*6;
+                enemies.push({
+                    x: x*CELL_SIZE + CELL_SIZE/2, y: y*CELL_SIZE + CELL_SIZE/2,
+                    health: 3 + Math.floor(Math.random()*3),
+                    type: Math.random()>0.5?'soldier':'heavy',
+                    state: 'idle', timer: 0,
+                    sprite: 1
+                });
+            }
+        }
+        function placeExit(x,y) {
+            exitDoor = { x: x*CELL_SIZE + CELL_SIZE/2, y: y*CELL_SIZE + CELL_SIZE/2, active: true };
+        }
+
+        // ----------  RESET GAME ----------
+        function resetGame() {
+            gameActive = true; gameOver = false; victoryFlag = false;
+            if (level > MAX_LEVEL) level = 1;
+            playerHealth = MAX_HEALTH = 8;
+            score = 0;
+            rapidFire=false; rapidTimer=0; shieldActive=false; shieldTimer=0; invincibleStar=false; starTimer=0;
+            damageBoost=false; damageTimer=0; bombCharge=false; bombChargeTimer=0; regen=false; regenTimer=0; regenCounter=0;
+            player.invincible = 0; player.bombCooldown = 0;
+            buildLevel(level);
+            updateUI();
+        }
+
+        // ----------  RAYCAST RENDERER (DOOM STYLE) ----------
+        function renderFrame() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // FLOOR / CEILING
+            ctx.fillStyle = levelTheme === 'jungle' ? '#1a4a3a' : levelTheme==='factory'?'#3a4a4a':levelTheme==='alien'?'#2a2a5a':levelTheme==='ice'?'#a0d0e0':levelTheme==='volcano'?'#4a2a2a':'#2a2a3a';
+            ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+            ctx.fillStyle = levelTheme === 'jungle' ? '#3a6a4a' : levelTheme==='factory'?'#5a6a6a':levelTheme==='alien'?'#4a4a8a':levelTheme==='ice'?'#c0e0f0':levelTheme==='volcano'?'#6a3a3a':'#3a3a4a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height/2);
+
+            let rayAngle = player.dir - HALF_FOV;
+            let angleStep = FOV / NUM_RAYS;
+
+            for (let ray = 0; ray < NUM_RAYS; ray++) {
+                let angle = rayAngle + ray * angleStep;
+                let cos = Math.cos(angle), sin = Math.sin(angle);
+
+                let dist = 0;
+                let hit = false;
+                let wallX = 0, wallY = 0;
+
+                while (!hit && dist < MAX_RENDER_DIST) {
+                    dist += 2;
+                    wallX = player.x + cos * dist;
+                    wallY = player.y + sin * dist;
+                    let mapX = Math.floor(wallX / CELL_SIZE);
+                    let mapY = Math.floor(wallY / CELL_SIZE);
+                    if (mapX < 0 || mapY < 0 || mapX >= mapWidth || mapY >= mapHeight) break;
+                    if (worldMap[mapY][mapX] === 1) hit = true;
+                }
+
+                if (hit) {
+                    let height = (CELL_SIZE / dist) * PROJECTION_PLANE;
+                    let wallTop = (canvas.height / 2) - height / 2;
+                    let wallBottom = (canvas.height / 2) + height / 2;
+
+                    // shade by distance
+                    let shade = Math.min(255, Math.max(100, 255 - dist * 0.2));
+                    let color;
+                    if (levelTheme === 'jungle') color = `rgb(${shade-50}, ${shade-20}, ${shade-100})`;
+                    else if (levelTheme === 'factory') color = `rgb(${shade-30}, ${shade-30}, ${shade-30})`;
+                    else if (levelTheme === 'alien') color = `rgb(${shade-150}, ${shade-150}, ${shade})`;
+                    else if (levelTheme === 'ice') color = `rgb(${shade}, ${shade}, 255)`;
+                    else if (levelTheme === 'volcano') color = `rgb(${shade}, ${shade-100}, ${shade-100})`;
+                    else color = `rgb(${shade-50}, ${shade-50}, ${shade})`;
+
+                    ctx.fillStyle = color;
+                    ctx.fillRect(ray * (canvas.width/NUM_RAYS), wallTop, canvas.width/NUM_RAYS+1, wallBottom - wallTop);
+                }
+            }
+
+            // ----- DRAW SPRITES (enemies, pickups, exit) -----
+            let sprites = [];
+            enemies.forEach(e => sprites.push({ type: 'enemy', x: e.x, y: e.y, health: e.health }));
+            pickups.forEach(p => sprites.push({ type: 'pickup', x: p.x, y: p.y, kind: p.type }));
+            if (exitDoor.active && enemies.length === 0) sprites.push({ type: 'exit', x: exitDoor.x, y: exitDoor.y });
+
+            sprites.sort((a,b) => (Math.hypot(b.x-player.x, b.y-player.y) - Math.hypot(a.x-player.x, a.y-player.y)));
+
+            sprites.forEach(s => {
+                let dx = s.x - player.x, dy = s.y - player.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > MAX_RENDER_DIST) return;
+                let angleToSprite = Math.atan2(dy, dx);
+                let angleDiff = angleToSprite - player.dir;
+                while (angleDiff < -Math.PI) angleDiff += 2*Math.PI;
+                while (angleDiff > Math.PI) angleDiff -= 2*Math.PI;
+                if (Math.abs(angleDiff) > HALF_FOV + 0.2) return;
+
+                let size = (CELL_SIZE / dist) * PROJECTION_PLANE;
+                let xPos = canvas.width/2 + (angleDiff / HALF_FOV) * (canvas.width/2) - size/2;
+                let yPos = canvas.height/2 - size/2;
+
+                if (s.type === 'enemy') {
+                    ctx.fillStyle = s.health > 3 ? '#b34b4b' : '#b35a4a';
+                    ctx.fillRect(xPos, yPos, size, size);
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(xPos+size*0.2, yPos+size*0.2, size*0.2, size*0.2);
+                    ctx.fillRect(xPos+size*0.6, yPos+size*0.2, size*0.2, size*0.2);
+                } else if (s.type === 'pickup') {
+                    ctx.fillStyle = '#ffd966';
+                    ctx.fillRect(xPos, yPos, size, size);
+                    ctx.fillStyle = 'white';
+                    ctx.font = `${size}px monospace`;
+                    ctx.fillText('?', xPos, yPos+size);
+                } else if (s.type === 'exit') {
+                    ctx.fillStyle = '#ffd966';
+                    ctx.shadowBlur = 20; ctx.shadowColor = '#ffd966';
+                    ctx.fillRect(xPos, yPos, size, size);
+                    ctx.shadowBlur = 0;
+                }
+            });
+
+            // ----- WEAPON (pistol) -----
+            ctx.fillStyle = '#3a7251';
+            ctx.fillRect(canvas.width-120, canvas.height-80, 60, 30);
+            ctx.fillRect(canvas.width-100, canvas.height-100, 20, 50);
+            // crosshair
+            ctx.fillStyle = '#ffffff80';
+            ctx.fillRect(canvas.width/2-10, canvas.height/2-2, 20, 4);
+            ctx.fillRect(canvas.width/2-2, canvas.height/2-10, 4, 20);
+        }
+
+        // ----------  UPDATE WORLD ----------
+        function updatePlayer() {
+            if (!gameActive) return;
+            if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
+
+            // powerups
+            if (rapidTimer>0) rapidTimer--; else rapidFire=false;
+            if (shieldTimer>0) shieldTimer--; else shieldActive=false;
+            if (starTimer>0) starTimer--; else invincibleStar=false;
+            if (damageTimer>0) damageTimer--; else damageBoost=false;
+            if (bombChargeTimer>0) bombChargeTimer--; else bombCharge=false;
+            if (regenTimer>0) { regenTimer--; regenCounter++; if (regenCounter>40) { if (playerHealth<MAX_HEALTH) playerHealth++; regenCounter=0; } } else regen=false;
+
+            // turn (mouse / touch look)
+            if (keys.turnLeft) player.dir -= TURN_SPEED;
+            if (keys.turnRight) player.dir += TURN_SPEED;
+            player.dir += mouseLook * 0.002;
+            player.dir += touchLook * 0.003;
+            touchLook = 0;
+
+            // movement
+            let moveX = 0, moveY = 0;
+            if (keys.up) { moveX += Math.cos(player.dir) * MOVE_SPEED; moveY += Math.sin(player.dir) * MOVE_SPEED; }
+            if (keys.down) { moveX -= Math.cos(player.dir) * MOVE_SPEED; moveY -= Math.sin(player.dir) * MOVE_SPEED; }
+            if (keys.left) { moveX += Math.cos(player.dir - Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir - Math.PI/2) * MOVE_SPEED; }
+            if (keys.right) { moveX += Math.cos(player.dir + Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir + Math.PI/2) * MOVE_SPEED; }
+
+            let nx = player.x + moveX, ny = player.y + moveY;
+            if (!collideWorld(nx, player.y)) player.x = nx;
+            if (!collideWorld(player.x, ny)) player.y = ny;
+
+            // SHOOT (hitscan)
+            if (keys.fire && gameActive) {
+                let fireDelay = rapidFire ? 4 : 12;
+                if (player.shootTimer <= 0) {
+                    let hitEnemy = false;
+                    for (let i = enemies.length-1; i>=0; i--) {
+                        let e = enemies[i];
+                        let dx = e.x - player.x, dy = e.y - player.y;
+                        let dist = Math.hypot(dx, dy);
+                        if (dist > 200) continue;
+                        let angleToEnemy = Math.atan2(dy, dx);
+                        let diff = angleToEnemy - player.dir;
+                        while (diff < -Math.PI) diff += 2*Math.PI;
+                        while (diff > Math.PI) diff -= 2*Math.PI;
+                        if (Math.abs(diff) < 0.2) {
+                            e.health -= (damageBoost ? 2 : 1);
+                            addParticles(e.x, e.y, '#ff0000', 8);
+                            if (e.health <= 0) {
+                                score += 30;
+                                if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
+                                explosions.push({ x: e.x, y: e.y, life: 20, radius: 20 });
+                                enemies.splice(i,1);
+                                // drop powerup
+                                if (Math.random()<0.7) {
+                                    let types = ['health','rapid','shield','star','damage','bomb','regen'];
+                                    let type = types[Math.floor(Math.random()*types.length)];
+                                    pickups.push({ x: e.x, y: e.y, w:20, h:20, type: type, vx:0, vy:0, life:300 });
+                                }
+                            }
+                            hitEnemy = true;
+                            break;
+                        }
+                    }
+                    if (!hitEnemy) addParticles(player.x+Math.cos(player.dir)*40, player.y+Math.sin(player.dir)*40, '#ffd966', 6);
+                    player.shootTimer = fireDelay;
+                }
+            }
+            if (player.shootTimer > 0) player.shootTimer--;
+
+            // BOMB
+            if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
+                addParticles(player.x, player.y, '#ffaa00', 30);
+                for (let i=enemies.length-1; i>=0; i--) {
+                    let e = enemies[i];
+                    if (Math.hypot(e.x-player.x, e.y-player.y) < 300) {
+                        explosions.push({ x:e.x, y:e.y, life:30, radius:30 });
+                        score += 30; if (score>highScore) { highScore=score; localStorage.setItem('commandoFPS', highScore); }
+                        enemies.splice(i,1);
+                    }
+                }
+                player.bombCooldown = bombCharge ? 90 : 300;
+            }
+            if (player.bombCooldown > 0) player.bombCooldown--;
+
+            if (player.invincible>0) player.invincible--;
+            if (invincibleStar) player.invincible = Math.max(player.invincible,2);
+
+            // enemy AI
+            enemies.forEach(e => {
+                let dx = player.x - e.x, dy = player.y - e.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist > 1) { e.x += (dx/dist)*0.8; e.y += (dy/dist)*0.8; }
+                if (!shieldActive && !player.invincible && !invincibleStar) {
+                    if (Math.hypot(player.x-e.x, player.y-e.y) < PLAYER_RADIUS+20) {
+                        playerHealth--;
+                        player.invincible = 80;
+                        addParticles(player.x, player.y, '#ff5555', 10);
+                    }
+                }
+            });
+
+            // pickups
+            for (let i=pickups.length-1; i>=0; i--) {
+                let p = pickups[i];
+                if (Math.hypot(player.x-p.x, player.y-p.y) < 30) {
+                    if (p.type === 'health') playerHealth = Math.min(MAX_HEALTH, playerHealth+2);
+                    else if (p.type === 'rapid') { rapidFire = true; rapidTimer = 600; }
+                    else if (p.type === 'shield') { shieldActive = true; shieldTimer = 600; }
+                    else if (p.type === 'star') { invincibleStar = true; starTimer = 500; }
+                    else if (p.type === 'damage') { damageBoost = true; damageTimer = 700; }
+                    else if (p.type === 'bomb') { bombCharge = true; bombChargeTimer = 600; player.bombCooldown = Math.max(0, player.bombCooldown-150); }
+                    else if (p.type === 'regen') { regen = true; regenTimer = 600; regenCounter = 0; }
+                    pickups.splice(i,1);
+                }
+            }
+
+            // exit
+            if (exitDoor.active && enemies.length===0 && Math.hypot(player.x-exitDoor.x, player.y-exitDoor.y) < 40) {
+                if (level < MAX_LEVEL) { level++; buildLevel(level); updateUI(); }
+                else { victoryFlag = true; gameActive = false; }
+            }
+        }
+
+        function collideWorld(x, y) {
+            let mx = Math.floor(x / CELL_SIZE), my = Math.floor(y / CELL_SIZE);
+            if (mx < 0 || my < 0 || mx >= mapWidth || my >= mapHeight) return true;
+            if (worldMap[my][mx] === 1) return true;
+            for (let i=-1; i<=1; i++) for (let j=-1; j<=1; j++) {
+                let nx = mx+i, ny = my+j;
+                if (nx<0||ny<0||nx>=mapWidth||ny>=mapHeight) continue;
+                if (worldMap[ny][nx] === 1) {
+                    let wx = nx*CELL_SIZE + CELL_SIZE/2, wy = ny*CELL_SIZE + CELL_SIZE/2;
+                    if (Math.hypot(x - wx, y - wy) < PLAYER_RADIUS+CELL_SIZE/2) return true;
+                }
+            }
+            return false;
+        }
+
+        function addParticles(x,y,color,c) {
+            for (let i=0; i<c; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2 });
+        }
+
+        function updateEffects() {
+            for (let i=particles.length-1; i>=0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life-=2;
+                if (p.life<=0) particles.splice(i,1);
+            }
+            for (let i=explosions.length-1; i>=0; i--) {
+                let ex = explosions[i];
+                ex.life--; ex.radius+=1.5;
+                if (ex.life<=0) explosions.splice(i,1);
+            }
+        }
+
+        // ----------  UI ----------
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = String(Math.floor(score)).padStart(5,'0');
+            document.getElementById('highScoreDisplay').innerText = String(highScore).padStart(5,'0');
+            let bar = ''; for (let i=0; i<playerHealth; i++) bar+='█';
+            document.getElementById('healthDisplay').innerText = bar.padEnd(MAX_HEALTH,'░');
+            let txt = `LVL ${level} · ${levelName}`;
+            document.getElementById('levelDisplayDesktop').innerText = txt;
+            if (document.getElementById('mobileLevelDisplay')) document.getElementById('mobileLevelDisplay').innerText = txt;
+        }
+
+        // ----------  CONTROLS (Keyboard + Touch) ----------
+        function initControls() {
+            // keyboard
+            window.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp': keys.up = true; e.preventDefault(); break;
+                    case 'ArrowDown': keys.down = true; e.preventDefault(); break;
+                    case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
+                    case 'ArrowRight': keys.right = true; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
+                    case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
+                    case 'a': case 'A': keys.turnLeft = true; e.preventDefault(); break;
+                    case 'd': case 'D': keys.turnRight = true; e.preventDefault(); break;
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp': keys.up = false; e.preventDefault(); break;
+                    case 'ArrowDown': keys.down = false; e.preventDefault(); break;
+                    case 'ArrowLeft': keys.left = false; e.preventDefault(); break;
+                    case 'ArrowRight': keys.right = false; e.preventDefault(); break;
+                    case 'z': case 'Z': keys.fire = false; e.preventDefault(); break;
+                    case 'x': case 'X': keys.bomb = false; e.preventDefault(); break;
+                    case 'a': case 'A': keys.turnLeft = false; e.preventDefault(); break;
+                    case 'd': case 'D': keys.turnRight = false; e.preventDefault(); break;
+                }
+            });
+            // mouse look
+            canvas.addEventListener('mousemove', (e) => {
+                if (gameActive) mouseLook = e.movementX;
+                else mouseLook = 0;
+            });
+            canvas.addEventListener('mouseleave', () => mouseLook = 0);
+            // touch look (right side drag)
+            canvas.addEventListener('touchmove', (e) => {
+                let touch = e.touches[0];
+                if (touch.clientX > canvas.offsetLeft + canvas.width/2) {
+                    touchLook = (touch.clientX - (canvas.offsetLeft + canvas.width/2)) * 0.2;
+                }
+            });
+            canvas.addEventListener('touchend', () => touchLook = 0);
+            // joystick (movement)
+            const stick = document.getElementById('joystickHandle');
+            const base = document.getElementById('joystickBase');
+            const container = document.getElementById('joystickContainer');
+            if (stick && base && container) {
+                let active = false;
+                const maxDist = 40;
+                function handleStart(e) { e.preventDefault(); active = true; }
+                function handleMove(e) {
+                    if (!active) return; e.preventDefault();
+                    let touch = e.touches ? e.touches[0] : e;
+                    let rect = base.getBoundingClientRect(), cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+                    let dx = touch.clientX - cx, dy = touch.clientY - cy, dist = Math.hypot(dx, dy);
+                    if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
+                    stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
+                    // map to movement: up/down = forward/back, left/right = strafe
+                    keys.up = dy < -10;
+                    keys.down = dy > 10;
+                    keys.left = dx < -10;
+                    keys.right = dx > 10;
+                }
+                function handleEnd(e) { e.preventDefault(); active = false; stick.style.left='0px'; stick.style.top='0px'; keys.up=keys.down=keys.left=keys.right=false; }
+                container.addEventListener('touchstart', handleStart, { passive: false });
+                container.addEventListener('touchmove', handleMove, { passive: false });
+                container.addEventListener('touchend', handleEnd);
+                container.addEventListener('touchcancel', handleEnd);
+            }
+            // fire & bomb
+            const tf = document.getElementById('touchFire');
+            const tb = document.getElementById('touchBomb');
+            if (tf) { tf.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.fire=true; }); tf.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.fire=false; }); }
+            if (tb) { tb.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.bomb=true; }); tb.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.bomb=false; }); }
+        }
+
+        // ----------  GAME LOOP ----------
+        function gameLoop() {
+            if (gameActive) {
+                updatePlayer();
+                updateEffects();
+                updateUI();
+            }
+            renderFrame();
+            if (!gameActive) {
+                ctx.save();
+                ctx.fillStyle = '#000000bb';
+                ctx.fillRect(220, 190, 360, 90);
+                ctx.fillStyle = '#ffe98c';
+                ctx.font = '36px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                if (victoryFlag) ctx.fillText('🏁 VICTORY!', 400, 245);
+                else if (gameOver) ctx.fillText('❌ GAME OVER', 400, 245);
+                else ctx.fillText('- PAUSE -', 400, 245);
+                ctx.restore();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ----------  INIT ----------
+        function init() {
+            resetGame();
+            initControls();
+            document.getElementById('restartButton').addEventListener('click', resetGame);
+            gameLoop();
+        }
+
+        window.addEventListener('load', init);
+    })();
+</script>
+</body>
+</html>
