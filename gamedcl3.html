@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -533,6 +534,12 @@
             if (keys.left) { moveX += Math.cos(player.dir - Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir - Math.PI/2) * MOVE_SPEED; }
             if (keys.right) { moveX += Math.cos(player.dir + Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir + Math.PI/2) * MOVE_SPEED; }
 
+            let moveDist = Math.hypot(moveX, moveY);
+            if (moveDist > 0) {
+                moveX = (moveX / moveDist) * MOVE_SPEED;
+                moveY = (moveY / moveDist) * MOVE_SPEED;
+            }
+
             let nx = player.x + moveX, ny = player.y + moveY;
             if (!collideWorld(nx, player.y)) player.x = nx;
             if (!collideWorld(player.x, ny)) player.y = ny;
@@ -567,19 +574,25 @@
 
                     if (hitEnemy) {
                         let e = enemies[hitIndex];
-                        e.health -= damage * (player.weapon === 'shotgun' ? 1.5 : 1);
-                        addParticles(e.x, e.y, '#ff0000', 12);
-                        if (e.health <= 0) {
-                            score += 50 + level * 10;
-                            if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
-                            addParticles(e.x, e.y, '#ff6600', 30);
-                            enemies.splice(hitIndex, 1);
-                            if (Math.random() < 0.8) {
-                                let types = ['health','rapid','shield','star','damage','bomb','regen'];
-                                if (Math.random() < 0.2) types.push('shotgun');
-                                let type = types[Math.floor(Math.random() * types.length)];
-                                pickups.push({ x: e.x, y: e.y, type: type, life: 600 });
+                        if (!isOccluded(e.x, e.y)) {
+                            e.health -= damage * (player.weapon === 'shotgun' ? 1.5 : 1);
+                            addParticles(e.x, e.y, '#ff0000', 12);
+                            if (e.health <= 0) {
+                                score += 50 + level * 10;
+                                if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
+                                addParticles(e.x, e.y, '#ff6600', 30);
+                                enemies.splice(hitIndex, 1);
+                                if (Math.random() < 0.8) {
+                                    let types = ['health','rapid','shield','star','damage','bomb','regen'];
+                                    if (Math.random() < 0.2) types.push('shotgun');
+                                    let type = types[Math.floor(Math.random() * types.length)];
+                                    pickups.push({ x: e.x, y: e.y, type: type, life: 600 });
+                                }
                             }
+                        } else {
+                            let missX = player.x + Math.cos(shotAngle) * 400;
+                            let missY = player.y + Math.sin(shotAngle) * 400;
+                            addParticles(missX, missY, '#ffd966', 8);
                         }
                     } else {
                         let missX = player.x + Math.cos(shotAngle) * 400;
@@ -844,3 +857,4 @@
 </script>
 </body>
 </html>
+```
