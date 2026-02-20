@@ -531,8 +531,8 @@
             let moveX = 0, moveY = 0;
             if (keys.up) { moveX += Math.cos(player.dir) * MOVE_SPEED; moveY += Math.sin(player.dir) * MOVE_SPEED; }
             if (keys.down) { moveX -= Math.cos(player.dir) * MOVE_SPEED; moveY -= Math.sin(player.dir) * MOVE_SPEED; }
-            if (keys.left) { moveX += Math.cos(player.dir - Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir - Math.PI/2) * MOVE_SPEED; }
-            if (keys.right) { moveX += Math.cos(player.dir + Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir + Math.PI/2) * MOVE_SPEED; }
+            if (keys.left) { moveX += Math.cos(player.dir + Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir + Math.PI/2) * MOVE_SPEED; }
+            if (keys.right) { moveX += Math.cos(player.dir - Math.PI/2) * MOVE_SPEED; moveY += Math.sin(player.dir - Math.PI/2) * MOVE_SPEED; }
 
             let moveDist = Math.hypot(moveX, moveY);
             if (moveDist > 0) {
@@ -565,7 +565,7 @@
                         let angleToEnemy = Math.atan2(dy, dx);
                         let diff = angleToEnemy - shotAngle;
                         diff = (diff + Math.PI) % (2 * Math.PI) - Math.PI;
-                        if (Math.abs(diff) < 0.15) {
+                        if (Math.abs(diff) < 0.15 && !isOccluded(e.x, e.y)) {
                             hitEnemy = true;
                             closestDist = dist;
                             hitIndex = i;
@@ -574,29 +574,71 @@
 
                     if (hitEnemy) {
                         let e = enemies[hitIndex];
-                        if (!isOccluded(e.x, e.y)) {
-                            e.health -= damage * (player.weapon === 'shotgun' ? 1.5 : 1);
-                            addParticles(e.x, e.y, '#ff0000', 12);
-                            if (e.health <= 0) {
-                                score += 50 + level * 10;
-                                if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
-                                addParticles(e.x, e.y, '#ff6600', 30);
-                                enemies.splice(hitIndex, 1);
-                                if (Math.random() < 0.8) {
-                                    let types = ['health','rapid','shield','star','damage','bomb','regen'];
-                                    if (Math.random() < 0.2) types.push('shotgun');
-                                    let type = types[Math.floor(Math.random() * types.length)];
-                                    pickups.push({ x: e.x, y: e.y, type: type, life: 600 });
-                                }
+                        e.health -= damage * (player.weapon === 'shotgun' ? 1.5 : 1);
+                        addParticles(e.x, e.y, '#ff0000', 12);
+                        if (e.health <= 0) {
+                            score += 50 + level * 10;
+                            if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
+                            addParticles(e.x, e.y, '#ff6600', 30);
+                            enemies.splice(hitIndex, 1);
+                            if (Math.random() < 0.8) {
+                                let types = ['health','rapid','shield','star','damage','bomb','regen'];
+                                if (Math.random() < 0.2) types.push('shotgun');
+                                let type = types[Math.floor(Math.random() * types.length)];
+                                pickups.push({ x: e.x, y: e.y, type: type, life: 600 });
                             }
-                        } else {
-                            let missX = player.x + Math.cos(shotAngle) * 400;
-                            let missY = player.y + Math.sin(shotAngle) * 400;
-                            addParticles(missX, missY, '#ffd966', 8);
                         }
                     } else {
-                        let missX = player.x + Math.cos(shotAngle) * 400;
-                        let missY = player.y + Math.sin(shotAngle) * 400;
+                        // Cast ray to find wall hit point
+                        let rayDirX = Math.cos(shotAngle);
+                        let rayDirY = Math.sin(shotAngle);
+                        let posX = player.x / CELL_SIZE;
+                        let posY = player.y / CELL_SIZE;
+                        let mapX = Math.floor(posX);
+                        let mapY = Math.floor(posY);
+                        let deltaDistX = (Math.abs(rayDirX) < 1e-6) ? 1e30 : Math.abs(1 / rayDirX);
+                        let deltaDistY = (Math.abs(rayDirY) < 1e-6) ? 1e30 : Math.abs(1 / rayDirY);
+                        let stepX, stepY, sideDistX, sideDistY;
+                        if (rayDirX < 0) {
+                            stepX = -1;
+                            sideDistX = (posX - mapX) * deltaDistX;
+                        } else {
+                            stepX = 1;
+                            sideDistX = (mapX + 1 - posX) * deltaDistX;
+                        }
+                        if (rayDirY < 0) {
+                            stepY = -1;
+                            sideDistY = (posY - mapY) * deltaDistY;
+                        } else {
+                            stepY = 1;
+                            sideDistY = (mapY + 1 - posY) * deltaDistY;
+                        }
+                        let hit = false;
+                        let side;
+                        let stepCount = 0;
+                        while (!hit && stepCount < 100) {
+                            stepCount++;
+                            if (sideDistX < sideDistY) {
+                                sideDistX += deltaDistX;
+                                mapX += stepX;
+                                side = 0;
+                            } else {
+                                sideDistY += deltaDistY;
+                                mapY += stepY;
+                                side = 1;
+                            }
+                            if (mapX < 0 || mapY < 0 || mapX >= mapWidth || mapY >= mapHeight) break;
+                            if (worldMap[mapY][mapX] === 1) hit = true;
+                        }
+                        let hitDist = 400; // fallback
+                        if (hit) {
+                            let perpDist;
+                            if (side === 0) perpDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
+                            else perpDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
+                            hitDist = perpDist * CELL_SIZE;
+                        }
+                        let missX = player.x + rayDirX * hitDist;
+                        let missY = player.y + rayDirY * hitDist;
                         addParticles(missX, missY, '#ffd966', 8);
                     }
                 }
