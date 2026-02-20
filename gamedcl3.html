@@ -47,10 +47,11 @@
     </div>
     
     <div class="legend">
-        <span><i>←→↑↓</i> MOVE / STRAFE</span>
-        <span><i>DRAG RIGHT</i> LOOK</span>
-        <span><i>FIRE</i> HOLD TO SHOOT</span>
-        <span><i>BOMB</i> CLEAR</span>
+        <span><i>←→↑↓ or WASD</i> MOVE / STRAFE</span>
+        <span><i>MOUSE DRAG</i> LOOK (CLICK TO LOCK)</span>
+        <span><i>LEFT CLICK / Z</i> HOLD TO SHOOT</span>
+        <span><i>RIGHT CLICK / X</i> BOMB</span>
+        <span><i>P</i> PAUSE</span>
         <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
     </div>
     <div class="touch-controls" id="touchControls">
@@ -67,7 +68,7 @@
         </div>
         <div class="mobile-info">
             <span id="mobileLevelDisplay">LVL 1 · JUNGLE</span>
-            <span>🎮 MOVE / LOOK (RIGHT)</span>
+            <span>🎮 MOVE / DRAG RIGHT TO LOOK</span>
             <span>💣 BOMB</span>
         </div>
     </div>
@@ -84,19 +85,19 @@
         const PLAYER_RADIUS = 16;
         const FOV = Math.PI / 3;      // 60 degrees
         const HALF_FOV = FOV / 2;
-        const NUM_RAYS = 120;
+        const NUM_RAYS = 240;         // Improved resolution
         const PROJECTION_PLANE = (canvas.width / 2) / Math.tan(HALF_FOV);
-        const MAX_RENDER_DIST = 800;
-        const TURN_SPEED = 0.035;
-        const MOVE_SPEED = 3.2;
+        const MAX_RENDER_DIST = 1600; // Increased
+        const TURN_SPEED = 0.05;      // Slightly faster
+        const MOVE_SPEED = 4.0;       // Slightly faster
 
         // ----------  GLOBALS ----------
-        let worldMap = [];            // 2D grid 0=empty, 1=wall, 2=door
+        let worldMap = [];            // 2D grid 0=empty, 1=wall, 2=door (not used yet)
         let mapWidth = 32, mapHeight = 32;
         let enemies = [];
         let pickups = [];
-        let bullets = [];            // hitscan effects only
-        let explosions = [];
+        let bullets = [];            // Not used yet
+        let explosions = [];         // Will render as particles
         let particles = [];
         let level = 1, MAX_LEVEL = 6;
         let gameActive = true, gameOver = false, victoryFlag = false;
@@ -109,7 +110,8 @@
             vx: 0, vy: 0,
             invincible: 0,
             bombCooldown: 0,
-            shootTimer: 0
+            shootTimer: 0,
+            weapon: 'pistol'         // New: weapons
         };
         let exitDoor = { x: 0, y: 0, active: false };
 
@@ -129,8 +131,9 @@
         const keys = { left: false, right: false, up: false, down: false, fire: false, bomb: false, turnLeft: false, turnRight: false };
         let mouseLook = 0;
         let touchLook = 0;
+        let lastTouchX = 0;
 
-        // ----------  BUILD 6 UNIQUE LEVELS (grid based) ----------
+        // ----------  BUILD 6 UNIQUE LEVELS (improved design) ----------
         function buildLevel(lvl) {
             worldMap = Array(mapHeight).fill().map(() => Array(mapWidth).fill(0));
             enemies = [];
@@ -147,74 +150,103 @@
                 worldMap[y][mapWidth-1] = 1;
             }
 
-            if (lvl === 1) { // JUNGLE
+            if (lvl === 1) { // JUNGLE - Multiple connected rooms
                 levelTheme = "jungle"; levelName = "SUNKEN JUNGLE";
-                addRoom(10,10,12,12);
-                addRoom(20,5,8,8);
-                worldMap[15][15] = 1; worldMap[16][15] = 1; worldMap[15][16] = 1; worldMap[16][16] = 1;
-                placeEnemies(15,15, 8);
+                addRoom(2,2,8,8);
+                addRoom(12,12,10,10);
+                addRoom(22,2,8,8);
+                // Corridors
+                for (let i=5; i<15; i++) worldMap[5][i] = 0; // Open path
+                for (let i=5; i<15; i++) worldMap[6][i] = 0;
+                // More obstacles
+                worldMap[8][8] = 1; worldMap[8][9] = 1; worldMap[9][8] = 1; worldMap[9][9] = 1;
+                placeEnemies(5,5, 6);
+                placeEnemies(15,15, 6);
                 placeExit(28,28);
-                player.x = 200; player.y = 200; player.dir = 0.5;
-            } else if (lvl === 2) { // FACTORY
+                player.x = 150; player.y = 150; player.dir = 0.5;
+            } else if (lvl === 2) { // FACTORY - Industrial layout
                 levelTheme = "factory"; levelName = "MACHINE COMPLEX";
-                addRoom(8,8,16,16);
-                for (let i=12; i<20; i+=2) worldMap[12][i]=1;
-                placeEnemies(14,14, 10);
-                placeExit(26,26);
-                player.x = 150; player.y = 150; player.dir = 1.2;
-            } else if (lvl === 3) { // ALIEN
+                addRoom(4,4,12,12);
+                addRoom(18,18,10,10);
+                // Machinery walls
+                for (let i=8; i<24; i+=4) worldMap[10][i] = 1; worldMap[10][i+1] = 1;
+                for (let i=6; i<16; i++) worldMap[i][12] = 1;
+                placeEnemies(8,8, 8);
+                placeEnemies(20,20, 4);
+                placeExit(28,4);
+                player.x = 200; player.y = 200; player.dir = 1.2;
+            } else if (lvl === 3) { // ALIEN - Organic structures
                 levelTheme = "alien"; levelName = "ALIEN NEXUS";
-                addRoom(5,5,20,20);
-                addRoom(18,18,8,8);
-                worldMap[10][10]=1; worldMap[11][10]=1; worldMap[10][11]=1; worldMap[11][11]=1;
-                placeEnemies(12,12, 12);
-                placeExit(27,27);
+                addRoom(3,3,15,15);
+                addRoom(20,20,8,8);
+                // Curvy walls simulation
+                for (let i=5; i<10; i++) worldMap[i][10] = 1; worldMap[i][11] = 1;
+                for (let i=15; i<25; i++) worldMap[15][i] = 1;
+                worldMap[10][15] = 1; worldMap[11][15] = 1; worldMap[10][16] = 1;
+                placeEnemies(6,6, 8);
+                placeEnemies(22,22, 6);
+                placeExit(4,28);
                 player.x = 180; player.y = 180; player.dir = 2.0;
-            } else if (lvl === 4) { // ICE
+            } else if (lvl === 4) { // ICE - Labyrinth
                 levelTheme = "ice"; levelName = "GLACIAL PEAK";
-                addMaze(6,6,20,20);
-                placeEnemies(14,14, 12);
+                addMaze(4,4,24,24); // Improved maze
+                // Add pillars
+                for (let i=6; i<26; i+=4) for (let j=6; j<26; j+=4) worldMap[j][i] = 1;
+                placeEnemies(10,10, 10);
+                placeEnemies(20,20, 6);
                 placeExit(28,28);
                 player.x = 200; player.y = 200; player.dir = 3.0;
-            } else if (lvl === 5) { // VOLCANO
+            } else if (lvl === 5) { // VOLCANO - Lava channels
                 levelTheme = "volcano"; levelName = "MOLTEN CORE";
-                addRoom(10,10,14,14);
-                worldMap[16][16]=1; worldMap[17][16]=1; worldMap[16][17]=1; worldMap[17][17]=1;
-                placeEnemies(15,15, 14);
-                placeExit(27,27);
+                addRoom(5,5,20,20);
+                // Lava walls
+                for (let i=10; i<20; i++) worldMap[10][i] = 1; worldMap[20][i] = 1;
+                for (let i=10; i<20; i++) worldMap[i][10] = 1; worldMap[i][20] = 1;
+                placeEnemies(15,15, 10);
+                placeEnemies(7,7, 6);
+                placeExit(28,28);
                 player.x = 220; player.y = 220; player.dir = 4.1;
-            } else if (lvl === 6) { // FORTRESS
+            } else if (lvl === 6) { // FORTRESS - Defenses
                 levelTheme = "fortress"; levelName = "FINAL FORTRESS";
-                addRoom(8,8,20,20);
-                for (let i=0;i<8;i++) worldMap[14+i][14]=1;
-                placeEnemies(16,16, 16);
-                placeExit(26,26);
+                addRoom(3,3,26,26);
+                // Barricades
+                for (let i=0; i<10; i++) worldMap[10+i][10] = 1; worldMap[10][10+i] = 1;
+                for (let i=0; i<10; i++) worldMap[15+i][20] = 1; worldMap[20][15+i] = 1;
+                placeEnemies(15,15, 12);
+                placeEnemies(25,25, 8);
+                placeExit(28,28);
                 player.x = 200; player.y = 200; player.dir = 2.8;
             }
         }
 
         function addRoom(x,y,w,h) {
-            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = 1;
-            for (let i = 1; i < w-1; i++) for (let j = 1; j < h-1; j++) worldMap[y+j][x+i] = 0;
+            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = (i===0 || i===w-1 || j===0 || j===h-1) ? 1 : 0;
         }
+
         function addMaze(x,y,w,h) {
-            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = Math.random()>0.7?1:0;
-            for (let i = 1; i < w-1; i++) for (let j = 1; j < h-1; j++) worldMap[y+j][x+i] = 0;
+            // Better maze: recursive division simplified
+            for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) worldMap[y+j][x+i] = 1;
+            for (let i = 1; i < w-1; i++) for (let j = 1; j < h-1; j++) worldMap[y+j][x+i] = Math.random() > 0.3 ? 1 : 0;
+            // Ensure paths
+            for (let i = 1; i < w-1; i+=2) for (let j = 1; j < h-1; j+=2) worldMap[y+j][x+i] = 0;
         }
+
         function placeEnemies(cx, cy, count) {
             for (let i=0; i<count; i++) {
-                let angle = (i/count)*Math.PI*2;
-                let x = cx + Math.cos(angle)*6;
-                let y = cy + Math.sin(angle)*6;
+                let angle = (i/count)*Math.PI*2 + Math.random()*0.5;
+                let dist = 4 + Math.random()*4;
+                let x = cx + Math.cos(angle)*dist;
+                let y = cy + Math.sin(angle)*dist;
                 enemies.push({
                     x: x*CELL_SIZE + CELL_SIZE/2, y: y*CELL_SIZE + CELL_SIZE/2,
-                    health: 3 + Math.floor(Math.random()*3),
-                    type: Math.random()>0.5?'soldier':'heavy',
-                    state: 'idle', timer: 0,
-                    sprite: 1
+                    health: 3 + Math.floor(Math.random()*4) + level,
+                    type: Math.random()>0.6 ? 'soldier' : 'heavy',
+                    state: 'idle', timer: Math.random()*10,
+                    sprite: 0
                 });
             }
         }
+
         function placeExit(x,y) {
             exitDoor = { x: x*CELL_SIZE + CELL_SIZE/2, y: y*CELL_SIZE + CELL_SIZE/2, active: true };
         }
@@ -222,25 +254,31 @@
         // ----------  RESET GAME ----------
         function resetGame() {
             gameActive = true; gameOver = false; victoryFlag = false;
-            if (level > MAX_LEVEL) level = 1;
             playerHealth = MAX_HEALTH = 8;
             score = 0;
             rapidFire=false; rapidTimer=0; shieldActive=false; shieldTimer=0; invincibleStar=false; starTimer=0;
             damageBoost=false; damageTimer=0; bombCharge=false; bombChargeTimer=0; regen=false; regenTimer=0; regenCounter=0;
-            player.invincible = 0; player.bombCooldown = 0;
+            player.invincible = 0; player.bombCooldown = 0; player.weapon = 'pistol';
             buildLevel(level);
             updateUI();
         }
 
-        // ----------  RAYCAST RENDERER (DOOM STYLE) ----------
+        // ----------  RAYCAST RENDERER (Improved with DDA, textures, shading) ----------
         function renderFrame() {
             if (!ctx) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // FLOOR / CEILING
-            ctx.fillStyle = levelTheme === 'jungle' ? '#1a4a3a' : levelTheme==='factory'?'#3a4a4a':levelTheme==='alien'?'#2a2a5a':levelTheme==='ice'?'#a0d0e0':levelTheme==='volcano'?'#4a2a2a':'#2a2a3a';
+            // FLOOR / CEILING with gradient
+            let floorGrad = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
+            floorGrad.addColorStop(0, levelTheme === 'jungle' ? '#1a4a3a' : levelTheme==='factory'?'#3a4a4a':levelTheme==='alien'?'#2a2a5a':levelTheme==='ice'?'#a0d0e0':levelTheme==='volcano'?'#4a2a2a':'#2a2a3a');
+            floorGrad.addColorStop(1, '#102020');
+            ctx.fillStyle = floorGrad;
             ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
-            ctx.fillStyle = levelTheme === 'jungle' ? '#3a6a4a' : levelTheme==='factory'?'#5a6a6a':levelTheme==='alien'?'#4a4a8a':levelTheme==='ice'?'#c0e0f0':levelTheme==='volcano'?'#6a3a3a':'#3a3a4a';
+
+            let ceilGrad = ctx.createLinearGradient(0, 0, 0, canvas.height/2);
+            ceilGrad.addColorStop(0, '#203040');
+            ceilGrad.addColorStop(1, levelTheme === 'jungle' ? '#3a6a4a' : levelTheme==='factory'?'#5a6a6a':levelTheme==='alien'?'#4a4a8a':levelTheme==='ice'?'#c0e0f0':levelTheme==='volcano'?'#6a3a3a':'#3a3a4a');
+            ctx.fillStyle = ceilGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height/2);
 
             let rayAngle = player.dir - HALF_FOV;
@@ -248,92 +286,179 @@
 
             for (let ray = 0; ray < NUM_RAYS; ray++) {
                 let angle = rayAngle + ray * angleStep;
-                let cos = Math.cos(angle), sin = Math.sin(angle);
+                let rayDirX = Math.cos(angle);
+                let rayDirY = Math.sin(angle);
 
-                let dist = 0;
+                let posX = player.x / CELL_SIZE;
+                let posY = player.y / CELL_SIZE;
+                let mapX = Math.floor(posX);
+                let mapY = Math.floor(posY);
+
+                let deltaDistX = Math.abs(1 / rayDirX);
+                let deltaDistY = Math.abs(1 / rayDirY);
+
+                let stepX, stepY, sideDistX, sideDistY;
+
+                if (rayDirX < 0) {
+                    stepX = -1;
+                    sideDistX = (posX - mapX) * deltaDistX;
+                } else {
+                    stepX = 1;
+                    sideDistX = (mapX + 1.0 - posX) * deltaDistX;
+                }
+                if (rayDirY < 0) {
+                    stepY = -1;
+                    sideDistY = (posY - mapY) * deltaDistY;
+                } else {
+                    stepY = 1;
+                    sideDistY = (mapY + 1.0 - posY) * deltaDistY;
+                }
+
                 let hit = false;
-                let wallX = 0, wallY = 0;
+                let side;
+                let stepCount = 0;
 
-                while (!hit && dist < MAX_RENDER_DIST) {
-                    dist += 2;
-                    wallX = player.x + cos * dist;
-                    wallY = player.y + sin * dist;
-                    let mapX = Math.floor(wallX / CELL_SIZE);
-                    let mapY = Math.floor(wallY / CELL_SIZE);
+                while (!hit && stepCount < 50) { // Limit steps
+                    stepCount++;
+                    if (sideDistX < sideDistY) {
+                        sideDistX += deltaDistX;
+                        mapX += stepX;
+                        side = 0;
+                    } else {
+                        sideDistY += deltaDistY;
+                        mapY += stepY;
+                        side = 1;
+                    }
                     if (mapX < 0 || mapY < 0 || mapX >= mapWidth || mapY >= mapHeight) break;
                     if (worldMap[mapY][mapX] === 1) hit = true;
                 }
 
                 if (hit) {
+                    let perpDist;
+                    if (side === 0) perpDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
+                    else perpDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
+
+                    let dist = perpDist * CELL_SIZE;
+
                     let height = (CELL_SIZE / dist) * PROJECTION_PLANE;
                     let wallTop = (canvas.height / 2) - height / 2;
                     let wallBottom = (canvas.height / 2) + height / 2;
 
-                    // shade by distance
-                    let shade = Math.min(255, Math.max(100, 255 - dist * 0.2));
-                    let color;
-                    if (levelTheme === 'jungle') color = `rgb(${shade-50}, ${shade-20}, ${shade-100})`;
-                    else if (levelTheme === 'factory') color = `rgb(${shade-30}, ${shade-30}, ${shade-30})`;
-                    else if (levelTheme === 'alien') color = `rgb(${shade-150}, ${shade-150}, ${shade})`;
-                    else if (levelTheme === 'ice') color = `rgb(${shade}, ${shade}, 255)`;
-                    else if (levelTheme === 'volcano') color = `rgb(${shade}, ${shade-100}, ${shade-100})`;
-                    else color = `rgb(${shade-50}, ${shade-50}, ${shade})`;
+                    // Texture coord
+                    let texX;
+                    if (side === 0) texX = posY + perpDist * rayDirY;
+                    else texX = posX + perpDist * rayDirX;
+                    texX -= Math.floor(texX);
+                    let texPixel = texX * CELL_SIZE;
 
-                    ctx.fillStyle = color;
-                    ctx.fillRect(ray * (canvas.width/NUM_RAYS), wallTop, canvas.width/NUM_RAYS+1, wallBottom - wallTop);
+                    // Shade by distance and side
+                    let shade = Math.min(255, Math.max(80, 255 - (dist / 5)));
+                    if (side === 1) shade *= 0.7; // Darker horizontal
+
+                    // Procedural texture
+                    let pattern = Math.floor(texPixel) % 8 < 4 ? shade - 30 : shade;
+                    let r, g, b;
+                    if (levelTheme === 'jungle') { r = pattern - 100; g = pattern - 20; b = pattern - 150; }
+                    else if (levelTheme === 'factory') { r = g = b = pattern - 50; }
+                    else if (levelTheme === 'alien') { r = pattern - 150; g = pattern - 100; b = pattern; }
+                    else if (levelTheme === 'ice') { r = g = pattern; b = 255; }
+                    else if (levelTheme === 'volcano') { r = pattern; g = b = pattern - 100; }
+                    else { r = g = pattern - 50; b = pattern; }
+
+                    ctx.fillStyle = `rgb(${Math.max(0,r)},${Math.max(0,g)},${Math.max(0,b)})`;
+                    ctx.fillRect(ray * (canvas.width / NUM_RAYS), wallTop, (canvas.width / NUM_RAYS) + 1, wallBottom - wallTop);
                 }
             }
 
-            // ----- DRAW SPRITES (enemies, pickups, exit) -----
+            // ----- DRAW SPRITES (enemies, pickups, exit, particles) -----
             let sprites = [];
-            enemies.forEach(e => sprites.push({ type: 'enemy', x: e.x, y: e.y, health: e.health }));
-            pickups.forEach(p => sprites.push({ type: 'pickup', x: p.x, y: p.y, kind: p.type }));
+            enemies.forEach(e => sprites.push({ type: 'enemy', x: e.x, y: e.y, health: e.health, enemyType: e.type, sprite: e.sprite }));
+            pickups.forEach(p => sprites.push({ type: 'pickup', x: p.x, y: p.y, pickupType: p.type }));
+            particles.forEach(p => sprites.push({ type: 'particle', x: p.x, y: p.y, color: p.color, size: p.size }));
             if (exitDoor.active && enemies.length === 0) sprites.push({ type: 'exit', x: exitDoor.x, y: exitDoor.y });
 
-            sprites.sort((a,b) => (Math.hypot(b.x-player.x, b.y-player.y) - Math.hypot(a.x-player.x, a.y-player.y)));
+            sprites.sort((a,b) => (Math.hypot(b.x - player.x, b.y - player.y) - Math.hypot(a.x - player.x, a.y - player.y)));
 
             sprites.forEach(s => {
                 let dx = s.x - player.x, dy = s.y - player.y;
                 let dist = Math.hypot(dx, dy);
-                if (dist > MAX_RENDER_DIST) return;
-                let angleToSprite = Math.atan2(dy, dx);
-                let angleDiff = angleToSprite - player.dir;
-                while (angleDiff < -Math.PI) angleDiff += 2*Math.PI;
-                while (angleDiff > Math.PI) angleDiff -= 2*Math.PI;
-                if (Math.abs(angleDiff) > HALF_FOV + 0.2) return;
+                if (dist > MAX_RENDER_DIST || dist < 1) return;
+                let angleToSprite = Math.atan2(dy, dx) - player.dir;
+                angleToSprite = (angleToSprite + Math.PI) % (2 * Math.PI) - Math.PI;
+                if (Math.abs(angleToSprite) > HALF_FOV + 0.3) return;
 
-                let size = (CELL_SIZE / dist) * PROJECTION_PLANE;
-                let xPos = canvas.width/2 + (angleDiff / HALF_FOV) * (canvas.width/2) - size/2;
-                let yPos = canvas.height/2 - size/2;
+                let spriteSize = (CELL_SIZE / dist) * PROJECTION_PLANE;
+                let xPos = canvas.width / 2 + (angleToSprite / FOV) * canvas.width - spriteSize / 2;
+                let yPos = canvas.height / 2 - spriteSize / 2;
+
+                let shade = Math.max(0.5, 1 - dist / MAX_RENDER_DIST);
 
                 if (s.type === 'enemy') {
-                    ctx.fillStyle = s.health > 3 ? '#b34b4b' : '#b35a4a';
-                    ctx.fillRect(xPos, yPos, size, size);
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(xPos+size*0.2, yPos+size*0.2, size*0.2, size*0.2);
-                    ctx.fillRect(xPos+size*0.6, yPos+size*0.2, size*0.2, size*0.2);
+                    // Improved enemy graphics
+                    let color = s.enemyType === 'soldier' ? `rgba(100,200,100,${shade})` : `rgba(200,100,100,${shade})`;
+                    ctx.fillStyle = color;
+                    // Body
+                    ctx.fillRect(xPos + spriteSize * 0.2, yPos + spriteSize * 0.4, spriteSize * 0.6, spriteSize * 0.6);
+                    // Head
+                    ctx.fillRect(xPos + spriteSize * 0.3, yPos + spriteSize * 0.1, spriteSize * 0.4, spriteSize * 0.3);
+                    // Eyes
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(xPos + spriteSize * 0.35, yPos + spriteSize * 0.2, spriteSize * 0.1, spriteSize * 0.1);
+                    ctx.fillRect(xPos + spriteSize * 0.55, yPos + spriteSize * 0.2, spriteSize * 0.1, spriteSize * 0.1);
                 } else if (s.type === 'pickup') {
-                    ctx.fillStyle = '#ffd966';
-                    ctx.fillRect(xPos, yPos, size, size);
-                    ctx.fillStyle = 'white';
-                    ctx.font = `${size}px monospace`;
-                    ctx.fillText('?', xPos, yPos+size);
+                    // Different colors for pickups
+                    let color;
+                    switch (s.pickupType) {
+                        case 'health': color = '#ff0000'; break;
+                        case 'rapid': color = '#ffff00'; break;
+                        case 'shield': color = '#00ffff'; break;
+                        case 'star': color = '#ffaa00'; break;
+                        case 'damage': color = '#ff00ff'; break;
+                        case 'bomb': color = '#00ff00'; break;
+                        case 'regen': color = '#ffffff'; break;
+                        case 'shotgun': color = '#a0a0a0'; break;
+                        default: color = '#ffd966';
+                    }
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(xPos + spriteSize / 2, yPos + spriteSize / 2, spriteSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
                 } else if (s.type === 'exit') {
-                    ctx.fillStyle = '#ffd966';
+                    ctx.fillStyle = `rgba(255,217,102,${shade})`;
                     ctx.shadowBlur = 20; ctx.shadowColor = '#ffd966';
-                    ctx.fillRect(xPos, yPos, size, size);
+                    ctx.fillRect(xPos, yPos, spriteSize, spriteSize);
                     ctx.shadowBlur = 0;
+                    // Door lines
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 5; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos + i * spriteSize / 5, yPos);
+                        ctx.lineTo(xPos + i * spriteSize / 5, yPos + spriteSize);
+                        ctx.stroke();
+                    }
+                } else if (s.type === 'particle') {
+                    let pSize = (s.size / dist) * PROJECTION_PLANE;
+                    ctx.fillStyle = s.color;
+                    ctx.fillRect(xPos, yPos, pSize, pSize);
                 }
             });
 
-            // ----- WEAPON (pistol) -----
-            ctx.fillStyle = '#3a7251';
-            ctx.fillRect(canvas.width-120, canvas.height-80, 60, 30);
-            ctx.fillRect(canvas.width-100, canvas.height-100, 20, 50);
-            // crosshair
-            ctx.fillStyle = '#ffffff80';
-            ctx.fillRect(canvas.width/2-10, canvas.height/2-2, 20, 4);
-            ctx.fillRect(canvas.width/2-2, canvas.height/2-10, 4, 20);
+            // ----- WEAPON (improved visuals) -----
+            let weaponColor = player.weapon === 'pistol' ? '#3a7251' : '#72513a'; // Different for shotgun
+            let barrelLength = player.weapon === 'pistol' ? 60 : 80;
+            ctx.fillStyle = weaponColor;
+            ctx.fillRect(canvas.width - 140, canvas.height - 90, barrelLength, 40);
+            ctx.fillRect(canvas.width - 120, canvas.height - 110, 30, 60);
+            // Crosshair improved
+            ctx.strokeStyle = '#ffffff80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2 - 15, canvas.height/2);
+            ctx.lineTo(canvas.width/2 + 15, canvas.height/2);
+            ctx.moveTo(canvas.width/2, canvas.height/2 - 15);
+            ctx.lineTo(canvas.width/2, canvas.height/2 + 15);
+            ctx.stroke();
         }
 
         // ----------  UPDATE WORLD ----------
@@ -342,19 +467,21 @@
             if (playerHealth <= 0) { gameActive = false; gameOver = true; victoryFlag = false; return; }
 
             // powerups
-            if (rapidTimer>0) rapidTimer--; else rapidFire=false;
-            if (shieldTimer>0) shieldTimer--; else shieldActive=false;
-            if (starTimer>0) starTimer--; else invincibleStar=false;
-            if (damageTimer>0) damageTimer--; else damageBoost=false;
-            if (bombChargeTimer>0) bombChargeTimer--; else bombCharge=false;
-            if (regenTimer>0) { regenTimer--; regenCounter++; if (regenCounter>40) { if (playerHealth<MAX_HEALTH) playerHealth++; regenCounter=0; } } else regen=false;
+            if (rapidTimer > 0) rapidTimer--; else rapidFire = false;
+            if (shieldTimer > 0) shieldTimer--; else shieldActive = false;
+            if (starTimer > 0) starTimer--; else invincibleStar = false;
+            if (damageTimer > 0) damageTimer--; else damageBoost = false;
+            if (bombChargeTimer > 0) bombChargeTimer--; else bombCharge = false;
+            if (regenTimer > 0) { regenTimer--; regenCounter++; if (regenCounter > 40) { if (playerHealth < MAX_HEALTH) playerHealth++; regenCounter = 0; } } else regen = false;
 
-            // turn (mouse / touch look)
+            // turn
             if (keys.turnLeft) player.dir -= TURN_SPEED;
             if (keys.turnRight) player.dir += TURN_SPEED;
             player.dir += mouseLook * 0.002;
             player.dir += touchLook * 0.003;
+            mouseLook = 0;
             touchLook = 0;
+            player.dir = (player.dir + 2 * Math.PI) % (2 * Math.PI);
 
             // movement
             let moveX = 0, moveY = 0;
@@ -367,94 +494,125 @@
             if (!collideWorld(nx, player.y)) player.x = nx;
             if (!collideWorld(player.x, ny)) player.y = ny;
 
-            // SHOOT (hitscan)
-            if (keys.fire && gameActive) {
-                let fireDelay = rapidFire ? 4 : 12;
-                if (player.shootTimer <= 0) {
+            // SHOOT (hitscan, support shotgun)
+            if (keys.fire && player.shootTimer <= 0) {
+                let fireDelay = rapidFire ? 4 : (player.weapon === 'shotgun' ? 20 : 12); // Slower for shotgun
+                let damage = damageBoost ? 2 : 1;
+                let rays = player.weapon === 'shotgun' ? 5 : 1;
+                let spread = player.weapon === 'shotgun' ? 0.15 : 0;
+
+                for (let r = 0; r < rays; r++) {
+                    let shotAngle = player.dir + (r - (rays - 1) / 2) * spread;
                     let hitEnemy = false;
-                    for (let i = enemies.length-1; i>=0; i--) {
+                    let closestDist = Infinity;
+                    let hitIndex = -1;
+
+                    for (let i = 0; i < enemies.length; i++) {
                         let e = enemies[i];
                         let dx = e.x - player.x, dy = e.y - player.y;
                         let dist = Math.hypot(dx, dy);
-                        if (dist > 200) continue;
+                        if (dist > 400 || dist >= closestDist) continue;
                         let angleToEnemy = Math.atan2(dy, dx);
-                        let diff = angleToEnemy - player.dir;
-                        while (diff < -Math.PI) diff += 2*Math.PI;
-                        while (diff > Math.PI) diff -= 2*Math.PI;
-                        if (Math.abs(diff) < 0.2) {
-                            e.health -= (damageBoost ? 2 : 1);
-                            addParticles(e.x, e.y, '#ff0000', 8);
-                            if (e.health <= 0) {
-                                score += 30;
-                                if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
-                                explosions.push({ x: e.x, y: e.y, life: 20, radius: 20 });
-                                enemies.splice(i,1);
-                                // drop powerup
-                                if (Math.random()<0.7) {
-                                    let types = ['health','rapid','shield','star','damage','bomb','regen'];
-                                    let type = types[Math.floor(Math.random()*types.length)];
-                                    pickups.push({ x: e.x, y: e.y, w:20, h:20, type: type, vx:0, vy:0, life:300 });
-                                }
-                            }
+                        let diff = angleToEnemy - shotAngle;
+                        diff = (diff + Math.PI) % (2 * Math.PI) - Math.PI;
+                        if (Math.abs(diff) < 0.15) {
                             hitEnemy = true;
-                            break;
+                            closestDist = dist;
+                            hitIndex = i;
                         }
                     }
-                    if (!hitEnemy) addParticles(player.x+Math.cos(player.dir)*40, player.y+Math.sin(player.dir)*40, '#ffd966', 6);
-                    player.shootTimer = fireDelay;
+
+                    if (hitEnemy) {
+                        let e = enemies[hitIndex];
+                        e.health -= damage * (player.weapon === 'shotgun' ? 1.5 : 1); // Bonus damage for shotgun
+                        addParticles(e.x, e.y, '#ff0000', 12);
+                        if (e.health <= 0) {
+                            score += 50 + level * 10;
+                            if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
+                            addParticles(e.x, e.y, '#ff6600', 30);
+                            enemies.splice(hitIndex, 1);
+                            // drop powerup
+                            if (Math.random() < 0.8) {
+                                let types = ['health','rapid','shield','star','damage','bomb','regen'];
+                                if (Math.random() < 0.2) types.push('shotgun');
+                                let type = types[Math.floor(Math.random() * types.length)];
+                                pickups.push({ x: e.x, y: e.y, type: type, life: 600 });
+                            }
+                        }
+                    } else {
+                        // Miss particles
+                        let missX = player.x + Math.cos(shotAngle) * 400;
+                        let missY = player.y + Math.sin(shotAngle) * 400;
+                        addParticles(missX, missY, '#ffd966', 8);
+                    }
                 }
+                player.shootTimer = fireDelay;
             }
             if (player.shootTimer > 0) player.shootTimer--;
 
             // BOMB
-            if (keys.bomb && player.bombCooldown <= 0 && gameActive) {
-                addParticles(player.x, player.y, '#ffaa00', 30);
-                for (let i=enemies.length-1; i>=0; i--) {
+            if (keys.bomb && player.bombCooldown <= 0) {
+                addParticles(player.x, player.y, '#ffaa00', 40);
+                for (let i = enemies.length - 1; i >= 0; i--) {
                     let e = enemies[i];
-                    if (Math.hypot(e.x-player.x, e.y-player.y) < 300) {
-                        explosions.push({ x:e.x, y:e.y, life:30, radius:30 });
-                        score += 30; if (score>highScore) { highScore=score; localStorage.setItem('commandoFPS', highScore); }
-                        enemies.splice(i,1);
+                    if (Math.hypot(e.x - player.x, e.y - player.y) < 400) {
+                        addParticles(e.x, e.y, '#ff6600', 40);
+                        score += 50; if (score > highScore) { highScore = score; localStorage.setItem('commandoFPS', highScore); }
+                        enemies.splice(i, 1);
                     }
                 }
-                player.bombCooldown = bombCharge ? 90 : 300;
+                player.bombCooldown = bombCharge ? 120 : 400;
             }
             if (player.bombCooldown > 0) player.bombCooldown--;
 
-            if (player.invincible>0) player.invincible--;
-            if (invincibleStar) player.invincible = Math.max(player.invincible,2);
+            if (player.invincible > 0) player.invincible--;
+            if (invincibleStar) player.invincible = Math.max(player.invincible, 2);
 
-            // enemy AI
+            // enemy AI (improved: animation, type differences)
             enemies.forEach(e => {
+                e.timer++;
+                e.sprite = Math.floor(e.timer / 8) % 2;
+                let speed = e.type === 'soldier' ? 1.2 : 0.8; // Soldier faster
                 let dx = player.x - e.x, dy = player.y - e.y;
                 let dist = Math.hypot(dx, dy);
-                if (dist > 1) { e.x += (dx/dist)*0.8; e.y += (dy/dist)*0.8; }
-                if (!shieldActive && !player.invincible && !invincibleStar) {
-                    if (Math.hypot(player.x-e.x, player.y-e.y) < PLAYER_RADIUS+20) {
-                        playerHealth--;
-                        player.invincible = 80;
-                        addParticles(player.x, player.y, '#ff5555', 10);
+                if (dist > 20) {
+                    e.x += (dx / dist) * speed;
+                    e.y += (dy / dist) * speed;
+                }
+                if (!shieldActive && player.invincible <= 0 && !invincibleStar) {
+                    if (dist < PLAYER_RADIUS + 25) {
+                        playerHealth -= e.type === 'soldier' ? 1 : 2; // Heavy more damage
+                        player.invincible = 60;
+                        addParticles(player.x, player.y, '#ff5555', 15);
                     }
                 }
             });
 
             // pickups
-            for (let i=pickups.length-1; i>=0; i--) {
+            for (let i = pickups.length - 1; i >= 0; i--) {
                 let p = pickups[i];
-                if (Math.hypot(player.x-p.x, player.y-p.y) < 30) {
-                    if (p.type === 'health') playerHealth = Math.min(MAX_HEALTH, playerHealth+2);
-                    else if (p.type === 'rapid') { rapidFire = true; rapidTimer = 600; }
-                    else if (p.type === 'shield') { shieldActive = true; shieldTimer = 600; }
-                    else if (p.type === 'star') { invincibleStar = true; starTimer = 500; }
-                    else if (p.type === 'damage') { damageBoost = true; damageTimer = 700; }
-                    else if (p.type === 'bomb') { bombCharge = true; bombChargeTimer = 600; player.bombCooldown = Math.max(0, player.bombCooldown-150); }
-                    else if (p.type === 'regen') { regen = true; regenTimer = 600; regenCounter = 0; }
-                    pickups.splice(i,1);
+                p.life--;
+                if (p.life <= 0) {
+                    pickups.splice(i, 1);
+                    continue;
+                }
+                if (Math.hypot(player.x - p.x, player.y - p.y) < 35) {
+                    switch (p.type) {
+                        case 'health': playerHealth = Math.min(MAX_HEALTH, playerHealth + 3); break;
+                        case 'rapid': rapidFire = true; rapidTimer = 800; break;
+                        case 'shield': shieldActive = true; shieldTimer = 800; break;
+                        case 'star': invincibleStar = true; starTimer = 600; break;
+                        case 'damage': damageBoost = true; damageTimer = 800; break;
+                        case 'bomb': bombCharge = true; bombChargeTimer = 800; player.bombCooldown = Math.max(0, player.bombCooldown - 200); break;
+                        case 'regen': regen = true; regenTimer = 800; regenCounter = 0; break;
+                        case 'shotgun': player.weapon = 'shotgun'; break;
+                    }
+                    pickups.splice(i, 1);
                 }
             }
 
             // exit
-            if (exitDoor.active && enemies.length===0 && Math.hypot(player.x-exitDoor.x, player.y-exitDoor.y) < 40) {
+            if (exitDoor.active && enemies.length === 0 && Math.hypot(player.x - exitDoor.x, player.y - exitDoor.y) < 50) {
                 if (level < MAX_LEVEL) { level++; buildLevel(level); updateUI(); }
                 else { victoryFlag = true; gameActive = false; }
             }
@@ -464,87 +622,131 @@
             let mx = Math.floor(x / CELL_SIZE), my = Math.floor(y / CELL_SIZE);
             if (mx < 0 || my < 0 || mx >= mapWidth || my >= mapHeight) return true;
             if (worldMap[my][mx] === 1) return true;
-            for (let i=-1; i<=1; i++) for (let j=-1; j<=1; j++) {
-                let nx = mx+i, ny = my+j;
-                if (nx<0||ny<0||nx>=mapWidth||ny>=mapHeight) continue;
+            for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+                let nx = mx + i, ny = my + j;
+                if (nx < 0 || ny < 0 || nx >= mapWidth || ny >= mapHeight) continue;
                 if (worldMap[ny][nx] === 1) {
-                    let wx = nx*CELL_SIZE + CELL_SIZE/2, wy = ny*CELL_SIZE + CELL_SIZE/2;
-                    if (Math.hypot(x - wx, y - wy) < PLAYER_RADIUS+CELL_SIZE/2) return true;
+                    let wx = nx * CELL_SIZE + CELL_SIZE / 2, wy = ny * CELL_SIZE + CELL_SIZE / 2;
+                    if (Math.hypot(x - wx, y - wy) < PLAYER_RADIUS + CELL_SIZE / 2 - 10) return true; // Improved collision
                 }
             }
             return false;
         }
 
-        function addParticles(x,y,color,c) {
-            for (let i=0; i<c; i++) particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20+Math.random()*20, color, size: 2 });
+        function addParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 30 + Math.random() * 30,
+                    color,
+                    size: 3 + Math.random() * 3
+                });
+            }
         }
 
         function updateEffects() {
-            for (let i=particles.length-1; i>=0; i--) {
+            for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life-=2;
-                if (p.life<=0) particles.splice(i,1);
-            }
-            for (let i=explosions.length-1; i>=0; i--) {
-                let ex = explosions[i];
-                ex.life--; ex.radius+=1.5;
-                if (ex.life<=0) explosions.splice(i,1);
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95; p.vy *= 0.95; // Damping
+                p.life -= 1;
+                if (p.life <= 0) particles.splice(i, 1);
             }
         }
 
         // ----------  UI ----------
         function updateUI() {
-            document.getElementById('scoreDisplay').innerText = String(Math.floor(score)).padStart(5,'0');
-            document.getElementById('highScoreDisplay').innerText = String(highScore).padStart(5,'0');
-            let bar = ''; for (let i=0; i<playerHealth; i++) bar+='█';
-            document.getElementById('healthDisplay').innerText = bar.padEnd(MAX_HEALTH,'░');
+            document.getElementById('scoreDisplay').innerText = String(Math.floor(score)).padStart(5, '0');
+            document.getElementById('highScoreDisplay').innerText = String(highScore).padStart(5, '0');
+            let bar = '';
+            for (let i = 0; i < MAX_HEALTH; i++) bar += (i < playerHealth) ? '█' : '░';
+            document.getElementById('healthDisplay').innerText = bar;
             let txt = `LVL ${level} · ${levelName}`;
             document.getElementById('levelDisplayDesktop').innerText = txt;
             if (document.getElementById('mobileLevelDisplay')) document.getElementById('mobileLevelDisplay').innerText = txt;
         }
 
-        // ----------  CONTROLS (Keyboard + Touch) ----------
+        // ----------  CONTROLS (Improved mouse lock, touch delta) ----------
         function initControls() {
-            // keyboard
-            window.addEventListener('keydown', (e) => {
-                switch(e.key) {
-                    case 'ArrowUp': keys.up = true; e.preventDefault(); break;
-                    case 'ArrowDown': keys.down = true; e.preventDefault(); break;
-                    case 'ArrowLeft': keys.left = true; e.preventDefault(); break;
-                    case 'ArrowRight': keys.right = true; e.preventDefault(); break;
-                    case 'z': case 'Z': keys.fire = true; e.preventDefault(); break;
-                    case 'x': case 'X': keys.bomb = true; e.preventDefault(); break;
-                    case 'a': case 'A': keys.turnLeft = true; e.preventDefault(); break;
-                    case 'd': case 'D': keys.turnRight = true; e.preventDefault(); break;
+            // Pointer lock
+            canvas.addEventListener('click', () => {
+                if (gameActive && !document.pointerLockElement) {
+                    canvas.requestPointerLock();
                 }
+            });
+            document.addEventListener('pointerlockchange', () => {
+                if (!document.pointerLockElement) {
+                    // Optionally pause or something
+                }
+            });
+
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                let key = e.key.toLowerCase();
+                if (key === 'w' || key === 'arrowup') keys.up = true;
+                if (key === 's' || key === 'arrowdown') keys.down = true;
+                if (key === 'a' || key === 'arrowleft') keys.left = true;
+                if (key === 'd' || key === 'arrowright') keys.right = true;
+                if (key === ' ') keys.fire = true;
+                if (key === 'shift') keys.bomb = true;
+                if (key === 'q') keys.turnLeft = true;
+                if (key === 'e') keys.turnRight = true;
+                if (key === 'p') gameActive = !gameActive;
+                e.preventDefault();
             });
             window.addEventListener('keyup', (e) => {
-                switch(e.key) {
-                    case 'ArrowUp': keys.up = false; e.preventDefault(); break;
-                    case 'ArrowDown': keys.down = false; e.preventDefault(); break;
-                    case 'ArrowLeft': keys.left = false; e.preventDefault(); break;
-                    case 'ArrowRight': keys.right = false; e.preventDefault(); break;
-                    case 'z': case 'Z': keys.fire = false; e.preventDefault(); break;
-                    case 'x': case 'X': keys.bomb = false; e.preventDefault(); break;
-                    case 'a': case 'A': keys.turnLeft = false; e.preventDefault(); break;
-                    case 'd': case 'D': keys.turnRight = false; e.preventDefault(); break;
-                }
+                let key = e.key.toLowerCase();
+                if (key === 'w' || key === 'arrowup') keys.up = false;
+                if (key === 's' || key === 'arrowdown') keys.down = false;
+                if (key === 'a' || key === 'arrowleft') keys.left = false;
+                if (key === 'd' || key === 'arrowright') keys.right = false;
+                if (key === ' ') keys.fire = false;
+                if (key === 'shift') keys.bomb = false;
+                if (key === 'q') keys.turnLeft = false;
+                if (key === 'e') keys.turnRight = false;
+                e.preventDefault();
             });
-            // mouse look
+
+            // Mouse look and fire
             canvas.addEventListener('mousemove', (e) => {
-                if (gameActive) mouseLook = e.movementX;
-                else mouseLook = 0;
+                if (document.pointerLockElement === canvas && gameActive) mouseLook = e.movementX;
             });
-            canvas.addEventListener('mouseleave', () => mouseLook = 0);
-            // touch look (right side drag)
-            canvas.addEventListener('touchmove', (e) => {
-                let touch = e.touches[0];
-                if (touch.clientX > canvas.offsetLeft + canvas.width/2) {
-                    touchLook = (touch.clientX - (canvas.offsetLeft + canvas.width/2)) * 0.2;
+            canvas.addEventListener('mousedown', (e) => {
+                if (gameActive) {
+                    if (e.button === 0) keys.fire = true;
+                    if (e.button === 2) keys.bomb = true;
                 }
             });
-            canvas.addEventListener('touchend', () => touchLook = 0);
-            // joystick (movement)
+            canvas.addEventListener('mouseup', (e) => {
+                if (e.button === 0) keys.fire = false;
+                if (e.button === 2) keys.bomb = false;
+            });
+
+            // Touch look (delta)
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                let touch = e.touches[0];
+                if (touch.clientX > canvas.offsetLeft + canvas.width / 2) {
+                    lastTouchX = touch.clientX;
+                }
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                let touch = e.touches[0];
+                if (touch.clientX > canvas.offsetLeft + canvas.width / 2) {
+                    touchLook = touch.clientX - lastTouchX;
+                    lastTouchX = touch.clientX;
+                }
+            });
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchLook = 0;
+            });
+
+            // Joystick
             const stick = document.getElementById('joystickHandle');
             const base = document.getElementById('joystickBase');
             const container = document.getElementById('joystickContainer');
@@ -559,7 +761,6 @@
                     let dx = touch.clientX - cx, dy = touch.clientY - cy, dist = Math.hypot(dx, dy);
                     if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
                     stick.style.left = dx + 'px'; stick.style.top = dy + 'px';
-                    // map to movement: up/down = forward/back, left/right = strafe
                     keys.up = dy < -10;
                     keys.down = dy > 10;
                     keys.left = dx < -10;
@@ -571,31 +772,38 @@
                 container.addEventListener('touchend', handleEnd);
                 container.addEventListener('touchcancel', handleEnd);
             }
-            // fire & bomb
+
+            // Touch fire & bomb
             const tf = document.getElementById('touchFire');
             const tb = document.getElementById('touchBomb');
-            if (tf) { tf.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.fire=true; }); tf.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.fire=false; }); }
-            if (tb) { tb.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.bomb=true; }); tb.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.bomb=false; }); }
+            if (tf) {
+                tf.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.fire=true; });
+                tf.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.fire=false; });
+            }
+            if (tb) {
+                tb.addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.bomb=true; });
+                tb.addEventListener('touchend', (e)=>{ e.preventDefault(); keys.bomb=false; });
+            }
         }
 
         // ----------  GAME LOOP ----------
         function gameLoop() {
-            if (gameActive) {
-                updatePlayer();
-                updateEffects();
-                updateUI();
-            }
+            updatePlayer();
+            updateEffects();
+            updateUI();
             renderFrame();
             if (!gameActive) {
                 ctx.save();
                 ctx.fillStyle = '#000000bb';
-                ctx.fillRect(220, 190, 360, 90);
+                ctx.fillRect(200, 180, 400, 120);
                 ctx.fillStyle = '#ffe98c';
-                ctx.font = '36px "Courier New", monospace';
+                ctx.font = '40px "Courier New", monospace';
                 ctx.textAlign = 'center';
-                if (victoryFlag) ctx.fillText('🏁 VICTORY!', 400, 245);
-                else if (gameOver) ctx.fillText('❌ GAME OVER', 400, 245);
-                else ctx.fillText('- PAUSE -', 400, 245);
+                if (victoryFlag) ctx.fillText('🏁 VICTORY!', 400, 250);
+                else if (gameOver) ctx.fillText('❌ GAME OVER', 400, 250);
+                else ctx.fillText('- PAUSED -', 400, 250);
+                ctx.font = '20px "Courier New", monospace';
+                ctx.fillText('Click Restart or Press P', 400, 280);
                 ctx.restore();
             }
             requestAnimationFrame(gameLoop);
