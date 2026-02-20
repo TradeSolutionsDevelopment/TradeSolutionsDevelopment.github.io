@@ -253,7 +253,7 @@
             updateUI();
         }
 
-        // ----------  OCCLUSION CHECK (improved robustness) ----------
+        // ----------  OCCLUSION CHECK (robust DDA) ----------
         function isOccluded(sx, sy) {
             let dx = sx - player.x;
             let dy = sy - player.y;
@@ -269,7 +269,6 @@
             let mapX = Math.floor(posX);
             let mapY = Math.floor(posY);
 
-            // Handle near-zero directions to avoid Infinity/NaN
             let deltaDistX = (Math.abs(rayDirX) < 1e-6) ? 1e30 : Math.abs(1 / rayDirX);
             let deltaDistY = (Math.abs(rayDirY) < 1e-6) ? 1e30 : Math.abs(1 / rayDirY);
 
@@ -314,7 +313,6 @@
                 if (side === 0) perpDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
                 else perpDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
                 let hitDist = perpDist * CELL_SIZE;
-                // small epsilon to avoid self-occlusion
                 return hitDist < dist - 8;
             }
             return false;
@@ -387,7 +385,7 @@
                         side = 1;
                     }
                     if (mapX < 0 || mapY < 0 || mapX >= mapWidth || mapY >= mapHeight) break;
-                    if (worldMap[mapY] && worldMap[mapY][mapX] === 1) hit = true;
+                    if (worldMap[mapY][mapX] === 1) hit = true;
                 }
 
                 if (hit) {
@@ -621,8 +619,9 @@
                     e.x += (dx / dist) * speed;
                     e.y += (dy / dist) * speed;
                 }
+                // ENEMY DAMAGE – only if line of sight is clear (not occluded)
                 if (!shieldActive && player.invincible <= 0 && !invincibleStar) {
-                    if (dist < PLAYER_RADIUS + 25) {
+                    if (dist < PLAYER_RADIUS + 25 && !isOccluded(e.x, e.y)) { // <-- FIX: no damage through walls
                         playerHealth -= e.type === 'soldier' ? 1 : 2;
                         player.invincible = 60;
                         addParticles(player.x, player.y, '#ff5555', 15);
@@ -705,36 +704,41 @@
             if (document.getElementById('mobileLevelDisplay')) document.getElementById('mobileLevelDisplay').innerText = txt;
         }
 
-        // ----------  CONTROLS (WASD only, no arrow keys) ----------
+        // ----------  CONTROLS (WASD only, using keyCode for reliability) ----------
         function initControls() {
             canvas.addEventListener('click', () => {
                 if (gameActive && !document.pointerLockElement) canvas.requestPointerLock();
             });
             document.addEventListener('pointerlockchange', () => {});
 
+            // Use both key and code for maximum compatibility
             window.addEventListener('keydown', (e) => {
-                let key = e.key.toLowerCase();
-                if (key === 'w') keys.up = true;
-                if (key === 's') keys.down = true;
-                if (key === 'a') keys.left = true;
-                if (key === 'd') keys.right = true;
-                if (key === ' ') keys.fire = true;
-                if (key === 'shift') keys.bomb = true;
-                if (key === 'q') keys.turnLeft = true;
-                if (key === 'e') keys.turnRight = true;
-                if (key === 'p') gameActive = !gameActive;
+                const key = e.key.toLowerCase();
+                const code = e.code;
+                // WASD movement using code (ignores keyboard layout)
+                if (code === 'KeyW') keys.up = true;
+                else if (code === 'KeyA') keys.left = true;
+                else if (code === 'KeyS') keys.down = true;
+                else if (code === 'KeyD') keys.right = true;
+                // Other functions
+                else if (key === ' ') keys.fire = true;
+                else if (key === 'shift') keys.bomb = true;
+                else if (key === 'q') keys.turnLeft = true;
+                else if (key === 'e') keys.turnRight = true;
+                else if (key === 'p') gameActive = !gameActive;
                 e.preventDefault();
             });
             window.addEventListener('keyup', (e) => {
-                let key = e.key.toLowerCase();
-                if (key === 'w') keys.up = false;
-                if (key === 's') keys.down = false;
-                if (key === 'a') keys.left = false;
-                if (key === 'd') keys.right = false;
-                if (key === ' ') keys.fire = false;
-                if (key === 'shift') keys.bomb = false;
-                if (key === 'q') keys.turnLeft = false;
-                if (key === 'e') keys.turnRight = false;
+                const key = e.key.toLowerCase();
+                const code = e.code;
+                if (code === 'KeyW') keys.up = false;
+                else if (code === 'KeyA') keys.left = false;
+                else if (code === 'KeyS') keys.down = false;
+                else if (code === 'KeyD') keys.right = false;
+                else if (key === ' ') keys.fire = false;
+                else if (key === 'shift') keys.bomb = false;
+                else if (key === 'q') keys.turnLeft = false;
+                else if (key === 'e') keys.turnRight = false;
                 e.preventDefault();
             });
 
@@ -751,6 +755,7 @@
                 if (e.button === 0) keys.fire = false;
                 if (e.button === 2) keys.bomb = false;
             });
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
