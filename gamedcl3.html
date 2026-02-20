@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,10 +48,10 @@
     </div>
     
     <div class="legend">
-        <span><i>←→↑↓ or WASD</i> MOVE / STRAFE</span>
+        <span><i>WASD</i> MOVE / STRAFE</span>
         <span><i>MOUSE DRAG</i> LOOK (CLICK TO LOCK)</span>
-        <span><i>LEFT CLICK / Z</i> HOLD TO SHOOT</span>
-        <span><i>RIGHT CLICK / X</i> BOMB</span>
+        <span><i>LEFT CLICK / SPACE</i> HOLD TO SHOOT</span>
+        <span><i>RIGHT CLICK / SHIFT</i> BOMB</span>
         <span><i>P</i> PAUSE</span>
         <span id="levelDisplayDesktop">LVL 1 · JUNGLE</span>
     </div>
@@ -263,6 +264,69 @@
             updateUI();
         }
 
+        // ----------  OCCLUSION CHECK ----------
+        function isOccluded(sx, sy) {
+            let dx = sx - player.x;
+            let dy = sy - player.y;
+            let dist = Math.hypot(dx, dy);
+            let angle = Math.atan2(dy, dx);
+            let rayDirX = Math.cos(angle);
+            let rayDirY = Math.sin(angle);
+
+            let posX = player.x / CELL_SIZE;
+            let posY = player.y / CELL_SIZE;
+            let mapX = Math.floor(posX);
+            let mapY = Math.floor(posY);
+
+            let deltaDistX = Math.abs(1 / rayDirX);
+            let deltaDistY = Math.abs(1 / rayDirY);
+
+            let stepX, stepY, sideDistX, sideDistY;
+
+            if (rayDirX < 0) {
+                stepX = -1;
+                sideDistX = (posX - mapX) * deltaDistX;
+            } else {
+                stepX = 1;
+                sideDistX = (mapX + 1 - posX) * deltaDistX;
+            }
+            if (rayDirY < 0) {
+                stepY = -1;
+                sideDistY = (posY - mapY) * deltaDistY;
+            } else {
+                stepY = 1;
+                sideDistY = (mapY + 1 - posY) * deltaDistY;
+            }
+
+            let hit = false;
+            let perpDist = 0;
+            let side;
+            let stepCount = 0;
+
+            while (!hit && stepCount < 100) {
+                stepCount++;
+                if (sideDistX < sideDistY) {
+                    sideDistX += deltaDistX;
+                    mapX += stepX;
+                    side = 0;
+                } else {
+                    sideDistY += deltaDistY;
+                    mapY += stepY;
+                    side = 1;
+                }
+                if (mapX < 0 || mapY < 0 || mapX >= mapWidth || mapY >= mapHeight) break;
+                if (worldMap[mapY][mapX] === 1) hit = true;
+            }
+
+            if (hit) {
+                if (side === 0) perpDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
+                else perpDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
+                let hitDist = perpDist * CELL_SIZE;
+                return hitDist < dist - 20; // epsilon to avoid clipping
+            }
+            return false;
+        }
+
         // ----------  RAYCAST RENDERER (Improved with DDA, textures, shading) ----------
         function renderFrame() {
             if (!ctx) return;
@@ -318,7 +382,7 @@
                 let side;
                 let stepCount = 0;
 
-                while (!hit && stepCount < 50) { // Limit steps
+                while (!hit && stepCount < 100) {
                     stepCount++;
                     if (sideDistX < sideDistY) {
                         sideDistX += deltaDistX;
@@ -386,6 +450,8 @@
                 let angleToSprite = Math.atan2(dy, dx) - player.dir;
                 angleToSprite = (angleToSprite + Math.PI) % (2 * Math.PI) - Math.PI;
                 if (Math.abs(angleToSprite) > HALF_FOV + 0.3) return;
+
+                if (isOccluded(s.x, s.y)) return;
 
                 let spriteSize = (CELL_SIZE / dist) * PROJECTION_PLANE;
                 let xPos = canvas.width / 2 + (angleToSprite / FOV) * canvas.width - spriteSize / 2;
@@ -686,10 +752,10 @@
             // Keyboard
             window.addEventListener('keydown', (e) => {
                 let key = e.key.toLowerCase();
-                if (key === 'w' || key === 'arrowup') keys.up = true;
-                if (key === 's' || key === 'arrowdown') keys.down = true;
-                if (key === 'a' || key === 'arrowleft') keys.left = true;
-                if (key === 'd' || key === 'arrowright') keys.right = true;
+                if (key === 'w') keys.up = true;
+                if (key === 's') keys.down = true;
+                if (key === 'a') keys.left = true;
+                if (key === 'd') keys.right = true;
                 if (key === ' ') keys.fire = true;
                 if (key === 'shift') keys.bomb = true;
                 if (key === 'q') keys.turnLeft = true;
@@ -699,10 +765,10 @@
             });
             window.addEventListener('keyup', (e) => {
                 let key = e.key.toLowerCase();
-                if (key === 'w' || key === 'arrowup') keys.up = false;
-                if (key === 's' || key === 'arrowdown') keys.down = false;
-                if (key === 'a' || key === 'arrowleft') keys.left = false;
-                if (key === 'd' || key === 'arrowright') keys.right = false;
+                if (key === 'w') keys.up = false;
+                if (key === 's') keys.down = false;
+                if (key === 'a') keys.left = false;
+                if (key === 'd') keys.right = false;
                 if (key === ' ') keys.fire = false;
                 if (key === 'shift') keys.bomb = false;
                 if (key === 'q') keys.turnLeft = false;
@@ -822,3 +888,4 @@
 </script>
 </body>
 </html>
+```
